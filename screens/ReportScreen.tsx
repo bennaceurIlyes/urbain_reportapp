@@ -31,7 +31,6 @@ const { height } = Dimensions.get('window');
 const ReportSchema = Yup.object().shape({
   title: Yup.string().required('Title is required'),
   description: Yup.string().required('Description is required').min(10, 'Please provide more details'),
-  priority: Yup.number().required('Priority is required'),
 });
 
 export const ReportScreen = ({ navigation }: any) => {
@@ -141,7 +140,7 @@ export const ReportScreen = ({ navigation }: any) => {
       </Box>
 
       <Formik
-        initialValues={{ title: '', description: '', priority: 2 }}
+        initialValues={{ title: '', description: '' }}
         validationSchema={ReportSchema}
         onSubmit={handleSubmit}
       >
@@ -216,27 +215,6 @@ export const ReportScreen = ({ navigation }: any) => {
                     </FormControl>
                   </VStack>
 
-                  {/* Priority */}
-                  <Box>
-                    <Text style={styles.label}>Priority Level</Text>
-                    <HStack space="sm">
-                      {[{ label: 'Low', val: 1, color: '#34C759' }, { label: 'Medium', val: 2, color: '#FF9500' }, { label: 'High', val: 3, color: '#FF3B30' }].map((p) => (
-                        <TouchableOpacity 
-                          key={p.val} 
-                          style={[
-                            styles.priorityCard, 
-                            values.priority === p.val && { borderColor: p.color, backgroundColor: p.color + '10' }
-                          ]}
-                          onPress={() => setFieldValue('priority', p.val)}
-                        >
-                          <Box w={8} h={8} borderRadius="$full" bg={p.color} mb="$1" />
-                          <Text style={[styles.priorityLabel, values.priority === p.val && { color: p.color, fontWeight: '700' }]}>
-                            {p.label}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </HStack>
-                  </Box>
 
                   {/* Location */}
                   <Box bg="$white" p="$4" borderRadius="$2xl" borderWidth={1} borderColor="$borderLight100" style={styles.inputShadow}>

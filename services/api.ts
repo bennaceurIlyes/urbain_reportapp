@@ -2,6 +2,7 @@ import { supabase } from './supabaseConfig';
 import { Database } from '../types/database';
 import { File } from 'expo-file-system';
 
+
 export type Report = Database['public']['Tables']['reports']['Row'];
 export type Attachment = Database['public']['Tables']['attachments']['Row'];
 
@@ -17,7 +18,7 @@ export interface LocationData {
 export interface ReportData {
   title: string;
   description: string;
-  priority: number; // 1: Low, 2: Medium, 3: High
+  priority?: number; // 1: Low, 2: Medium, 3: High
   location: LocationData;
   imageUri: string;
   userId: string;
@@ -32,7 +33,7 @@ export const submitReport = async (data: ReportData) => {
     .insert({
       title: data.title,
       description: data.description,
-      priority: data.priority,
+      priority: data.priority || 2,
       status: 0, // Pending
       reporter_id: data.userId,
       location: JSON.stringify(data.location),
@@ -52,32 +53,30 @@ export const submitReport = async (data: ReportData) => {
     try {
       console.log('Preparing image upload for:', data.imageUri);
       
-      // Use the new File API as recommended by Expo 54
+      // Use the new Expo 54 FileSystem API to read image as ArrayBuffer
       const file = new File(data.imageUri);
-      
-      console.log('File instance created:', file.name, 'size:', file.size);
+      const arrayBuffer = await file.arrayBuffer();
       
       const fileExt = data.imageUri.split('.').pop()?.toLowerCase() || 'jpg';
       const cleanFileName = `photo_${Date.now()}.${fileExt}`;
       const filePath = `report-${reportData.id}/${cleanFileName}`;
 
-      console.log('Uploading to Supabase Storage path:', filePath);
+      console.log(`Uploading image to bucket "Attachments", path: ${filePath}`);
 
-      // Pass the File instance directly since it implements the Blob interface
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('Attachments')
-        .upload(filePath, file as any, {
+        .upload(filePath, arrayBuffer, {
           contentType: `image/${fileExt === 'jpg' || fileExt === 'jpeg' ? 'jpeg' : fileExt}`,
           cacheControl: '3600',
           upsert: false,
         });
 
       if (uploadError) {
-        console.error('Supabase Storage Upload Error Details:', JSON.stringify(uploadError, null, 2));
-        throw uploadError;
+        console.error('Supabase Storage Upload Error:', uploadError);
+        throw new Error(`Storage upload failed: ${uploadError.message}`);
       }
 
-      console.log('Image uploaded successfully to bucket "Attachments"');
+      console.log('Image uploaded successfully');
 
       // 3. Save Attachment record in the database
       const { error: attachError } = await supabase
