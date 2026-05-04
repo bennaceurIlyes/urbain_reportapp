@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   locationTitle: { fontSize: 14, fontWeight: '600', color: '#333' },
   locationSub: { fontSize: 12, color: '#8E8E93' },
   locBtn: { minWidth: 90, paddingVertical: 8 },
-  bottomBar: { paddingBottom: Platform.OS === 'ios' ? 70 : 50, backgroundColor: '#FFF' },
+  bottomBar: { paddingBottom: Platform.OS === 'ios' ? 90 : 70, backgroundColor: '#FFF' },
   submitBtn: { 
     height: 60, borderRadius: 30, shadowColor: '#006233', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 5
   },

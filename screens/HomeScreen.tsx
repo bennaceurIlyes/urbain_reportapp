@@ -158,7 +158,7 @@ export const HomeScreen = ({ navigation }: any) => {
           <HStack justifyContent="space-between" alignItems="center" px="$6" pt={Platform.OS === 'ios' ? 70 : 40} pb="$4">
             <VStack space="xs">
               <Heading size="xl" color="#006233">
-                Urban Report
+                🇩🇿 Urban Report
               </Heading>
               <Text style={styles.greetingText}>Algerian Citizen Portal</Text>
             </VStack>
@@ -188,8 +188,8 @@ export const HomeScreen = ({ navigation }: any) => {
               <RefreshControl 
                 refreshing={refreshing} 
                 onRefresh={onRefresh} 
-                tintColor="#007AFF" 
-                colors={['#007AFF']}
+                tintColor="#006233" 
+                colors={['#006233']}
               />
             }
             contentContainerStyle={styles.listContainer}
@@ -197,7 +197,7 @@ export const HomeScreen = ({ navigation }: any) => {
             ListEmptyComponent={
               <VStack alignItems="center" justifyContent="center" mt="$20" space="lg">
                 <Box bg="$primary50" p="$6" borderRadius="$full">
-                  <AlertCircle size={48} color="#007AFF" strokeWidth={1.5} />
+                  <AlertCircle size={48} color="#006233" strokeWidth={1.5} />
                 </Box>
                 <VStack space="xs" alignItems="center">
                   <Heading size="md" textAlign="center">No issues reported</Heading>
@@ -245,10 +245,10 @@ const styles = StyleSheet.create({
   },
   greetingText: { fontSize: 13, color: '#006233', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
   userName: { letterSpacing: -0.5 },
-  content: { flex: 1, paddingTop: Platform.OS === 'ios' ? 140 : 110, paddingHorizontal: 20 },
+  content: { flex: 1, paddingTop: Platform.OS === 'ios' ? 150 : 120, paddingHorizontal: 20 },
   sectionLabel: { fontSize: 12, fontWeight: '800', color: '#8E8E93', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, paddingLeft: 4 },
   filterContainer: { paddingVertical: 5, paddingRight: 30 },
-  seeAll: { color: '#007AFF', fontWeight: '700', fontSize: 14 },
+  seeAll: { color: '#006233', fontWeight: '700', fontSize: 14 },
   listContainer: { paddingBottom: 120 },
   categoryText: { fontSize: 12, color: '#8E8E93', fontWeight: '600' },
   statusText: { fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },

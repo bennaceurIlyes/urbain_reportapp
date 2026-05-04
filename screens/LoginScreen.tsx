@@ -57,7 +57,7 @@ export const LoginScreen = ({ navigation }: any) => {
                   <Heading size="3xl" color="$white">U</Heading>
                 </Box>
               </BlurView>
-              <Heading size="2xl" color="$textLight900" mt="$4">Urban Report</Heading>
+              <Heading size="2xl" color="$textLight900" mt="$4">🇩🇿 Urban Report</Heading>
               <Text style={styles.subtitle}>Cleaner cities, one report at a time</Text>
             </Center>
 
