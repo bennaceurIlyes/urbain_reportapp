@@ -6,14 +6,14 @@ import {
   ButtonIcon,
   HStack
 } from '@gluestack-ui/themed';
-import { StyleSheet, ViewStyle } from 'react-native';
+import { StyleSheet, ViewStyle, StyleProp } from 'react-native';
 
 interface ButtonProps {
   title: string;
   loading?: boolean;
   variant?: 'primary' | 'secondary' | 'outline' | 'link';
   onPress: () => void;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   disabled?: boolean;
   icon?: any;
 }

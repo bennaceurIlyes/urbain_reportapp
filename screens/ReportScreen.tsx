@@ -264,7 +264,7 @@ export const ReportScreen = ({ navigation }: any) => {
               </ScrollView>
 
               {/* Fixed Bottom Action */}
-              <Box p="$6" bg="$white" borderTopWidth={1} borderColor="rgba(0,0,0,0.05)" style={styles.bottomBar}>
+              <Box style={styles.bottomBar}>
                 <Button 
                   title="Submit Report" 
                   onPress={() => handleSubmit()} 
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
   headerWrapper: { zIndex: 10, backgroundColor: '#F8F9FB' },
   blurContainer: { borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.05)' },
   backBtn: { padding: 8 },
-  scroll: { padding: 20, paddingTop: Platform.OS === 'ios' ? 120 : 100, paddingBottom: 40 },
+  scroll: { padding: 20, paddingTop: Platform.OS === 'ios' ? 120 : 100, paddingBottom: 100 },
   label: { fontSize: 16, fontWeight: '600', color: '#333', marginBottom: 12 },
   imagePreview: { width: '100%', height: 220, resizeMode: 'cover' },
   removeImage: { position: 'absolute', top: 12, right: 12, borderRadius: 20, overflow: 'hidden' },
@@ -320,7 +320,14 @@ const styles = StyleSheet.create({
   locationTitle: { fontSize: 14, fontWeight: '600', color: '#333' },
   locationSub: { fontSize: 12, color: '#8E8E93' },
   locBtn: { minWidth: 90, paddingVertical: 8 },
-  bottomBar: { paddingBottom: Platform.OS === 'ios' ? 90 : 70, backgroundColor: '#FFF' },
+  bottomBar: { 
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20, 
+    backgroundColor: '#FFF',
+    borderTopWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
   submitBtn: { 
     height: 60, borderRadius: 30, shadowColor: '#006233', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 5
   },

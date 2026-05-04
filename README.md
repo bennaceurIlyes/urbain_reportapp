@@ -29,7 +29,7 @@ Urban Report is a premium mobile application designed for Algerian citizens to r
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/urban-issue-app.git
+   git clone https://github.com/bennaceurIlyes/urbain_reportapp.git
    cd urban-issue-app
    ```
 

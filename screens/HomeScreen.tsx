@@ -18,7 +18,7 @@ import { supabase } from '../services/supabaseConfig';
 import { getUserReports, ReportWithAttachments } from '../services/api';
 import { SkeletonCard } from '../components/SkeletonCard';
 import { Button } from '../components/Button';
-import { MapPin, Calendar, AlertCircle, User } from 'lucide-react-native';
+import { MapPin, Calendar, AlertCircle } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -245,11 +245,11 @@ const styles = StyleSheet.create({
   },
   greetingText: { fontSize: 13, color: '#006233', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
   userName: { letterSpacing: -0.5 },
-  content: { flex: 1, paddingTop: Platform.OS === 'ios' ? 150 : 120, paddingHorizontal: 20 },
+  content: { flex: 1, paddingTop: Platform.OS === 'ios' ? 120 : 100, paddingHorizontal: 20 },
   sectionLabel: { fontSize: 12, fontWeight: '800', color: '#8E8E93', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, paddingLeft: 4 },
   filterContainer: { paddingVertical: 5, paddingRight: 30 },
   seeAll: { color: '#006233', fontWeight: '700', fontSize: 14 },
-  listContainer: { paddingBottom: 120 },
+  listContainer: { paddingBottom: 100 },
   categoryText: { fontSize: 12, color: '#8E8E93', fontWeight: '600' },
   statusText: { fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
   cardDesc: { fontSize: 15, color: '#666', lineHeight: 22, marginTop: 10 },
