@@ -1,36 +1,27 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Alert, Platform, ScrollView } from 'react-native';
+import { View, StyleSheet, Alert, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { 
-  Box, 
-  Heading, 
-  VStack, 
-  HStack, 
-  Avatar, 
-  AvatarFallbackText, 
-  AvatarImage,
-  Text,
-  Icon,
-  ChevronLeftIcon,
-  Center,
+  Text, 
+  useTheme, 
   Divider,
-  Pressable
-} from '@gluestack-ui/themed';
-import { BlurView } from 'expo-blur';
+} from 'react-native-paper';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../services/supabaseConfig';
-import { User, LogOut, Settings, Bell, Shield, HelpCircle, ChevronRight, PieChart, Clock, CheckCircle } from 'lucide-react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export const ProfileScreen = ({ navigation }: any) => {
   const { user } = useAuth();
+  const theme = useTheme();
 
   const handleLogout = async () => {
     Alert.alert(
-      "Logout",
-      "Are you sure you want to log out?",
+      "Sign Out",
+      "Are you sure you want to log out of your account?",
       [
         { text: "Cancel", style: "cancel" },
         { 
-          text: "Logout", 
+          text: "Log Out", 
           style: "destructive",
           onPress: async () => {
             const { error } = await supabase.auth.signOut();
@@ -41,155 +32,162 @@ export const ProfileScreen = ({ navigation }: any) => {
     );
   };
 
-  const MenuItem = ({ icon: IconComp, label, color = "#444" }: any) => (
-    <Pressable w="100%" onPress={() => {}}>
-      <HStack justifyContent="space-between" alignItems="center" py="$4">
-        <HStack space="md" alignItems="center">
-          <Box p="$2" borderRadius="$xl" bg="$backgroundLight100">
-            <IconComp size={18} color={color} />
-          </Box>
-          <Text fontWeight="$medium" color="$textLight800" size="sm">{label}</Text>
-        </HStack>
-        <ChevronRight size={18} color="#CCC" />
-      </HStack>
-    </Pressable>
+  const ProfileItem = ({ icon, label, color, onPress, value }: any) => (
+    <TouchableOpacity style={styles.profileItem} onPress={onPress} activeOpacity={0.6}>
+      <View style={[styles.iconContainer, { backgroundColor: color + '10' }]}>
+        <MaterialCommunityIcons name={icon as any} size={22} color={color} />
+      </View>
+      <Text variant="bodyLarge" style={styles.itemLabel}>{label}</Text>
+      <View style={styles.itemRight}>
+        {value && <Text variant="bodyMedium" style={styles.itemValue}>{value}</Text>}
+        <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
+      </View>
+    </TouchableOpacity>
   );
 
   return (
-    <Box flex={1} bg="$backgroundLight50">
-      {/* Glass Header */}
-      <Box zIndex={10}>
-        <BlurView intensity={90} tint="light" style={styles.headerBlur}>
-          <HStack alignItems="center" px="$6" pt={Platform.OS === 'ios' ? 50 : 20} pb="$3">
-            <Heading size="xl">Profile</Heading>
-          </HStack>
-        </BlurView>
-      </Box>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={styles.topHeader}>
+        <Text variant="displaySmall" style={styles.headerTitle}>Profile</Text>
+        <TouchableOpacity style={styles.settingsBtn}>
+          <MaterialCommunityIcons name="cog-outline" size={24} color="#0F172A" />
+        </TouchableOpacity>
+      </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Center mt="$6" mb="$8">
-          <Box p="$1" borderRadius="$full" borderWidth={2} borderColor="$primary500" style={styles.avatarBorder}>
-            <Avatar size="2xl" borderRadius="$full">
-              <AvatarFallbackText>{user?.email}</AvatarFallbackText>
-              <AvatarImage 
-                source={{ uri: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200' }} 
-                alt="User profile avatar"
-              />
-            </Avatar>
-          </Box>
-          <Heading size="xl" mt="$4">{user?.email?.split('@')[0]}</Heading>
-          <Text color="$textLight500" size="sm">{user?.email}</Text>
+        <View style={styles.profileHeader}>
+          <View style={styles.avatarWrapper}>
+            <View style={styles.avatarPlaceholder}>
+              <Text style={styles.avatarInitial}>
+                {user?.email?.[0].toUpperCase() || 'U'}
+              </Text>
+            </View>
+          </View>
+          <Text variant="headlineSmall" style={styles.userName}>{user?.email?.split('@')[0] || 'User'}</Text>
+          <Text variant="bodyMedium" style={styles.userEmail}>{user?.email}</Text>
           
-          <HStack 
-            mt="$6" 
-            space="xl" 
-            bg="$white" 
-            p="$5" 
-            borderRadius="$2xl" 
-            w="85%"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.05,
-              shadowRadius: 10,
-              elevation: 2
-            }}
-          >
-            <VStack alignItems="center" flex={1}>
-              <Box bg="$primary50" p="$2" borderRadius="$full" mb="$1">
-                <PieChart size={16} color="#007AFF" />
-              </Box>
-              <Heading size="sm">12</Heading>
-              <Text size="xs" color="$textLight400">Total</Text>
-            </VStack>
-            <Divider orientation="vertical" />
-            <VStack alignItems="center" flex={1}>
-              <Box bg="$warning50" p="$2" borderRadius="$full" mb="$1">
-                <Clock size={16} color="#FF9500" />
-              </Box>
-              <Heading size="sm">4</Heading>
-              <Text size="xs" color="$textLight400">Pending</Text>
-            </VStack>
-            <Divider orientation="vertical" />
-            <VStack alignItems="center" flex={1}>
-              <Box bg="$success50" p="$2" borderRadius="$full" mb="$1">
-                <CheckCircle size={16} color="#34C759" />
-              </Box>
-              <Heading size="sm">8</Heading>
-              <Text size="xs" color="$textLight400">Fixed</Text>
-            </VStack>
-          </HStack>
-        </Center>
+          <View style={styles.statsContainer}>
+            <View style={styles.statBox}>
+              <Text variant="titleLarge" style={styles.statNumber}>12</Text>
+              <Text variant="labelSmall" style={styles.statLabel}>REPORTS</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statBox}>
+              <Text variant="titleLarge" style={styles.statNumber}>8</Text>
+              <Text variant="labelSmall" style={styles.statLabel}>RESOLVED</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statBox}>
+              <Text variant="titleLarge" style={styles.statNumber}>4</Text>
+              <Text variant="labelSmall" style={styles.statLabel}>PENDING</Text>
+            </View>
+          </View>
+        </View>
 
-        <Box px="$6" mb="$4">
-          <Text fontWeight="$bold" color="$textLight900" size="md">Settings</Text>
-        </Box>
-        
-        <Box 
-          bg="$white" 
-          px="$6" 
-          borderRadius="$3xl" 
-          mx="$4"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.05,
-            shadowRadius: 12,
-            elevation: 3
-          }}
-        >
-          <VStack>
-            <MenuItem icon={User} label="Personal Information" color="#007AFF" />
-            <Divider />
-            <MenuItem icon={Bell} label="Notifications" color="#FF9500" />
-            <Divider />
-            <MenuItem icon={Shield} label="Privacy & Security" color="#34C759" />
-            <Divider />
-            <MenuItem icon={HelpCircle} label="Help & Support" color="#5856D6" />
-          </VStack>
-        </Box>
+        <View style={styles.section}>
+          <Text variant="labelLarge" style={styles.sectionLabel}>App Settings</Text>
+          <View style={styles.menuGroup}>
+            <ProfileItem 
+              icon="bell-outline" 
+              label="Notifications" 
+              color="#F59E0B" 
+              onPress={() => {}} 
+              value="On"
+            />
+            <Divider style={styles.menuDivider} />
+            <ProfileItem 
+              icon="help-circle-outline" 
+              label="Help Center" 
+              color="#64748B" 
+              onPress={() => {}} 
+            />
+            <Divider style={styles.menuDivider} />
+            <ProfileItem 
+              icon="file-document-outline" 
+              label="Terms & Privacy" 
+              color="#64748B" 
+              onPress={() => {}} 
+            />
+          </View>
+        </View>
 
-        <Box 
-          bg="$white" 
-          px="$6" 
-          borderRadius="$3xl" 
-          mx="$4" 
-          mt="$6" 
-          mb="$10"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.05,
-            shadowRadius: 12,
-            elevation: 3
-          }}
-        >
-          <Pressable onPress={handleLogout}>
-            <HStack justifyContent="space-between" alignItems="center" py="$4">
-              <HStack space="md" alignItems="center">
-                <Box p="$2" borderRadius="$xl" bg="$error50">
-                  <LogOut size={18} color="#FF3B30" />
-                </Box>
-                <Text fontWeight="$semibold" color="$error600" size="sm">Log Out</Text>
-              </HStack>
-            </HStack>
-          </Pressable>
-        </Box>
+        <View style={styles.footer}>
+          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+            <MaterialCommunityIcons name="logout" size={20} color="#EF4444" />
+            <Text variant="titleMedium" style={styles.logoutText}>Sign Out</Text>
+          </TouchableOpacity>
+          <Text variant="labelSmall" style={styles.versionText}>Urban Report v1.2.0</Text>
+        </View>
       </ScrollView>
-    </Box>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  headerBlur: {
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
+  container: { flex: 1 },
+  topHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    paddingHorizontal: 24,
+    paddingVertical: 12
   },
-  scroll: { paddingBottom: 100 },
-  avatarBorder: {
-    shadowColor: "#007AFF",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-  }
+  headerTitle: { fontWeight: '800', letterSpacing: -0.5, color: '#0F172A' },
+  settingsBtn: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
+  scroll: { paddingBottom: 120 },
+  profileHeader: { alignItems: 'center', padding: 24 },
+  avatarWrapper: { marginBottom: 20 },
+  avatarPlaceholder: { 
+    width: 100, height: 100, borderRadius: 50, 
+    backgroundColor: '#1B4FD8', 
+    justifyContent: 'center', alignItems: 'center',
+    shadowColor: '#1B4FD8', shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2, shadowRadius: 15, elevation: 5
+  },
+  avatarInitial: { fontSize: 42, fontWeight: '800', color: '#FFFFFF' },
+  userName: { fontWeight: '800', color: '#0F172A', marginBottom: 4 },
+  userEmail: { color: '#64748B', fontWeight: '500' },
+  statsContainer: { 
+    flexDirection: 'row', 
+    marginTop: 32, 
+    padding: 24, 
+    borderRadius: 24, 
+    backgroundColor: '#FFFFFF',
+    width: '100%',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.02, shadowRadius: 10, elevation: 2,
+    borderWidth: 1, borderColor: '#F1F5F9'
+  },
+  statBox: { flex: 1, alignItems: 'center' },
+  statNumber: { fontWeight: '800', color: '#1B4FD8' },
+  statLabel: { color: '#94A3B8', fontWeight: '700', marginTop: 4, letterSpacing: 0.5 },
+  statDivider: { width: 1, height: '60%', backgroundColor: '#F1F5F9', alignSelf: 'center' },
+  section: { paddingHorizontal: 24, marginTop: 32 },
+  sectionLabel: { color: '#94A3B8', fontWeight: '700', marginBottom: 16, letterSpacing: 1, textTransform: 'uppercase', fontSize: 11 },
+  menuGroup: { 
+    backgroundColor: '#FFFFFF', borderRadius: 24, 
+    borderWidth: 1, borderColor: '#F1F5F9',
+    overflow: 'hidden'
+  },
+  profileItem: { 
+    flexDirection: 'row', alignItems: 'center', 
+    padding: 16, paddingRight: 20
+  },
+  iconContainer: { 
+    width: 40, height: 40, borderRadius: 12, 
+    justifyContent: 'center', alignItems: 'center', marginRight: 16 
+  },
+  itemLabel: { flex: 1, fontWeight: '600', color: '#0F172A' },
+  itemRight: { flexDirection: 'row', alignItems: 'center' },
+  itemValue: { color: '#64748B', marginRight: 8, fontWeight: '500' },
+  menuDivider: { backgroundColor: '#F8FAFC', marginHorizontal: 16 },
+  footer: { marginTop: 40, paddingHorizontal: 24, alignItems: 'center' },
+  logoutBtn: { 
+    flexDirection: 'row', alignItems: 'center', 
+    paddingVertical: 14, paddingHorizontal: 32, 
+    borderRadius: 16, backgroundColor: '#FEF2F2',
+    borderWidth: 1, borderColor: '#FEE2E2'
+  },
+  logoutText: { color: '#EF4444', fontWeight: '700', marginLeft: 10 },
+  versionText: { marginTop: 24, color: '#CBD5E1', fontWeight: '500' },
 });

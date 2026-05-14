@@ -65,6 +65,8 @@ export const submitReport = async (data: ReportData) => {
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('Attachments')
+
+
         .upload(filePath, arrayBuffer, {
           contentType: `image/${fileExt === 'jpg' || fileExt === 'jpeg' ? 'jpeg' : fileExt}`,
           cacheControl: '3600',
@@ -105,6 +107,7 @@ export const submitReport = async (data: ReportData) => {
 
 export const getUserReports = async (): Promise<ReportWithAttachments[]> => {
   const { data: userData, error: authError } = await supabase.auth.getUser();
+
   if (authError || !userData?.user) {
     throw new Error('User must be authenticated to fetch reports');
   }
@@ -119,20 +122,29 @@ export const getUserReports = async (): Promise<ReportWithAttachments[]> => {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching reports:', error);
     return [];
   }
 
-  // Transform file paths to public URLs for the UI
-  const reportsWithUrls = data?.map((report: any) => ({
-    ...report,
-    attachments: report.attachments?.map((att: any) => ({
-      ...att,
-      file_url: att.file_url.startsWith('http') 
-        ? att.file_url 
-        : supabase.storage.from('Attachments').getPublicUrl(att.file_url).data.publicUrl
-    }))
-  }));
+
+  const reportsWithUrls = data?.map((report: any) => {
+    return {
+      ...report,
+      attachments: report.attachments ? report.attachments.map((att: any) => {
+        const { data: { publicUrl } } = supabase.storage.from('Attachments').getPublicUrl(att.file_url);
+        
+        return {
+          ...att,
+          file_url: att.file_url.startsWith('http') ? att.file_url : publicUrl
+        };
+      }) : []
+    };
+  });
+
+
+
+
+
+
   
   return (reportsWithUrls || []) as ReportWithAttachments[];
 };

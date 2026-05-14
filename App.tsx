@@ -2,8 +2,8 @@ import 'react-native-url-polyfill/auto';
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { GluestackUIProvider } from '@gluestack-ui/themed';
-import { config } from '@gluestack-ui/config';
+import { PaperProvider } from 'react-native-paper';
+import { theme } from './theme';
 import { AppNavigator } from './navigation/AppNavigator';
 
 import { LogBox } from 'react-native';
@@ -16,12 +16,12 @@ LogBox.ignoreLogs([
 
 export default function App() {
   return (
-    <GluestackUIProvider config={config}>
+    <PaperProvider theme={theme}>
       <SafeAreaProvider>
         <NavigationContainer>
           <AppNavigator />
         </NavigationContainer>
       </SafeAreaProvider>
-    </GluestackUIProvider>
+    </PaperProvider>
   );
 }

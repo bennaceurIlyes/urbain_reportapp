@@ -1,46 +1,44 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, RefreshControl, Dimensions, Platform, ScrollView } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { View, StyleSheet, FlatList, RefreshControl, Dimensions, TouchableOpacity, Image } from 'react-native';
 import { 
-  Box, 
-  Heading, 
-  VStack, 
-  HStack, 
-  Icon,
-  SearchIcon,
-  Fab,
-  FabIcon,
-  AddIcon,
-  Pressable
-} from '@gluestack-ui/themed';
+  Text, 
+  useTheme, 
+  ActivityIndicator,
+  IconButton,
+} from 'react-native-paper';
 import { useAuth } from '../hooks/useAuth';
-import { supabase } from '../services/supabaseConfig';
 import { getUserReports, ReportWithAttachments } from '../services/api';
-import { SkeletonCard } from '../components/SkeletonCard';
-import { Button } from '../components/Button';
-import { MapPin, Calendar, AlertCircle } from 'lucide-react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
 export const HomeScreen = ({ navigation }: any) => {
   const { user } = useAuth();
+  const theme = useTheme();
   const [reports, setReports] = useState<ReportWithAttachments[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-
   const fetchReports = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user found in HomeScreen, skipping fetch');
+      return;
+    }
+    
+    console.log('HomeScreen: Fetching reports...');
     try {
       const data = await getUserReports();
+      console.log('HomeScreen: Reports fetched successfully, count:', data.length);
       setReports(data);
     } catch (error) {
-      console.error(error);
+      console.error('HomeScreen: Fetch error:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
+
 
   useEffect(() => {
     fetchReports();
@@ -55,130 +53,97 @@ export const HomeScreen = ({ navigation }: any) => {
     fetchReports();
   };
 
-
-
-  const getPriorityInfo = (priority: number) => {
+  const getPriorityColor = (priority: number) => {
     switch(priority) {
-      case 1: return { label: 'Low', color: '#34C759' };
-      case 2: return { label: 'Medium', color: '#FF9500' };
-      case 3: return { label: 'High', color: '#FF3B30' };
-      default: return { label: 'Unknown', color: '#8E8E93' };
+      case 1: return '#10B981'; // Green
+      case 2: return '#F59E0B'; // Amber
+      case 3: return '#EF4444'; // Red
+      default: return '#94A3B8';
     }
   };
 
   const getStatusInfo = (status: number) => {
     switch(status) {
-      case 0: return { label: 'PENDING', color: '#8E8E93' };
-      case 1: return { label: 'IN PROGRESS', color: '#007AFF' };
-      case 2: return { label: 'RESOLVED', color: '#34C759' };
-      default: return { label: 'UNKNOWN', color: '#8E8E93' };
+      case 0: return { label: 'Pending', color: '#64748B' };
+      case 1: return { label: 'In Progress', color: '#3B82F6' };
+      case 2: return { label: 'Resolved', color: '#10B981' };
+      default: return { label: 'Unknown', color: '#94A3B8' };
     }
   };
 
-  const renderSkeleton = () => (
-    <VStack space="md" p="$4">
-      {[1, 2, 3].map((i) => (
-        <SkeletonCard key={i} />
-      ))}
-    </VStack>
-  );
-
   const renderItem = ({ item }: { item: ReportWithAttachments }) => {
     const imageUrl = item.attachments?.length > 0 ? item.attachments[0].file_url : null;
-    const priority = getPriorityInfo(item.priority);
+
     const status = getStatusInfo(item.status);
-    console.log(`Report ${item.id} image URL:`, imageUrl);
+    const priorityColor = getPriorityColor(item.priority);
     
     return (
-      <Pressable onPress={() => navigation.navigate('ReportDetails', { report: item })}>
-        <Box 
-          bg="$white" 
-          p="$4" 
-          borderRadius="$2xl" 
-          mb="$4" 
-          borderWidth={1}
-          borderColor="rgba(0,0,0,0.05)"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.05,
-            shadowRadius: 12,
-            elevation: 3
-          }}
-        >
-          <VStack space="sm">
-            <HStack justifyContent="space-between" alignItems="flex-start">
-              <VStack flex={1}>
-                <Heading size="md" color="$textLight900" numberOfLines={1}>
-                  {item.title}
-                </Heading>
-                <HStack alignItems="center" space="xs" mt="$1">
-                  <MapPin size={12} color="#8E8E93" />
-                  <Text style={styles.footerText}>Location Tagged</Text>
-                </HStack>
-              </VStack>
-              <Box px="$3" py="$1" borderRadius="$full" bg={status.color + '15'}>
-                <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
-              </Box>
-            </HStack>
+      <TouchableOpacity 
+        style={styles.card} 
+        activeOpacity={0.9}
+        onPress={() => navigation.navigate('ReportDetails', { report: item })}
+      >
+        <View style={styles.cardInner}>
+          {imageUrl && (
+            <Image source={{ uri: imageUrl }} style={styles.cardImage} />
+          )}
+          <View style={styles.cardBody}>
+            <View style={styles.cardHeader}>
+              <View style={[styles.statusDot, { backgroundColor: status.color }]} />
+              <Text variant="labelMedium" style={[styles.statusText, { color: status.color }]}>
+                {status.label}
+              </Text>
+              <Text style={styles.dotSeparator}>•</Text>
+              <Text variant="labelMedium" style={styles.dateText}>
+                {new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+              </Text>
+            </View>
+            
+            <Text variant="titleMedium" style={styles.cardTitle} numberOfLines={1}>
+              {item.title}
+            </Text>
+            
+            <Text variant="bodyMedium" style={styles.cardDesc} numberOfLines={2}>
+              {item.description}
+            </Text>
 
-            <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
-            
-            {imageUrl && (
-              <Box mt="$2" borderRadius="$xl" overflow="hidden" height={180}>
-                <Image 
-                  source={{ uri: imageUrl }} 
-                  style={styles.image} 
-                  onError={(e) => console.log(`Error loading image for report ${item.id}:`, e.nativeEvent.error)}
-                />
-              </Box>
-            )}
-            
-            <HStack justifyContent="space-between" alignItems="center" mt="$2">
-              <HStack space="xs" alignItems="center">
-                <Calendar size={14} color="#8E8E93" />
-                <Text style={styles.footerText}>{new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</Text>
-              </HStack>
-              <HStack space="xs" alignItems="center">
-                <Box w={8} h={8} borderRadius="$full" bg={priority.color} />
-                <Text style={[styles.priorityText, { color: priority.color }]}>{priority.label}</Text>
-              </HStack>
-            </HStack>
-          </VStack>
-        </Box>
-      </Pressable>
+            <View style={styles.cardFooter}>
+              <View style={styles.locationContainer}>
+                <MaterialCommunityIcons name="map-marker-outline" size={14} color="#64748B" />
+                <Text variant="bodySmall" style={styles.footerText}>Location Tagged</Text>
+              </View>
+              <View style={[styles.priorityBadge, { backgroundColor: priorityColor + '15' }]}>
+                <Text variant="labelSmall" style={{ color: priorityColor, fontWeight: '700' }}>
+                  {item.priority === 3 ? 'High' : item.priority === 2 ? 'Medium' : 'Low'}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </TouchableOpacity>
     );
   };
 
   return (
-    <View style={styles.container}>
-      {/* Glass Effect Header */}
-      <Box style={styles.headerWrapper}>
-        <BlurView intensity={90} tint="light" style={styles.blurContainer}>
-          <HStack justifyContent="space-between" alignItems="center" px="$6" pt={Platform.OS === 'ios' ? 70 : 40} pb="$4">
-            <VStack space="xs">
-              <Heading size="xl" color="#006233">
-                🇩🇿 Urban Report
-              </Heading>
-              <Text style={styles.greetingText}>Algerian Citizen Portal</Text>
-            </VStack>
-
-          </HStack>
-        </BlurView>
-      </Box>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={styles.topHeader}>
+        <View style={styles.userSection}>
+          <Text variant="labelLarge" style={styles.greeting}>Good morning</Text>
+          <Text variant="displaySmall" style={styles.headerTitle}>My Reports</Text>
+        </View>
+        <TouchableOpacity 
+          style={styles.profileButton}
+          onPress={() => navigation.navigate('Profile')}
+        >
+          <MaterialCommunityIcons name="account-circle-outline" size={28} color="#0F172A" />
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.content}>
-
-
-        <HStack justifyContent="space-between" alignItems="center" mb="$4" px="$1" mt="$4">
-          <VStack>
-            <Heading size="lg" color="$textLight900">My Submissions</Heading>
-            <Text style={{ fontSize: 12, color: '#8E8E93' }}>Only showing issues you reported</Text>
-          </VStack>
-        </HStack>
-        
         {loading ? (
-          renderSkeleton()
+          <View style={styles.loader}>
+            <ActivityIndicator size="small" color="#1B4FD8" />
+          </View>
         ) : (
           <FlatList
             data={reports}
@@ -188,84 +153,113 @@ export const HomeScreen = ({ navigation }: any) => {
               <RefreshControl 
                 refreshing={refreshing} 
                 onRefresh={onRefresh} 
-                tintColor="#006233" 
-                colors={['#006233']}
+                tintColor="#1B4FD8"
               />
             }
             contentContainerStyle={styles.listContainer}
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
-              <VStack alignItems="center" justifyContent="center" mt="$20" space="lg">
-                <Box bg="$primary50" p="$6" borderRadius="$full">
-                  <AlertCircle size={48} color="#006233" strokeWidth={1.5} />
-                </Box>
-                <VStack space="xs" alignItems="center">
-                  <Heading size="md" textAlign="center">No issues reported</Heading>
-                  <Text style={styles.emptySubtext}>Your neighborhood looks clean! Or you can be the first to report something.</Text>
-                </VStack>
-                <Button 
-                  title="Report New Issue" 
-                  onPress={() => navigation.navigate('Report')}
-                  variant="outline"
-                  style={{ marginTop: 10 }}
-                />
-              </VStack>
+              <View style={styles.emptyState}>
+                <MaterialCommunityIcons name="clipboard-text-outline" size={64} color="#E2E8F0" />
+                <Text variant="headlineSmall" style={styles.emptyTitle}>No reports yet</Text>
+                <Text variant="bodyMedium" style={styles.emptySubtext}>
+                  Tap the button below to report your first urban issue.
+                </Text>
+              </View>
             }
           />
         )}
       </View>
 
-      <Fab
-        size="lg"
-        placement="bottom right"
+      <TouchableOpacity 
+        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
         onPress={() => navigation.navigate('Report')}
-        bg="#006233"
-        style={styles.fab}
-        m="$8"
+        activeOpacity={0.8}
       >
-        <FabIcon as={AddIcon} />
-      </Fab>
-    </View>
+        <MaterialCommunityIcons name="plus" size={32} color="#FFFFFF" />
+      </TouchableOpacity>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FB' },
-  headerWrapper: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
+  container: { flex: 1 },
+  topHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'flex-end', 
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 20
   },
-  blurContainer: {
-    paddingBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
+  userSection: { flex: 1 },
+  greeting: { color: '#64748B', fontWeight: '500', marginBottom: 4 },
+  headerTitle: { fontWeight: '800', letterSpacing: -0.5 },
+  profileButton: { 
+    width: 48, 
+    height: 48, 
+    borderRadius: 24, 
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
   },
-  greetingText: { fontSize: 13, color: '#006233', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
-  userName: { letterSpacing: -0.5 },
-  content: { flex: 1, paddingTop: Platform.OS === 'ios' ? 120 : 100, paddingHorizontal: 20 },
-  sectionLabel: { fontSize: 12, fontWeight: '800', color: '#8E8E93', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, paddingLeft: 4 },
-  filterContainer: { paddingVertical: 5, paddingRight: 30 },
-  seeAll: { color: '#006233', fontWeight: '700', fontSize: 14 },
-  listContainer: { paddingBottom: 100 },
-  categoryText: { fontSize: 12, color: '#8E8E93', fontWeight: '600' },
-  statusText: { fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
-  cardDesc: { fontSize: 15, color: '#666', lineHeight: 22, marginTop: 10 },
-  image: { width: '100%', height: 200, resizeMode: 'cover' },
-  footerText: { fontSize: 12, color: '#8E8E93', fontWeight: '500' },
-  priorityText: { fontSize: 12, fontWeight: '700' },
-  emptySubtext: { fontSize: 15, color: '#8E8E93', textAlign: 'center', paddingHorizontal: 40, lineHeight: 22 },
+  content: { flex: 1 },
+  listContainer: { paddingHorizontal: 20, paddingBottom: 120 },
+  card: {
+    marginBottom: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 12,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    overflow: 'hidden'
+  },
+  cardInner: { flexDirection: 'column' },
+  cardImage: { width: '100%', height: 180, backgroundColor: '#F8FAFC' },
+  cardBody: { padding: 20 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  statusDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
+  statusText: { fontWeight: '700', letterSpacing: 0.2 },
+  dotSeparator: { marginHorizontal: 8, color: '#CBD5E1' },
+  dateText: { color: '#64748B', fontWeight: '500' },
+  cardTitle: { fontWeight: '700', color: '#0F172A', marginBottom: 6 },
+  cardDesc: { color: '#64748B', lineHeight: 20, marginBottom: 16 },
+  cardFooter: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F8FAFC'
+  },
+  locationContainer: { flexDirection: 'row', alignItems: 'center' },
+  footerText: { color: '#64748B', marginLeft: 6, fontWeight: '500' },
+  priorityBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 80, paddingHorizontal: 40 },
+  emptyTitle: { fontWeight: '700', marginTop: 24, color: '#0F172A' },
+  emptySubtext: { textAlign: 'center', marginTop: 8, color: '#64748B', lineHeight: 22 },
   fab: {
+    position: 'absolute',
+    bottom: 100,
+    right: 24,
     width: 64,
     height: 64,
     borderRadius: 32,
-    shadowColor: '#006233',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#1B4FD8',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 10,
-  }
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
+    zIndex: 100
+  },
 });
 
