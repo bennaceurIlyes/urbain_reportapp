@@ -14,27 +14,56 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, borderRadius, typography } from '../theme';
 import { useLanguage } from '../hooks/useLanguage';
 import { LanguageToggle } from '../components/LanguageToggle';
-import Svg, { Path, Pattern, Rect, Defs, Circle } from 'react-native-svg';
+import Svg, { Path, Pattern, Rect, Defs } from 'react-native-svg';
 
 const { width, height } = Dimensions.get('window');
 
-/** Algerian National Flag SVG */
+/**
+ * Algerian National Flag SVG
+ * Based on Law No. 63-145 proportions (2:3 ratio, 900×600 viewBox)
+ * - Crescent: outer r=150, inner r=120, inner center offset 25px right
+ * - Star: 5-pointed, inscribed in r=75 circle, centered at (490, 300)
+ */
 const AlgerianFlag = () => (
   <View style={flagStyles.container}>
     <View style={flagStyles.shadowWrapper}>
       <Svg width="90" height="60" viewBox="0 0 900 600">
-        {/* Green half */}
+        {/* Green half (hoist side) */}
         <Rect x="0" y="0" width="450" height="600" fill="#006233" />
-        {/* White half */}
+        {/* White half (fly side) */}
         <Rect x="450" y="0" width="450" height="600" fill="#FFFFFF" />
-        {/* Red crescent */}
-        <Circle cx="450" cy="300" r="150" fill="#D21034" />
-        <Circle cx="475" cy="300" r="120" fill="#FFFFFF" />
-        {/* Restore green over the white circle on the left side */}
-        <Circle cx="475" cy="300" r="120" fill="#006233" clipPath="url(#leftClip)" />
-        {/* Red star */}
+        {/* Red crescent — constructed as a compound path with two arcs */}
         <Path
-          d="M490 230 L504 272 L548 272 L512 298 L524 340 L490 314 L456 340 L468 298 L432 272 L476 272 Z"
+          d={[
+            // Outer arc (r=150, center at 450,300) — full circle path
+            'M450,150',
+            'A150,150 0 1,0 450,450',
+            'A150,150 0 1,0 450,150',
+            'Z',
+            // Inner cutout (r=120, center offset to 475,300) — reverse winding
+            'M475,180',
+            'A120,120 0 1,1 475,420',
+            'A120,120 0 1,1 475,180',
+            'Z',
+          ].join(' ')}
+          fill="#D21034"
+          fillRule="evenodd"
+        />
+        {/* Red 5-pointed star — centered at (490, 300), outer r=75 */}
+        <Path
+          d={[
+            'M490,225',          // top point
+            'L506.36,271.67',    // inner right-top
+            'L556.36,271.67',    // outer right-top
+            'L515.68,300',       // inner right-bottom
+            'L531.36,346.67',    // outer right-bottom
+            'L490,318.33',       // inner bottom center
+            'L448.64,346.67',    // outer left-bottom
+            'L464.32,300',       // inner left-bottom
+            'L423.64,271.67',    // outer left-top
+            'L473.64,271.67',   // inner left-top
+            'Z',
+          ].join(' ')}
           fill="#D21034"
         />
       </Svg>
