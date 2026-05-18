@@ -18,20 +18,42 @@ import Svg, { Path, Pattern, Rect, Defs, Circle } from 'react-native-svg';
 
 const { width, height } = Dimensions.get('window');
 
-/** Crescent and star SVG icon */
-const CrescentStar = () => (
-  <Svg width="48" height="48" viewBox="0 0 48 48">
-    <Circle cx="24" cy="24" r="16" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
-    <Path
-      d="M30 12 C22 14 18 22 20 30 C14 26 12 18 16 12 C20 8 28 8 30 12Z"
-      fill="rgba(255,255,255,0.9)"
-    />
-    <Path
-      d="M30 18 L31 21 L34 21 L32 23 L33 26 L30 24 L27 26 L28 23 L26 21 L29 21Z"
-      fill="rgba(255,255,255,0.9)"
-    />
-  </Svg>
+/** Algerian National Flag SVG */
+const AlgerianFlag = () => (
+  <View style={flagStyles.container}>
+    <View style={flagStyles.shadowWrapper}>
+      <Svg width="90" height="60" viewBox="0 0 900 600">
+        {/* Green half */}
+        <Rect x="0" y="0" width="450" height="600" fill="#006233" />
+        {/* White half */}
+        <Rect x="450" y="0" width="450" height="600" fill="#FFFFFF" />
+        {/* Red crescent */}
+        <Circle cx="450" cy="300" r="150" fill="#D21034" />
+        <Circle cx="475" cy="300" r="120" fill="#FFFFFF" />
+        {/* Restore green over the white circle on the left side */}
+        <Circle cx="475" cy="300" r="120" fill="#006233" clipPath="url(#leftClip)" />
+        {/* Red star */}
+        <Path
+          d="M490 230 L504 272 L548 272 L512 298 L524 340 L490 314 L456 340 L468 298 L432 272 L476 272 Z"
+          fill="#D21034"
+        />
+      </Svg>
+    </View>
+  </View>
 );
+
+const flagStyles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  shadowWrapper: {
+    borderRadius: 6,
+    overflow: 'hidden',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+});
 
 /** Zellij divider line */
 const ZellijDivider = () => (
@@ -98,7 +120,13 @@ export const LoginScreen = ({ navigation }: any) => {
             </Svg>
 
             <View style={styles.headerContent}>
-              <CrescentStar />
+              <AlgerianFlag />
+              <Text style={styles.republicName}>
+                {lang === 'ar'
+                  ? 'الجمهورية الجزائرية الديمقراطية الشعبية'
+                  : 'République Algérienne\nDémocratique et Populaire'}
+              </Text>
+              <View style={styles.goldDivider} />
               <Text style={[styles.appName, isRTL && styles.textRTL]}>
                 {t('appName')}
               </Text>
@@ -218,11 +246,27 @@ const styles = StyleSheet.create({
   headerContent: {
     alignItems: 'center',
   },
+  republicName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+    lineHeight: 22,
+    letterSpacing: 0.3,
+  },
+  goldDivider: {
+    width: 60,
+    height: 2,
+    backgroundColor: '#D4AF37',
+    borderRadius: 1,
+    marginVertical: 10,
+    opacity: 0.7,
+  },
   appName: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginTop: spacing.md,
+    marginTop: spacing.xs,
     textAlign: 'center',
   },
   appSubtitle: {
