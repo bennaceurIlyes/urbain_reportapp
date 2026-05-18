@@ -1,31 +1,34 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl, Dimensions, TouchableOpacity, Image } from 'react-native';
-import { 
-  Text, 
-  useTheme, 
-  ActivityIndicator,
-  IconButton,
-} from 'react-native-paper';
+import { View, StyleSheet, FlatList, RefreshControl, TouchableOpacity, Animated } from 'react-native';
+import { Text, ActivityIndicator } from 'react-native-paper';
 import { useAuth } from '../hooks/useAuth';
 import { getUserReports, ReportWithAttachments } from '../services/api';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-const { width } = Dimensions.get('window');
+import { GovHeader } from '../components/GovHeader';
+import { ReportCard } from '../components/ReportCard';
+import { EmptyState } from '../components/EmptyState';
+import { SkeletonCard } from '../components/SkeletonCard';
+import { LanguageToggle } from '../components/LanguageToggle';
+import { colors, spacing, shadows, toArabicNumeral } from '../theme';
+import { useLanguage } from '../hooks/useLanguage';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRef } from 'react';
 
 export const HomeScreen = ({ navigation }: any) => {
   const { user } = useAuth();
-  const theme = useTheme();
+  const { t, lang, isRTL } = useLanguage();
+  const insets = useSafeAreaInsets();
   const [reports, setReports] = useState<ReportWithAttachments[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const fabScale = useRef(new Animated.Value(1)).current;
 
   const fetchReports = async () => {
     if (!user) {
       console.log('No user found in HomeScreen, skipping fetch');
       return;
     }
-    
+
     console.log('HomeScreen: Fetching reports...');
     try {
       const data = await getUserReports();
@@ -38,7 +41,6 @@ export const HomeScreen = ({ navigation }: any) => {
       setRefreshing(false);
     }
   };
-
 
   useEffect(() => {
     fetchReports();
@@ -53,213 +55,155 @@ export const HomeScreen = ({ navigation }: any) => {
     fetchReports();
   };
 
-  const getPriorityColor = (priority: number) => {
-    switch(priority) {
-      case 1: return '#10B981'; // Green
-      case 2: return '#F59E0B'; // Amber
-      case 3: return '#EF4444'; // Red
-      default: return '#94A3B8';
-    }
+  // Stats calculation
+  const totalReports = reports.length;
+  const pendingReports = reports.filter(r => r.status === 0 || r.status === 'pending').length;
+  const resolvedReports = reports.filter(r => r.status === 2 || r.status === 'completed' || r.status === 'approved').length;
+
+  const formatNum = (n: number) => toArabicNumeral(n, lang);
+
+  const onFabPressIn = () => {
+    Animated.spring(fabScale, { toValue: 0.9, useNativeDriver: true, speed: 50 }).start();
+  };
+  const onFabPressOut = () => {
+    Animated.spring(fabScale, { toValue: 1, useNativeDriver: true, speed: 50 }).start();
   };
 
-  const getStatusInfo = (status: number) => {
-    switch(status) {
-      case 0: return { label: 'Pending', color: '#64748B' };
-      case 1: return { label: 'In Progress', color: '#3B82F6' };
-      case 2: return { label: 'Resolved', color: '#10B981' };
-      default: return { label: 'Unknown', color: '#94A3B8' };
-    }
-  };
-
-  const renderItem = ({ item }: { item: ReportWithAttachments }) => {
-    const imageUrl = item.attachments?.length > 0 ? item.attachments[0].file_url : null;
-
-    const status = getStatusInfo(item.status);
-    const priorityColor = getPriorityColor(item.priority);
-    
-    return (
-      <TouchableOpacity 
-        style={styles.card} 
-        activeOpacity={0.9}
-        onPress={() => navigation.navigate('ReportDetails', { report: item })}
-      >
-        <View style={styles.cardInner}>
-          {imageUrl && (
-            <Image source={{ uri: imageUrl }} style={styles.cardImage} />
-          )}
-          <View style={styles.cardBody}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.statusDot, { backgroundColor: status.color }]} />
-              <Text variant="labelMedium" style={[styles.statusText, { color: status.color }]}>
-                {status.label}
-              </Text>
-              <Text style={styles.dotSeparator}>•</Text>
-              <Text variant="labelMedium" style={styles.dateText}>
-                {new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-              </Text>
-            </View>
-            
-            <Text variant="titleMedium" style={styles.cardTitle} numberOfLines={1}>
-              {item.title}
-            </Text>
-            
-            <Text variant="bodyMedium" style={styles.cardDesc} numberOfLines={2}>
-              {item.description}
-            </Text>
-
-            <View style={styles.cardFooter}>
-              <View style={styles.locationContainer}>
-                <MaterialCommunityIcons name="map-marker-outline" size={14} color="#64748B" />
-                <Text variant="bodySmall" style={styles.footerText}>Location Tagged</Text>
-              </View>
-              <View style={[styles.priorityBadge, { backgroundColor: priorityColor + '15' }]}>
-                <Text variant="labelSmall" style={{ color: priorityColor, fontWeight: '700' }}>
-                  {item.priority === 3 ? 'High' : item.priority === 2 ? 'Medium' : 'Low'}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
+  const renderStatsRow = () => (
+    <View style={[styles.statsRow, isRTL && styles.statsRowRTL]}>
+      <View style={styles.statCard}>
+        <Text style={styles.statNumber}>{formatNum(totalReports)}</Text>
+        <Text style={[styles.statLabel, isRTL && styles.statLabelRTL]}>{t('totalReports')}</Text>
+      </View>
+      <View style={[styles.statCard, { borderColor: colors.status.pending + '30' }]}>
+        <Text style={[styles.statNumber, { color: colors.status.pending }]}>{formatNum(pendingReports)}</Text>
+        <Text style={[styles.statLabel, isRTL && styles.statLabelRTL]}>{t('pendingCount')}</Text>
+      </View>
+      <View style={[styles.statCard, { borderColor: colors.status.completed + '30' }]}>
+        <Text style={[styles.statNumber, { color: colors.status.completed }]}>{formatNum(resolvedReports)}</Text>
+        <Text style={[styles.statLabel, isRTL && styles.statLabelRTL]}>{t('resolvedCount')}</Text>
+      </View>
+    </View>
+  );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.topHeader}>
-        <View style={styles.userSection}>
-          <Text variant="labelLarge" style={styles.greeting}>Good morning</Text>
-          <Text variant="displaySmall" style={styles.headerTitle}>My Reports</Text>
-        </View>
-        <TouchableOpacity 
-          style={styles.profileButton}
-          onPress={() => navigation.navigate('Profile')}
-        >
-          <MaterialCommunityIcons name="account-circle-outline" size={28} color="#0F172A" />
-        </TouchableOpacity>
-      </View>
+    <View style={styles.container}>
+      <GovHeader
+        title={t('myReports')}
+        subtitle={t('ministry')}
+        badge={totalReports > 0 ? formatNum(totalReports) : undefined}
+        rightElement={<LanguageToggle />}
+      />
 
       <View style={styles.content}>
         {loading ? (
-          <View style={styles.loader}>
-            <ActivityIndicator size="small" color="#1B4FD8" />
+          <View style={styles.skeletonContainer}>
+            {renderStatsRow()}
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
           </View>
         ) : (
           <FlatList
             data={reports}
             keyExtractor={item => item.id}
-            renderItem={renderItem}
+            renderItem={({ item }) => (
+              <ReportCard
+                report={item}
+                onPress={() => navigation.navigate('ReportDetails', { report: item })}
+              />
+            )}
             refreshControl={
-              <RefreshControl 
-                refreshing={refreshing} 
-                onRefresh={onRefresh} 
-                tintColor="#1B4FD8"
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.republicGreen}
+                colors={[colors.republicGreen]}
               />
             }
-            contentContainerStyle={styles.listContainer}
+            contentContainerStyle={[styles.listContainer, { paddingBottom: 120 + insets.bottom }]}
             showsVerticalScrollIndicator={false}
-            ListEmptyComponent={
-              <View style={styles.emptyState}>
-                <MaterialCommunityIcons name="clipboard-text-outline" size={64} color="#E2E8F0" />
-                <Text variant="headlineSmall" style={styles.emptyTitle}>No reports yet</Text>
-                <Text variant="bodyMedium" style={styles.emptySubtext}>
-                  Tap the button below to report your first urban issue.
-                </Text>
-              </View>
-            }
+            ListHeaderComponent={renderStatsRow}
+            ListEmptyComponent={<EmptyState type="no-reports" />}
           />
         )}
       </View>
 
-      <TouchableOpacity 
-        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
-        onPress={() => navigation.navigate('Report')}
-        activeOpacity={0.8}
-      >
-        <MaterialCommunityIcons name="plus" size={32} color="#FFFFFF" />
-      </TouchableOpacity>
-    </SafeAreaView>
+      {/* FAB */}
+      <Animated.View style={[styles.fabContainer, isRTL ? styles.fabLeft : styles.fabRight, { transform: [{ scale: fabScale }] }]}>
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => navigation.navigate('Report')}
+          onPressIn={onFabPressIn}
+          onPressOut={onFabPressOut}
+          activeOpacity={1}
+          accessibilityLabel={t('newReport')}
+          accessibilityRole="button"
+        >
+          <MaterialCommunityIcons name="plus" size={28} color="#FFFFFF" />
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  topHeader: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'flex-end', 
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 20
-  },
-  userSection: { flex: 1 },
-  greeting: { color: '#64748B', fontWeight: '500', marginBottom: 4 },
-  headerTitle: { fontWeight: '800', letterSpacing: -0.5 },
-  profileButton: { 
-    width: 48, 
-    height: 48, 
-    borderRadius: 24, 
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
+  container: { flex: 1, backgroundColor: colors.offWhite },
   content: { flex: 1 },
-  listContainer: { paddingHorizontal: 20, paddingBottom: 120 },
-  card: {
-    marginBottom: 20,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 12,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-    overflow: 'hidden'
+  skeletonContainer: { paddingHorizontal: spacing.md, paddingTop: spacing.md },
+  listContainer: { paddingHorizontal: spacing.md },
+  statsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+    marginTop: spacing.md,
   },
-  cardInner: { flexDirection: 'column' },
-  cardImage: { width: '100%', height: 180, backgroundColor: '#F8FAFC' },
-  cardBody: { padding: 20 },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  statusDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
-  statusText: { fontWeight: '700', letterSpacing: 0.2 },
-  dotSeparator: { marginHorizontal: 8, color: '#CBD5E1' },
-  dateText: { color: '#64748B', fontWeight: '500' },
-  cardTitle: { fontWeight: '700', color: '#0F172A', marginBottom: 6 },
-  cardDesc: { color: '#64748B', lineHeight: 20, marginBottom: 16 },
-  cardFooter: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
+  statsRowRTL: {
+    flexDirection: 'row-reverse',
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: colors.cardWhite,
+    borderRadius: 12,
+    padding: spacing.md,
     alignItems: 'center',
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#F8FAFC'
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    ...shadows.card,
   },
-  locationContainer: { flexDirection: 'row', alignItems: 'center' },
-  footerText: { color: '#64748B', marginLeft: 6, fontWeight: '500' },
-  priorityBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 80, paddingHorizontal: 40 },
-  emptyTitle: { fontWeight: '700', marginTop: 24, color: '#0F172A' },
-  emptySubtext: { textAlign: 'center', marginTop: 8, color: '#64748B', lineHeight: 22 },
-  fab: {
+  statNumber: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.republicGreen,
+    marginBottom: 2,
+  },
+  statLabel: {
+    fontSize: 11,
+    color: colors.textMuted,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  statLabelRTL: {
+    textAlign: 'center',
+  },
+  fabContainer: {
     position: 'absolute',
-    bottom: 100,
-    right: 24,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    bottom: 90,
+    zIndex: 100,
+  },
+  fabRight: {
+    right: spacing.lg,
+  },
+  fabLeft: {
+    left: spacing.lg,
+  },
+  fab: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.republicGreen,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#1B4FD8',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
-    zIndex: 100
+    ...shadows.fab,
   },
 });
-

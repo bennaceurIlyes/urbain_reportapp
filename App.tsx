@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { PaperProvider } from 'react-native-paper';
 import { theme } from './theme';
 import { AppNavigator } from './navigation/AppNavigator';
+import { LanguageProvider } from './hooks/useLanguage';
 
 import { LogBox } from 'react-native';
 
@@ -18,9 +19,11 @@ export default function App() {
   return (
     <PaperProvider theme={theme}>
       <SafeAreaProvider>
-        <NavigationContainer>
-          <AppNavigator />
-        </NavigationContainer>
+        <LanguageProvider>
+          <NavigationContainer>
+            <AppNavigator />
+          </NavigationContainer>
+        </LanguageProvider>
       </SafeAreaProvider>
     </PaperProvider>
   );

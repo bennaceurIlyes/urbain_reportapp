@@ -1,158 +1,239 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, Image, Dimensions, Platform, TouchableOpacity, StatusBar } from 'react-native';
-import { 
-  Text, 
-  useTheme, 
-  Divider,
-} from 'react-native-paper';
+import { View, StyleSheet, ScrollView, Image, Dimensions, TouchableOpacity, StatusBar, Linking } from 'react-native';
+import { Text, Divider } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { colors, spacing, borderRadius, shadows, getStatusColor, toArabicNumeral } from '../theme';
+import { StatusBadge } from '../components/StatusBadge';
+import { PriorityBadge } from '../components/PriorityBadge';
+import { GovHeader } from '../components/GovHeader';
+import { useLanguage } from '../hooks/useLanguage';
+import { getStatusLabel } from '../i18n/strings';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const { width, height } = Dimensions.get('window');
+const { height } = Dimensions.get('window');
+
+/** Status timeline step component */
+const TimelineStep: React.FC<{
+  title: string;
+  subtitle: string;
+  time?: string;
+  completed: boolean;
+  current: boolean;
+  isLast: boolean;
+  isRTL: boolean;
+}> = ({ title, subtitle, time, completed, current, isLast, isRTL }) => {
+  return (
+    <View style={[tlStyles.item, isRTL && tlStyles.itemRTL]}>
+      <View style={tlStyles.lineColumn}>
+        <View style={[
+          tlStyles.dot,
+          completed && tlStyles.dotCompleted,
+          current && tlStyles.dotCurrent,
+        ]}>
+          {completed && <MaterialCommunityIcons name="check" size={10} color="#FFFFFF" />}
+        </View>
+        {!isLast && (
+          <View style={[
+            tlStyles.line,
+            completed && tlStyles.lineCompleted,
+          ]} />
+        )}
+      </View>
+      <View style={[tlStyles.content, isRTL && tlStyles.contentRTL]}>
+        <View style={[tlStyles.header, isRTL && tlStyles.headerRTL]}>
+          <Text style={[
+            tlStyles.title,
+            { opacity: completed || current ? 1 : 0.4 },
+            isRTL && tlStyles.titleRTL,
+          ]}>
+            {title}
+          </Text>
+          {time && <Text style={tlStyles.time}>{time}</Text>}
+        </View>
+        <Text style={[
+          tlStyles.subtitle,
+          { opacity: completed || current ? 0.7 : 0.3 },
+          isRTL && tlStyles.subtitleRTL,
+        ]}>
+          {subtitle}
+        </Text>
+      </View>
+    </View>
+  );
+};
 
 export const ReportDetailsScreen = ({ route, navigation }: any) => {
   const { report } = route.params;
-  const theme = useTheme();
+  const { t, lang, isRTL } = useLanguage();
+  const insets = useSafeAreaInsets();
 
-  // Handle location if it's a JSON string from the database
-  const location = typeof report.location === 'string' 
-    ? JSON.parse(report.location) 
+  const location = typeof report.location === 'string'
+    ? JSON.parse(report.location)
     : report.location;
 
   const imageUrl = report.attachments?.length > 0 ? report.attachments[0].file_url : null;
 
+  const statusColor = getStatusColor(report.status);
 
-
-  const getPriorityColor = (priority: number) => {
-    switch(priority) {
-      case 1: return '#10B981';
-      case 2: return '#F59E0B';
-      case 3: return '#EF4444';
-      default: return '#94A3B8';
+  // Determine which timeline steps are complete
+  const statusIndex = (() => {
+    switch (report.status) {
+      case 0: case 'pending': return 0;
+      case 'assigned': return 1;
+      case 1: case 'in_progress': return 2;
+      case 2: case 'completed': return 3;
+      case 'approved': return 4;
+      default: return 0;
     }
+  })();
+
+  const openMaps = () => {
+    if (!location?.latitude || !location?.longitude) return;
+    const url = `https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}`;
+    Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
   };
 
-  const getStatusInfo = (status: number) => {
-    switch(status) {
-      case 0: return { label: 'Pending Review', color: '#64748B', icon: 'clock-outline' };
-      case 1: return { label: 'In Progress', color: '#1B4FD8', icon: 'progress-wrench' };
-      case 2: return { label: 'Resolved', color: '#10B981', icon: 'check-circle' };
-      default: return { label: 'Unknown', color: '#94A3B8', icon: 'help-circle' };
-    }
-  };
-
-  const status = getStatusInfo(report.status);
-  const priorityColor = getPriorityColor(report.priority);
+  const timelineSteps = [
+    { title: t('reportCreated'), subtitle: t('receivedByServices') },
+    { title: t('underInvestigation'), subtitle: t('techTeamAssigned') },
+    { title: t('workInProgress'), subtitle: t('maintenanceOnSite') },
+    { title: t('resolved'), subtitle: t('issueFixed') },
+    { title: t('approved'), subtitle: t('approvedByAdmin') },
+  ];
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
-      
+
       <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
-        {/* Hero Section */}
+        {/* Hero Image */}
         <View style={styles.heroContainer}>
           {imageUrl ? (
-            <Image source={{ uri: imageUrl }} style={styles.heroImage} />
+            <Image source={{ uri: imageUrl }} style={styles.heroImage} accessibilityLabel={t('evidencePhoto')} />
           ) : (
             <View style={styles.placeholderImage}>
-              <MaterialCommunityIcons name="image-off-outline" size={64} color="#CBD5E1" />
+              <MaterialCommunityIcons name="image-off-outline" size={64} color={colors.borderLight} />
             </View>
           )}
           <LinearGradient
-            colors={['rgba(0,0,0,0.4)', 'transparent', 'rgba(0,0,0,0.1)']}
-            style={styles.gradient}
+            colors={['rgba(0,0,0,0.4)', 'transparent', 'rgba(0,0,0,0.08)']}
+            style={StyleSheet.absoluteFillObject}
           />
-          
-          <SafeAreaView style={styles.headerOverlay}>
-            <TouchableOpacity 
+
+          {/* Back button */}
+          <View style={[styles.headerOverlay, { paddingTop: insets.top + spacing.sm }]}>
+            <TouchableOpacity
               onPress={() => navigation.goBack()}
-              style={styles.backButton}
+              style={[styles.backButton, isRTL && styles.backButtonRTL]}
+              accessibilityLabel={t('back')}
+              accessibilityRole="button"
             >
-              <MaterialCommunityIcons name="chevron-left" size={28} color="#0F172A" />
+              <MaterialCommunityIcons name={isRTL ? 'chevron-right' : 'chevron-left'} size={28} color={colors.textPrimary} />
             </TouchableOpacity>
-          </SafeAreaView>
+          </View>
         </View>
 
-        {/* Content Section */}
+        {/* Content */}
         <View style={styles.contentCard}>
-          <View style={styles.statusRow}>
-            <View style={[styles.statusBadge, { backgroundColor: status.color + '15' }]}>
-              <MaterialCommunityIcons name={status.icon as any} size={16} color={status.color} />
-              <Text variant="labelLarge" style={[styles.statusText, { color: status.color }]}>
-                {status.label}
-              </Text>
-            </View>
-            <View style={[styles.priorityBadge, { borderColor: priorityColor }]}>
-              <Text variant="labelSmall" style={{ color: priorityColor, fontWeight: '800' }}>
-                {report.priority === 3 ? 'HIGH PRIORITY' : report.priority === 2 ? 'MEDIUM' : 'LOW'}
-              </Text>
-            </View>
+          {/* Status + Priority */}
+          <View style={[styles.badgeRow, isRTL && styles.badgeRowRTL]}>
+            <StatusBadge status={report.status} lang={lang} />
+            <PriorityBadge priority={report.priority} lang={lang} />
           </View>
 
-          <Text variant="displaySmall" style={styles.title}>{report.title}</Text>
-          
-          <View style={styles.metaRow}>
-            <View style={styles.metaItem}>
-              <MaterialCommunityIcons name="calendar-outline" size={16} color="#64748B" />
-              <Text variant="bodySmall" style={styles.metaText}>
-                {new Date(report.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+          {/* Title */}
+          <Text style={[styles.title, isRTL && styles.titleRTL]}>{report.title}</Text>
+
+          {/* Meta */}
+          <View style={[styles.metaRow, isRTL && styles.metaRowRTL]}>
+            <View style={[styles.metaItem, isRTL && styles.metaItemRTL]}>
+              <MaterialCommunityIcons name="calendar-outline" size={16} color={colors.textMuted} />
+              <Text style={styles.metaText}>
+                {new Date(report.created_at).toLocaleDateString(lang === 'ar' ? 'ar-DZ' : 'fr-DZ', {
+                  month: 'long', day: 'numeric', year: 'numeric'
+                })}
               </Text>
             </View>
-            <View style={styles.metaItem}>
-              <MaterialCommunityIcons name="map-marker-outline" size={16} color="#64748B" />
-              <Text variant="bodySmall" style={styles.metaText}>Location Verified</Text>
+            <View style={[styles.metaItem, isRTL && styles.metaItemRTL]}>
+              <MaterialCommunityIcons name="map-marker-outline" size={16} color={colors.textMuted} />
+              <Text style={styles.metaText}>{t('locationVerified')}</Text>
             </View>
           </View>
 
           <Divider style={styles.divider} />
 
-          <Text variant="titleMedium" style={styles.sectionTitle}>Description</Text>
-          <Text variant="bodyLarge" style={styles.description}>
-            {report.description}
-          </Text>
+          {/* Description */}
+          <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL]}>{t('description')}</Text>
+          <Text style={[styles.description, isRTL && styles.descriptionRTL]}>{report.description}</Text>
 
-          <View style={styles.infoGrid}>
+          {/* Info Cards */}
+          <View style={[styles.infoGrid, isRTL && styles.infoGridRTL]}>
             <View style={styles.infoCard}>
-              <Text variant="labelSmall" style={styles.infoLabel}>REPORT ID</Text>
-              <Text variant="titleSmall" style={styles.infoValue}>#{report.id.substring(0, 8).toUpperCase()}</Text>
-            </View>
-            <View style={styles.infoCard}>
-              <Text variant="labelSmall" style={styles.infoLabel}>LOCATION</Text>
-              <Text variant="titleSmall" style={styles.infoValue}>
-                {location?.latitude ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}` : 'N/A'}
+              <Text style={[styles.infoLabel, isRTL && styles.infoLabelRTL]}>{t('reportId')}</Text>
+              <Text style={[styles.infoValue, isRTL && styles.infoValueRTL]}>
+                #{report.id.substring(0, 8).toUpperCase()}
               </Text>
             </View>
+            <TouchableOpacity
+              style={styles.infoCard}
+              onPress={openMaps}
+              disabled={!location?.latitude}
+              activeOpacity={0.7}
+              accessibilityLabel={t('locationLabel')}
+              accessibilityRole="button"
+            >
+              <View style={[styles.locationCardInner, isRTL && styles.locationCardInnerRTL]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.infoLabel, isRTL && styles.infoLabelRTL]}>{t('locationLabel')}</Text>
+                  <Text style={[styles.infoValue, location?.latitude && { color: colors.republicGreen }, isRTL && styles.infoValueRTL]}>
+                    {location?.latitude
+                      ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
+                      : 'N/A'}
+                  </Text>
+                </View>
+                {location?.latitude && (
+                  <MaterialCommunityIcons name="map-marker-radius" size={24} color={colors.republicGreen} />
+                )}
+              </View>
+            </TouchableOpacity>
           </View>
 
-          <Text variant="titleMedium" style={styles.sectionTitle}>Progress Timeline</Text>
+          {/* Timeline */}
+          <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL]}>{t('progressTimeline')}</Text>
           <View style={styles.timeline}>
-            <TimelineItem 
-              title="Report Created" 
-              subtitle="Received by urban services" 
-              time={new Date(report.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              completed 
-              isLast={false} 
-            />
-            <TimelineItem 
-              title="Under Investigation" 
-              subtitle="Technical team assigned" 
-              completed={report.status >= 1} 
-              isLast={false} 
-            />
-            <TimelineItem 
-              title="Work in Progress" 
-              subtitle="Maintenance team on-site" 
-              completed={report.status >= 1.5} 
-              isLast={false} 
-            />
-            <TimelineItem 
-              title="Resolved" 
-              subtitle="Issue successfully fixed" 
-              completed={report.status >= 2} 
-              isLast 
-            />
+            {timelineSteps.map((step, index) => (
+              <TimelineStep
+                key={index}
+                title={step.title}
+                subtitle={step.subtitle}
+                time={index === 0
+                  ? new Date(report.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  : undefined}
+                completed={index < statusIndex}
+                current={index === statusIndex}
+                isLast={index === timelineSteps.length - 1}
+                isRTL={isRTL}
+              />
+            ))}
           </View>
+
+          {/* Completion images */}
+          {report.completion_images && report.completion_images.length > 0 && (
+            <>
+              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL]}>{t('completionImages')}</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.completionScroll}>
+                {report.completion_images.map((uri: string, i: number) => (
+                  <Image
+                    key={i}
+                    source={{ uri }}
+                    style={styles.completionImage}
+                    accessibilityLabel={`${t('completionImages')} ${i + 1}`}
+                  />
+                ))}
+              </ScrollView>
+            </>
+          )}
 
           <View style={{ height: 100 }} />
         </View>
@@ -161,81 +242,136 @@ export const ReportDetailsScreen = ({ route, navigation }: any) => {
   );
 };
 
-const TimelineItem = ({ title, subtitle, time, completed, isLast }: any) => {
-  return (
-    <View style={styles.timelineItem}>
-      <View style={styles.timelineLine}>
-        <View style={[styles.timelineDot, { backgroundColor: completed ? '#1B4FD8' : '#E2E8F0' }]}>
-          {completed && <MaterialCommunityIcons name="check" size={8} color="white" />}
-        </View>
-        {!isLast && <View style={[styles.line, { backgroundColor: completed ? '#1B4FD8' : '#E2E8F0' }]} />}
-      </View>
-      <View style={styles.timelineContent}>
-        <View style={styles.timelineHeader}>
-          <Text variant="titleSmall" style={[styles.timelineTitle, { opacity: completed ? 1 : 0.4 }]}>{title}</Text>
-          {time && <Text variant="labelSmall" style={styles.timelineTime}>{time}</Text>}
-        </View>
-        <Text variant="bodySmall" style={[styles.timelineSub, { opacity: completed ? 0.7 : 0.3 }]}>{subtitle}</Text>
-      </View>
-    </View>
-  );
-};
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  heroContainer: { height: height * 0.45, width: '100%' },
+  container: { flex: 1, backgroundColor: colors.offWhite },
+  heroContainer: { height: height * 0.4, width: '100%' },
   heroImage: { width: '100%', height: '100%', resizeMode: 'cover' },
-  placeholderImage: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center', backgroundColor: '#F1F5F9' },
-  gradient: { ...StyleSheet.absoluteFillObject },
-  headerOverlay: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: 20 },
-  backButton: { 
-    width: 44, height: 44, borderRadius: 22, 
-    backgroundColor: 'rgba(255,255,255,0.9)', 
+  placeholderImage: {
+    width: '100%', height: '100%',
     justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1, shadowRadius: 4
+    backgroundColor: colors.surfaceGreen,
   },
-  contentCard: { 
-    flex: 1, marginTop: -40, 
-    borderTopLeftRadius: 40, borderTopRightRadius: 40, 
-    backgroundColor: '#FFFFFF', padding: 28,
-    minHeight: height * 0.6
+  headerOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0,
+    paddingHorizontal: spacing.lg,
   },
-  statusRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  statusBadge: { 
-    flexDirection: 'row', alignItems: 'center', 
-    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100 
+  backButton: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    justifyContent: 'center', alignItems: 'center',
+    ...shadows.card,
   },
-  statusText: { marginLeft: 6, fontWeight: '700' },
-  priorityBadge: { 
-    paddingHorizontal: 10, paddingVertical: 4, 
-    borderRadius: 6, borderWidth: 1 
+  backButtonRTL: {
+    alignSelf: 'flex-end',
   },
-  title: { fontWeight: '800', color: '#0F172A', marginBottom: 16, letterSpacing: -1 },
-  metaRow: { flexDirection: 'row', gap: 20, marginBottom: 24 },
+  contentCard: {
+    flex: 1, marginTop: -32,
+    borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    backgroundColor: colors.cardWhite,
+    padding: spacing.lg,
+    minHeight: height * 0.6,
+  },
+  badgeRow: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', marginBottom: spacing.lg,
+  },
+  badgeRowRTL: { flexDirection: 'row-reverse' },
+  title: {
+    fontSize: 24, fontWeight: '700',
+    color: colors.textPrimary, marginBottom: spacing.md,
+    letterSpacing: -0.5, textAlign: 'left',
+  },
+  titleRTL: { textAlign: 'right' },
+  metaRow: { flexDirection: 'row', gap: spacing.lg, marginBottom: spacing.lg },
+  metaRowRTL: { flexDirection: 'row-reverse' },
   metaItem: { flexDirection: 'row', alignItems: 'center' },
-  metaText: { color: '#64748B', marginLeft: 6, fontWeight: '500' },
-  divider: { backgroundColor: '#F1F5F9', marginBottom: 24 },
-  sectionTitle: { fontWeight: '700', color: '#0F172A', marginBottom: 12, letterSpacing: 0.2 },
-  description: { color: '#475569', lineHeight: 26, marginBottom: 32 },
-  infoGrid: { flexDirection: 'row', gap: 12, marginBottom: 32 },
-  infoCard: { 
-    flex: 1, padding: 16, borderRadius: 20, 
-    backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#F1F5F9' 
+  metaItemRTL: { flexDirection: 'row-reverse' },
+  metaText: {
+    color: colors.textMuted, marginLeft: 6,
+    fontWeight: '500', fontSize: 13,
   },
-  infoLabel: { color: '#94A3B8', fontWeight: '700', marginBottom: 4 },
-  infoValue: { color: '#0F172A', fontWeight: '600' },
-  timeline: { marginTop: 8 },
-  timelineItem: { flexDirection: 'row', minHeight: 70 },
-  timelineLine: { alignItems: 'center', width: 20 },
-  timelineDot: { 
-    width: 20, height: 20, borderRadius: 10, 
-    justifyContent: 'center', alignItems: 'center', zIndex: 1 
+  divider: { backgroundColor: colors.borderLight, marginBottom: spacing.lg },
+  sectionTitle: {
+    fontSize: 16, fontWeight: '700',
+    color: colors.textPrimary, marginBottom: spacing.sm,
+    textAlign: 'left',
   },
-  line: { width: 2, flex: 1, marginVertical: -2 },
-  timelineContent: { flex: 1, marginLeft: 16, paddingBottom: 20 },
-  timelineHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  timelineTitle: { fontWeight: '700', color: '#0F172A' },
-  timelineTime: { color: '#94A3B8', fontWeight: '500' },
-  timelineSub: { color: '#64748B', marginTop: 2 },
+  sectionTitleRTL: { textAlign: 'right' },
+  description: {
+    color: colors.textSecondary, lineHeight: 26,
+    marginBottom: spacing.xl, fontSize: 15, textAlign: 'left',
+  },
+  descriptionRTL: { textAlign: 'right' },
+  infoGrid: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.xl },
+  infoGridRTL: { flexDirection: 'row-reverse' },
+  infoCard: {
+    flex: 1, padding: spacing.md,
+    borderRadius: borderRadius.card,
+    backgroundColor: colors.offWhite,
+    borderWidth: 1, borderColor: colors.borderLight,
+  },
+  infoLabel: {
+    color: colors.textMuted, fontWeight: '700',
+    marginBottom: 4, fontSize: 11, letterSpacing: 0.5,
+    textTransform: 'uppercase', textAlign: 'left',
+  },
+  infoLabelRTL: { textAlign: 'right' },
+  infoValue: {
+    color: colors.textPrimary, fontWeight: '600', fontSize: 13,
+    textAlign: 'left',
+  },
+  infoValueRTL: { textAlign: 'right' },
+  locationCardInner: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  locationCardInnerRTL: { flexDirection: 'row-reverse' },
+  timeline: { marginTop: spacing.sm, marginBottom: spacing.lg },
+  completionScroll: { marginBottom: spacing.lg },
+  completionImage: {
+    width: 120, height: 120,
+    borderRadius: borderRadius.badge,
+    marginRight: spacing.sm,
+    backgroundColor: colors.offWhite,
+  },
+});
+
+// ─── Timeline Styles ──────────────────────────────────────────────────────────
+const tlStyles = StyleSheet.create({
+  item: { flexDirection: 'row', minHeight: 65 },
+  itemRTL: { flexDirection: 'row-reverse' },
+  lineColumn: { alignItems: 'center', width: 24 },
+  dot: {
+    width: 22, height: 22, borderRadius: 11,
+    backgroundColor: colors.borderLight,
+    justifyContent: 'center', alignItems: 'center', zIndex: 1,
+  },
+  dotCompleted: { backgroundColor: colors.republicGreen },
+  dotCurrent: {
+    backgroundColor: colors.surfaceGreen,
+    borderWidth: 3, borderColor: colors.republicGreen,
+  },
+  line: {
+    width: 2, flex: 1,
+    backgroundColor: colors.borderLight, marginVertical: -2,
+  },
+  lineCompleted: { backgroundColor: colors.republicGreen },
+  content: { flex: 1, marginLeft: spacing.md, paddingBottom: spacing.md },
+  contentRTL: { marginLeft: 0, marginRight: spacing.md },
+  header: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerRTL: { flexDirection: 'row-reverse' },
+  title: {
+    fontWeight: '700', color: colors.textPrimary, fontSize: 14,
+    textAlign: 'left',
+  },
+  titleRTL: { textAlign: 'right' },
+  time: { color: colors.textMuted, fontWeight: '500', fontSize: 11 },
+  subtitle: {
+    color: colors.textSecondary, marginTop: 2, fontSize: 12,
+    textAlign: 'left',
+  },
+  subtitleRTL: { textAlign: 'right' },
 });

@@ -7,24 +7,26 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { ReportScreen } from '../screens/ReportScreen';
 import { ReportDetailsScreen } from '../screens/ReportDetailsScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { TeamLeaderHomeScreen } from '../screens/TeamLeaderHomeScreen';
+import { TeamLeaderReportDetailsScreen } from '../screens/TeamLeaderReportDetailsScreen';
+import { TeamLeaderCompletionUploadScreen } from '../screens/TeamLeaderCompletionUploadScreen';
 import { useAuth } from '../hooks/useAuth';
+import { useLanguage } from '../hooks/useLanguage';
 import { View, Platform, StyleSheet } from 'react-native';
-import { ActivityIndicator, useTheme } from 'react-native-paper';
+import { ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-
-const styles = StyleSheet.create({
-  activeIconContainer: {
-    padding: 2,
-  },
-});
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors, spacing } from '../theme';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-const TabNavigator = () => {
-  const theme = useTheme();
-  
+// ─── CITIZEN TAB NAVIGATOR ───────────────────────────────────────────────────
+const CitizenTabNavigator = () => {
+  const { t, isRTL } = useLanguage();
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -32,69 +34,77 @@ const TabNavigator = () => {
         tabBarShowLabel: true,
         tabBarStyle: {
           position: 'absolute',
-          bottom: 30,
-          left: 32,
-          right: 32,
-          height: 68,
-          borderRadius: 34,
-          backgroundColor: Platform.OS === 'ios' ? 'rgba(255, 255, 255, 0.9)' : '#FFFFFF',
-          borderWidth: 1,
-          borderColor: 'rgba(255, 255, 255, 0.5)',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 65 + insets.bottom,
+          backgroundColor: Platform.OS === 'ios' ? 'rgba(255,255,255,0.92)' : '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: colors.borderLight,
           elevation: 0,
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: 12 },
-          shadowOpacity: 0.08,
-          shadowRadius: 24,
-          paddingBottom: 0,
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
+          paddingBottom: insets.bottom,
         },
-        tabBarBackground: () => (
+        tabBarBackground: () =>
           Platform.OS === 'ios' ? (
-            <BlurView intensity={100} tint="light" style={StyleSheet.absoluteFill} />
-          ) : null
-        ),
-        tabBarActiveTintColor: '#1B4FD8',
-        tabBarInactiveTintColor: '#94A3B8',
+            <BlurView intensity={80} tint="light" style={StyleSheet.absoluteFill} />
+          ) : null,
+        tabBarActiveTintColor: colors.republicGreen,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '700',
-          marginBottom: 10,
-          textTransform: 'uppercase',
-          letterSpacing: 0.5
+          fontSize: 11,
+          fontWeight: '600',
+          marginBottom: 4,
         },
         tabBarIconStyle: {
-          marginTop: 10
-        }
+          marginTop: 6,
+        },
       }}
     >
-      <Tab.Screen 
-        name="MainHome" 
-        component={HomeScreen} 
+      <Tab.Screen
+        name="MainHome"
+        component={HomeScreen}
         options={{
-          tabBarLabel: 'Feed',
+          tabBarLabel: t('myReports'),
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : null}>
-              <MaterialCommunityIcons 
-                name={focused ? "layers" : "layers-outline"} 
-                size={22} 
-                color={color} 
+            <MaterialCommunityIcons
+              name={focused ? 'home' : 'home-outline'}
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="NewReport"
+        component={ReportScreen}
+        options={{
+          tabBarLabel: t('newReport'),
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? styles.activeIconBg : undefined}>
+              <MaterialCommunityIcons
+                name="plus-circle"
+                size={focused ? 28 : 24}
+                color={focused ? colors.republicGreen : color}
               />
             </View>
           ),
         }}
       />
-      <Tab.Screen 
-        name="Profile" 
-        component={ProfileScreen} 
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
         options={{
-          tabBarLabel: 'Settings',
+          tabBarLabel: t('profile'),
           tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconContainer : null}>
-              <MaterialCommunityIcons 
-                name={focused ? "account" : "account-outline"} 
-                size={24} 
-                color={color} 
-              />
-            </View>
+            <MaterialCommunityIcons
+              name={focused ? 'account' : 'account-outline'}
+              size={24}
+              color={color}
+            />
           ),
         }}
       />
@@ -102,44 +112,136 @@ const TabNavigator = () => {
   );
 };
 
+// ─── TEAM LEADER TAB NAVIGATOR ───────────────────────────────────────────────
+const TeamLeaderTabNavigator = () => {
+  const { t, isRTL } = useLanguage();
+  const insets = useSafeAreaInsets();
+
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarShowLabel: true,
+        tabBarStyle: {
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 65 + insets.bottom,
+          backgroundColor: Platform.OS === 'ios' ? 'rgba(255,255,255,0.92)' : '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: colors.borderLight,
+          elevation: 0,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
+          paddingBottom: insets.bottom,
+        },
+        tabBarBackground: () =>
+          Platform.OS === 'ios' ? (
+            <BlurView intensity={80} tint="light" style={StyleSheet.absoluteFill} />
+          ) : null,
+        tabBarActiveTintColor: colors.republicGreen,
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+          marginBottom: 4,
+        },
+        tabBarIconStyle: {
+          marginTop: 6,
+        },
+      }}
+    >
+      <Tab.Screen
+        name="TLHome"
+        component={TeamLeaderHomeScreen}
+        options={{
+          tabBarLabel: t('myTasks'),
+          tabBarIcon: ({ color, focused }) => (
+            <MaterialCommunityIcons
+              name={focused ? 'clipboard-list' : 'clipboard-list-outline'}
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="TLProfile"
+        component={ProfileScreen}
+        options={{
+          tabBarLabel: t('profile'),
+          tabBarIcon: ({ color, focused }) => (
+            <MaterialCommunityIcons
+              name={focused ? 'account' : 'account-outline'}
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+};
+
+// ─── ROOT NAVIGATOR ──────────────────────────────────────────────────────────
 export const AppNavigator = () => {
   const { user, loading } = useAuth();
-  const theme = useTheme();
+  const { isRTL } = useLanguage();
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.republicGreen} />
       </View>
     );
   }
 
+  const slideAnimation = isRTL ? 'slide_from_left' as const : 'slide_from_right' as const;
+
   return (
-    <Stack.Navigator 
-      screenOptions={{ 
+    <Stack.Navigator
+      screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: theme.colors.background }
+        contentStyle: { backgroundColor: colors.offWhite },
+        animation: slideAnimation,
       }}
     >
       {user ? (
-        <>
-          <Stack.Screen name="Tabs" component={TabNavigator} />
-          <Stack.Screen 
-            name="Report" 
-            component={ReportScreen} 
-            options={{ 
-              presentation: 'fullScreenModal',
-              animation: 'slide_from_bottom'
-            }}
-          />
-          <Stack.Screen 
-            name="ReportDetails" 
-            component={ReportDetailsScreen} 
-            options={{ 
-              animation: 'slide_from_right'
-            }}
-          />
-        </>
+        user.user_metadata?.role === 'team_leader' ? (
+          <>
+            <Stack.Screen name="TeamLeaderTabs" component={TeamLeaderTabNavigator} />
+            <Stack.Screen
+              name="TeamLeaderReportDetails"
+              component={TeamLeaderReportDetailsScreen}
+              options={{ animation: slideAnimation }}
+            />
+            <Stack.Screen
+              name="TeamLeaderCompletionUpload"
+              component={TeamLeaderCompletionUploadScreen}
+              options={{ animation: 'slide_from_bottom' }}
+            />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="Tabs" component={CitizenTabNavigator} />
+            <Stack.Screen
+              name="Report"
+              component={ReportScreen}
+              options={{
+                presentation: 'fullScreenModal',
+                animation: 'slide_from_bottom',
+              }}
+            />
+            <Stack.Screen
+              name="ReportDetails"
+              component={ReportDetailsScreen}
+              options={{ animation: slideAnimation }}
+            />
+          </>
+        )
       ) : (
         <>
           <Stack.Screen name="Login" component={LoginScreen} />
@@ -150,3 +252,14 @@ export const AppNavigator = () => {
   );
 };
 
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.offWhite,
+  },
+  activeIconBg: {
+    padding: 2,
+  },
+});

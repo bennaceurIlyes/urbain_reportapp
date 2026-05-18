@@ -1,193 +1,293 @@
 import React from 'react';
-import { View, StyleSheet, Alert, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { 
-  Text, 
-  useTheme, 
-  Divider,
-} from 'react-native-paper';
+import { View, StyleSheet, Alert, ScrollView, TouchableOpacity } from 'react-native';
+import { Text, Divider } from 'react-native-paper';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../services/supabaseConfig';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { GovHeader } from '../components/GovHeader';
+import { LanguageToggle } from '../components/LanguageToggle';
+import { colors, spacing, borderRadius, shadows } from '../theme';
+import { useLanguage } from '../hooks/useLanguage';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const ProfileScreen = ({ navigation }: any) => {
   const { user } = useAuth();
-  const theme = useTheme();
+  const { t, lang, isRTL } = useLanguage();
+  const insets = useSafeAreaInsets();
+
+  const role = user?.user_metadata?.role === 'team_leader' ? t('teamLeader') : t('citizen');
+  const initial = user?.email?.[0].toUpperCase() || 'U';
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
 
   const handleLogout = async () => {
     Alert.alert(
-      "Sign Out",
-      "Are you sure you want to log out of your account?",
+      t('logout'),
+      t('logoutConfirm'),
       [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Log Out", 
-          style: "destructive",
+        { text: t('cancel'), style: 'cancel' },
+        {
+          text: t('logout'),
+          style: 'destructive',
           onPress: async () => {
             const { error } = await supabase.auth.signOut();
-            if (error) Alert.alert("Error", error.message);
-          }
-        }
+            if (error) Alert.alert(t('error'), error.message);
+          },
+        },
       ]
     );
   };
 
   const ProfileItem = ({ icon, label, color, onPress, value }: any) => (
-    <TouchableOpacity style={styles.profileItem} onPress={onPress} activeOpacity={0.6}>
-      <View style={[styles.iconContainer, { backgroundColor: color + '10' }]}>
+    <TouchableOpacity
+      style={[styles.profileItem, isRTL && styles.profileItemRTL]}
+      onPress={onPress}
+      activeOpacity={0.6}
+      accessibilityLabel={label}
+      accessibilityRole="button"
+    >
+      <View style={[styles.iconContainer, { backgroundColor: color + '15' }]}>
         <MaterialCommunityIcons name={icon as any} size={22} color={color} />
       </View>
-      <Text variant="bodyLarge" style={styles.itemLabel}>{label}</Text>
-      <View style={styles.itemRight}>
-        {value && <Text variant="bodyMedium" style={styles.itemValue}>{value}</Text>}
-        <MaterialCommunityIcons name="chevron-right" size={20} color="#CBD5E1" />
+      <Text style={[styles.itemLabel, isRTL && styles.itemLabelRTL]}>{label}</Text>
+      <View style={[styles.itemRight, isRTL && styles.itemRightRTL]}>
+        {value && <Text style={styles.itemValue}>{value}</Text>}
+        <MaterialCommunityIcons
+          name={isRTL ? 'chevron-left' : 'chevron-right'}
+          size={20}
+          color={colors.borderLight}
+        />
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.topHeader}>
-        <Text variant="displaySmall" style={styles.headerTitle}>Profile</Text>
-        <TouchableOpacity style={styles.settingsBtn}>
-          <MaterialCommunityIcons name="cog-outline" size={24} color="#0F172A" />
-        </TouchableOpacity>
-      </View>
+    <View style={styles.container}>
+      <GovHeader title={t('profile')} subtitle={role} />
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[styles.scroll, { paddingBottom: 100 + insets.bottom }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Avatar & Info */}
         <View style={styles.profileHeader}>
           <View style={styles.avatarWrapper}>
-            <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarInitial}>
-                {user?.email?.[0].toUpperCase() || 'U'}
-              </Text>
+            <View style={styles.avatarCircle}>
+              <Text style={styles.avatarInitial}>{initial}</Text>
+            </View>
+            {/* Role badge */}
+            <View style={styles.roleBadge}>
+              <Text style={styles.roleBadgeText}>{role}</Text>
             </View>
           </View>
-          <Text variant="headlineSmall" style={styles.userName}>{user?.email?.split('@')[0] || 'User'}</Text>
-          <Text variant="bodyMedium" style={styles.userEmail}>{user?.email}</Text>
-          
-          <View style={styles.statsContainer}>
-            <View style={styles.statBox}>
-              <Text variant="titleLarge" style={styles.statNumber}>12</Text>
-              <Text variant="labelSmall" style={styles.statLabel}>REPORTS</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statBox}>
-              <Text variant="titleLarge" style={styles.statNumber}>8</Text>
-              <Text variant="labelSmall" style={styles.statLabel}>RESOLVED</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statBox}>
-              <Text variant="titleLarge" style={styles.statNumber}>4</Text>
-              <Text variant="labelSmall" style={styles.statLabel}>PENDING</Text>
-            </View>
+          <Text style={[styles.userName, isRTL && styles.userNameRTL]}>{displayName}</Text>
+          <Text style={styles.userEmail}>{user?.email}</Text>
+        </View>
+
+        {/* Stats */}
+        <View style={[styles.statsContainer, isRTL && styles.statsContainerRTL]}>
+          <View style={styles.statBox}>
+            <Text style={styles.statNumber}>١٢</Text>
+            <Text style={styles.statLabel}>{t('totalReports')}</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statBox}>
+            <Text style={[styles.statNumber, { color: colors.status.completed }]}>٨</Text>
+            <Text style={styles.statLabel}>{t('resolvedCount')}</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statBox}>
+            <Text style={[styles.statNumber, { color: colors.status.pending }]}>٤</Text>
+            <Text style={styles.statLabel}>{t('pendingCount')}</Text>
           </View>
         </View>
 
+        {/* Language Section */}
         <View style={styles.section}>
-          <Text variant="labelLarge" style={styles.sectionLabel}>App Settings</Text>
+          <Text style={[styles.sectionLabel, isRTL && styles.sectionLabelRTL]}>{t('appLanguage')}</Text>
+          <View style={styles.languageCard}>
+            <View style={[styles.languageRow, isRTL && styles.languageRowRTL]}>
+              <View style={[styles.iconContainer, { backgroundColor: colors.republicGreen + '15' }]}>
+                <MaterialCommunityIcons name="translate" size={22} color={colors.republicGreen} />
+              </View>
+              <Text style={[styles.languageLabel, isRTL && styles.languageLabelRTL]}>{t('appLanguage')}</Text>
+              <View style={styles.toggleWrapper}>
+                <LanguageToggle />
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Settings */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionLabel, isRTL && styles.sectionLabelRTL]}>{t('appSettings')}</Text>
           <View style={styles.menuGroup}>
-            <ProfileItem 
-              icon="bell-outline" 
-              label="Notifications" 
-              color="#F59E0B" 
-              onPress={() => {}} 
-              value="On"
+            <ProfileItem
+              icon="bell-outline"
+              label={t('notifications')}
+              color={colors.status.pending}
+              onPress={() => {}}
+              value={t('on')}
             />
             <Divider style={styles.menuDivider} />
-            <ProfileItem 
-              icon="help-circle-outline" 
-              label="Help Center" 
-              color="#64748B" 
-              onPress={() => {}} 
+            <ProfileItem
+              icon="help-circle-outline"
+              label={t('helpCenter')}
+              color={colors.textSecondary}
+              onPress={() => {}}
             />
             <Divider style={styles.menuDivider} />
-            <ProfileItem 
-              icon="file-document-outline" 
-              label="Terms & Privacy" 
-              color="#64748B" 
-              onPress={() => {}} 
+            <ProfileItem
+              icon="file-document-outline"
+              label={t('termsPrivacy')}
+              color={colors.textSecondary}
+              onPress={() => {}}
             />
           </View>
         </View>
 
+        {/* Logout */}
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-            <MaterialCommunityIcons name="logout" size={20} color="#EF4444" />
-            <Text variant="titleMedium" style={styles.logoutText}>Sign Out</Text>
+          <TouchableOpacity
+            style={styles.logoutBtn}
+            onPress={handleLogout}
+            accessibilityLabel={t('logout')}
+            accessibilityRole="button"
+          >
+            <MaterialCommunityIcons name="logout" size={20} color={colors.error} />
+            <Text style={styles.logoutText}>{t('logout')}</Text>
           </TouchableOpacity>
-          <Text variant="labelSmall" style={styles.versionText}>Urban Report v1.2.0</Text>
+          <Text style={styles.versionText}>{t('version')}</Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  topHeader: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    paddingHorizontal: 24,
-    paddingVertical: 12
-  },
-  headerTitle: { fontWeight: '800', letterSpacing: -0.5, color: '#0F172A' },
-  settingsBtn: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: colors.offWhite },
   scroll: { paddingBottom: 120 },
-  profileHeader: { alignItems: 'center', padding: 24 },
-  avatarWrapper: { marginBottom: 20 },
-  avatarPlaceholder: { 
-    width: 100, height: 100, borderRadius: 50, 
-    backgroundColor: '#1B4FD8', 
+
+  // Profile Header
+  profileHeader: { alignItems: 'center', padding: spacing.lg },
+  avatarWrapper: { marginBottom: spacing.md, alignItems: 'center' },
+  avatarCircle: {
+    width: 90, height: 90, borderRadius: 45,
+    backgroundColor: colors.republicGreen,
     justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#1B4FD8', shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2, shadowRadius: 15, elevation: 5
+    ...shadows.elevated,
   },
-  avatarInitial: { fontSize: 42, fontWeight: '800', color: '#FFFFFF' },
-  userName: { fontWeight: '800', color: '#0F172A', marginBottom: 4 },
-  userEmail: { color: '#64748B', fontWeight: '500' },
-  statsContainer: { 
-    flexDirection: 'row', 
-    marginTop: 32, 
-    padding: 24, 
-    borderRadius: 24, 
-    backgroundColor: '#FFFFFF',
-    width: '100%',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.02, shadowRadius: 10, elevation: 2,
-    borderWidth: 1, borderColor: '#F1F5F9'
+  avatarInitial: { fontSize: 38, fontWeight: '800', color: '#FFFFFF' },
+  roleBadge: {
+    marginTop: -12,
+    backgroundColor: colors.governmentGold,
+    paddingHorizontal: 14, paddingVertical: 3,
+    borderRadius: 12,
   },
+  roleBadgeText: {
+    color: '#FFFFFF', fontSize: 11, fontWeight: '700',
+  },
+  userName: {
+    fontSize: 20, fontWeight: '700', color: colors.textPrimary,
+    marginBottom: 2, textAlign: 'center',
+  },
+  userNameRTL: { textAlign: 'center' },
+  userEmail: {
+    color: colors.textMuted, fontWeight: '500', fontSize: 14,
+  },
+
+  // Stats
+  statsContainer: {
+    flexDirection: 'row',
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    padding: spacing.lg,
+    borderRadius: borderRadius.card,
+    backgroundColor: colors.cardWhite,
+    borderWidth: 1, borderColor: colors.borderLight,
+    ...shadows.card,
+  },
+  statsContainerRTL: { flexDirection: 'row-reverse' },
   statBox: { flex: 1, alignItems: 'center' },
-  statNumber: { fontWeight: '800', color: '#1B4FD8' },
-  statLabel: { color: '#94A3B8', fontWeight: '700', marginTop: 4, letterSpacing: 0.5 },
-  statDivider: { width: 1, height: '60%', backgroundColor: '#F1F5F9', alignSelf: 'center' },
-  section: { paddingHorizontal: 24, marginTop: 32 },
-  sectionLabel: { color: '#94A3B8', fontWeight: '700', marginBottom: 16, letterSpacing: 1, textTransform: 'uppercase', fontSize: 11 },
-  menuGroup: { 
-    backgroundColor: '#FFFFFF', borderRadius: 24, 
-    borderWidth: 1, borderColor: '#F1F5F9',
-    overflow: 'hidden'
+  statNumber: {
+    fontSize: 22, fontWeight: '800', color: colors.republicGreen,
   },
-  profileItem: { 
-    flexDirection: 'row', alignItems: 'center', 
-    padding: 16, paddingRight: 20
+  statLabel: {
+    color: colors.textMuted, fontWeight: '600', marginTop: 4,
+    fontSize: 11,
   },
-  iconContainer: { 
-    width: 40, height: 40, borderRadius: 12, 
-    justifyContent: 'center', alignItems: 'center', marginRight: 16 
+  statDivider: {
+    width: 1, height: '60%',
+    backgroundColor: colors.borderLight, alignSelf: 'center',
   },
-  itemLabel: { flex: 1, fontWeight: '600', color: '#0F172A' },
+
+  // Language
+  languageCard: {
+    backgroundColor: colors.cardWhite, borderRadius: borderRadius.card,
+    borderWidth: 1, borderColor: colors.borderLight,
+    padding: spacing.md,
+    ...shadows.card,
+  },
+  languageRow: {
+    flexDirection: 'row', alignItems: 'center',
+  },
+  languageRowRTL: { flexDirection: 'row-reverse' },
+  languageLabel: {
+    flex: 1, fontWeight: '600', color: colors.textPrimary,
+    marginLeft: spacing.md, fontSize: 15,
+  },
+  languageLabelRTL: { marginLeft: 0, marginRight: spacing.md, textAlign: 'right' },
+  toggleWrapper: {
+    backgroundColor: colors.republicGreen,
+    borderRadius: 20,
+    padding: 2,
+  },
+
+  // Sections
+  section: { paddingHorizontal: spacing.lg, marginTop: spacing.xl },
+  sectionLabel: {
+    color: colors.textMuted, fontWeight: '700', marginBottom: spacing.sm,
+    letterSpacing: 0.5, fontSize: 12, textTransform: 'uppercase',
+    textAlign: 'left',
+  },
+  sectionLabelRTL: { textAlign: 'right' },
+  menuGroup: {
+    backgroundColor: colors.cardWhite, borderRadius: borderRadius.card,
+    borderWidth: 1, borderColor: colors.borderLight,
+    overflow: 'hidden',
+    ...shadows.card,
+  },
+  profileItem: {
+    flexDirection: 'row', alignItems: 'center',
+    padding: spacing.md, paddingRight: spacing.lg,
+  },
+  profileItemRTL: {
+    flexDirection: 'row-reverse',
+    paddingRight: spacing.md, paddingLeft: spacing.lg,
+  },
+  iconContainer: {
+    width: 40, height: 40, borderRadius: 12,
+    justifyContent: 'center', alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  itemLabel: {
+    flex: 1, fontWeight: '600', color: colors.textPrimary,
+    fontSize: 15, textAlign: 'left',
+  },
+  itemLabelRTL: { textAlign: 'right', marginLeft: spacing.md, marginRight: 0 },
   itemRight: { flexDirection: 'row', alignItems: 'center' },
-  itemValue: { color: '#64748B', marginRight: 8, fontWeight: '500' },
-  menuDivider: { backgroundColor: '#F8FAFC', marginHorizontal: 16 },
-  footer: { marginTop: 40, paddingHorizontal: 24, alignItems: 'center' },
-  logoutBtn: { 
-    flexDirection: 'row', alignItems: 'center', 
-    paddingVertical: 14, paddingHorizontal: 32, 
-    borderRadius: 16, backgroundColor: '#FEF2F2',
-    borderWidth: 1, borderColor: '#FEE2E2'
+  itemRightRTL: { flexDirection: 'row-reverse' },
+  itemValue: { color: colors.textMuted, marginRight: spacing.sm, fontWeight: '500', fontSize: 14 },
+  menuDivider: { backgroundColor: colors.offWhite, marginHorizontal: spacing.md },
+
+  // Footer
+  footer: { marginTop: spacing.xl * 1.5, paddingHorizontal: spacing.lg, alignItems: 'center' },
+  logoutBtn: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 14, paddingHorizontal: spacing.xl,
+    borderRadius: borderRadius.button,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1, borderColor: '#FEE2E2',
   },
-  logoutText: { color: '#EF4444', fontWeight: '700', marginLeft: 10 },
-  versionText: { marginTop: 24, color: '#CBD5E1', fontWeight: '500' },
+  logoutText: { color: colors.error, fontWeight: '700', marginLeft: 10, fontSize: 15 },
+  versionText: { marginTop: spacing.lg, color: colors.textMuted, fontWeight: '500', fontSize: 12 },
 });

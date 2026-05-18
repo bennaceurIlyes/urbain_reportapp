@@ -148,3 +148,104 @@ export const getUserReports = async (): Promise<ReportWithAttachments[]> => {
   
   return (reportsWithUrls || []) as ReportWithAttachments[];
 };
+
+export const getTeamLeaderReports = async (): Promise<ReportWithAttachments[]> => {
+  const { data: userData, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !userData?.user) {
+    throw new Error('User must be authenticated to fetch reports');
+  }
+
+  const { data, error } = await supabase
+    .from('reports')
+    .select(`*, attachments (*)`)
+    .eq('team_leader', userData.user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Supabase error in getTeamLeaderReports:', error);
+    return [];
+  }
+
+  console.log('Team Leader Reports fetched:', data?.length);
+
+  const reportsWithUrls = data?.map((report: any) => {
+    return {
+      ...report,
+      attachments: report.attachments ? report.attachments.map((att: any) => {
+        const { data: { publicUrl } } = supabase.storage.from('Attachments').getPublicUrl(att.file_url);
+        return {
+          ...att,
+          file_url: att.file_url.startsWith('http') ? att.file_url : publicUrl
+        };
+      }) : []
+    };
+  });
+  
+  return (reportsWithUrls || []) as ReportWithAttachments[];
+};
+
+export const updateReportStatus = async (reportId: string, status: string | number) => {
+  const updates: any = { status };
+  
+  if (status === 'completed') {
+    updates.completed_at = new Date().toISOString();
+  } else if (status === 'approved') {
+    updates.approved_at = new Date().toISOString();
+  }
+
+  const { error } = await supabase
+    .from('reports')
+    .update(updates)
+    .eq('id', reportId);
+
+  if (error) {
+    console.error('Error updating report status:', error);
+    throw new Error(`Failed to update status: ${error.message}`);
+  }
+};
+
+export const uploadCompletionImages = async (reportId: string, imageUris: string[]): Promise<string[]> => {
+  const uploadedPaths: string[] = [];
+
+  for (let i = 0; i < imageUris.length; i++) {
+    const uri = imageUris[i];
+    const file = new File(uri);
+    const arrayBuffer = await file.arrayBuffer();
+    
+    const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpg';
+    const cleanFileName = `completion_${reportId}_${Date.now()}_${i}.${fileExt}`;
+    const filePath = `report-${reportId}/${cleanFileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('Attachments')
+      .upload(filePath, arrayBuffer, {
+        contentType: `image/${fileExt === 'jpg' || fileExt === 'jpeg' ? 'jpeg' : fileExt}`,
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error('Storage upload failed:', uploadError);
+      throw new Error(`Storage upload failed: ${uploadError.message}`);
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from('Attachments').getPublicUrl(filePath);
+    uploadedPaths.push(publicUrl);
+  }
+
+  const { error: updateError } = await supabase
+    .from('reports')
+    .update({ 
+      completion_images: uploadedPaths,
+      status: 'completed',
+      completed_at: new Date().toISOString()
+    })
+    .eq('id', reportId);
+
+  if (updateError) {
+    throw new Error(`Failed to update report with completion images: ${updateError.message}`);
+  }
+
+  return uploadedPaths;
+};

@@ -16,9 +16,14 @@ export interface Database {
           title: string
           description: string
           priority: number
-          status: number
+          status: string | number
           reporter_id: string
           location: string
+          team_leader: string | null
+          assigned_to_at: string | null
+          completion_images: string[] | null
+          completed_at: string | null
+          approved_at: string | null
         }
         Insert: {
           id?: string
@@ -26,9 +31,14 @@ export interface Database {
           title: string
           description: string
           priority: number
-          status?: number
+          status?: string | number
           reporter_id: string
           location: string
+          team_leader?: string | null
+          assigned_to_at?: string | null
+          completion_images?: string[] | null
+          completed_at?: string | null
+          approved_at?: string | null
         }
         Update: {
           id?: string
@@ -36,9 +46,14 @@ export interface Database {
           title?: string
           description?: string
           priority?: number
-          status?: number
+          status?: string | number
           reporter_id?: string
           location?: string
+          team_leader?: string | null
+          assigned_to_at?: string | null
+          completion_images?: string[] | null
+          completed_at?: string | null
+          approved_at?: string | null
         }
         Relationships: [
           {

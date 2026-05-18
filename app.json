@@ -19,7 +19,13 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.ilyes321.urbanissueapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -38,6 +44,11 @@
           "cameraPermission": "Allow $(PRODUCT_NAME) to open the camera so you can take a picture of the issue."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "816bc1f4-26ef-4eed-8c97-1c8f913434d1"
+      }
+    }
   }
 }

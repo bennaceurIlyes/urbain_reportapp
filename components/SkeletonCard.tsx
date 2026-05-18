@@ -1,47 +1,190 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Surface, useTheme } from 'react-native-paper';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Animated } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { colors, spacing, borderRadius, shadows } from '../theme';
 
-export const SkeletonCard = () => {
-  const theme = useTheme();
-  const skeletonColor = theme.colors.surfaceVariant;
+/** Shimmer effect skeleton card for loading states */
+export const SkeletonCard: React.FC = () => {
+  const shimmerAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(shimmerAnim, {
+        toValue: 1,
+        duration: 1200,
+        useNativeDriver: true,
+      })
+    );
+    loop.start();
+    return () => loop.stop();
+  }, []);
+
+  const translateX = shimmerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-200, 200],
+  });
 
   return (
-    <Surface style={styles.card} elevation={1}>
-      <View style={styles.header}>
-        <View style={{ flex: 1 }}>
-          <View style={[styles.shimmer, { width: '70%', height: 24, backgroundColor: skeletonColor }]} />
-          <View style={[styles.shimmer, { width: '40%', height: 16, marginTop: 8, backgroundColor: skeletonColor }]} />
-        </View>
-        <View style={[styles.shimmer, { width: 80, height: 28, borderRadius: 14, backgroundColor: skeletonColor }]} />
-      </View>
+    <View style={styles.card}>
+      {/* Priority bar skeleton */}
+      <View style={styles.priorityBar} />
       
       <View style={styles.content}>
-        <View style={[styles.shimmer, { width: '100%', height: 16, backgroundColor: skeletonColor }]} />
-        <View style={[styles.shimmer, { width: '90%', height: 16, marginTop: 8, backgroundColor: skeletonColor }]} />
+        {/* Title row */}
+        <View style={styles.topRow}>
+          <View style={styles.titleSkeleton}>
+            <Animated.View style={[styles.shimmer, { transform: [{ translateX }] }]}>
+              <LinearGradient
+                colors={['transparent', 'rgba(255,255,255,0.4)', 'transparent']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFill}
+              />
+            </Animated.View>
+          </View>
+          <View style={styles.badgeSkeleton}>
+            <Animated.View style={[styles.shimmer, { transform: [{ translateX }] }]}>
+              <LinearGradient
+                colors={['transparent', 'rgba(255,255,255,0.4)', 'transparent']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFill}
+              />
+            </Animated.View>
+          </View>
+        </View>
+
+        {/* Description lines */}
+        <View style={styles.line1}>
+          <Animated.View style={[styles.shimmer, { transform: [{ translateX }] }]}>
+            <LinearGradient
+              colors={['transparent', 'rgba(255,255,255,0.4)', 'transparent']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={StyleSheet.absoluteFill}
+            />
+          </Animated.View>
+        </View>
+        <View style={styles.line2}>
+          <Animated.View style={[styles.shimmer, { transform: [{ translateX }] }]}>
+            <LinearGradient
+              colors={['transparent', 'rgba(255,255,255,0.4)', 'transparent']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={StyleSheet.absoluteFill}
+            />
+          </Animated.View>
+        </View>
+
+        {/* Bottom row */}
+        <View style={styles.bottomRow}>
+          <View style={styles.metaSkeleton}>
+            <Animated.View style={[styles.shimmer, { transform: [{ translateX }] }]}>
+              <LinearGradient
+                colors={['transparent', 'rgba(255,255,255,0.4)', 'transparent']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFill}
+              />
+            </Animated.View>
+          </View>
+          <View style={styles.thumbSkeleton}>
+            <Animated.View style={[styles.shimmer, { transform: [{ translateX }] }]}>
+              <LinearGradient
+                colors={['transparent', 'rgba(255,255,255,0.4)', 'transparent']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFill}
+              />
+            </Animated.View>
+          </View>
+        </View>
       </View>
-      
-      <View style={[styles.image, { backgroundColor: skeletonColor }]} />
-      
-      <View style={styles.footer}>
-        <View style={[styles.shimmer, { width: '30%', height: 16, backgroundColor: skeletonColor }]} />
-        <View style={[styles.shimmer, { width: '15%', height: 16, backgroundColor: skeletonColor }]} />
-      </View>
-    </Surface>
+    </View>
   );
 };
 
+const skeletonBg = '#E8E8E8';
+
 const styles = StyleSheet.create({
   card: {
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 16,
-    backgroundColor: '#fff'
+    backgroundColor: colors.cardWhite,
+    borderRadius: borderRadius.card,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    marginBottom: spacing.md,
+    overflow: 'hidden',
+    flexDirection: 'row',
+    ...shadows.card,
   },
-  header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
-  content: { marginBottom: 16 },
-  image: { height: 180, width: '100%', borderRadius: 12, marginBottom: 16 },
-  footer: { flexDirection: 'row', justifyContent: 'space-between' },
-  shimmer: { borderRadius: 4 }
+  priorityBar: {
+    width: 4,
+    backgroundColor: skeletonBg,
+  },
+  content: {
+    flex: 1,
+    padding: spacing.md,
+  },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  titleSkeleton: {
+    height: 16,
+    width: '55%',
+    backgroundColor: skeletonBg,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  badgeSkeleton: {
+    height: 22,
+    width: 65,
+    backgroundColor: skeletonBg,
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
+  line1: {
+    height: 12,
+    width: '90%',
+    backgroundColor: skeletonBg,
+    borderRadius: 6,
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  line2: {
+    height: 12,
+    width: '70%',
+    backgroundColor: skeletonBg,
+    borderRadius: 6,
+    marginBottom: spacing.sm,
+    overflow: 'hidden',
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight + '60',
+  },
+  metaSkeleton: {
+    height: 12,
+    width: 80,
+    backgroundColor: skeletonBg,
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
+  thumbSkeleton: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    backgroundColor: skeletonBg,
+    overflow: 'hidden',
+  },
+  shimmer: {
+    width: 200,
+    height: '100%',
+  },
 });
-
