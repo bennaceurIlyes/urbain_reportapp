@@ -1,6 +1,20 @@
 import { supabase } from './supabaseConfig';
 import { Database } from '../types/database';
 import { File } from 'expo-file-system';
+import {
+  sanitizeText,
+  validateTitle,
+  validateDescription,
+  validatePriority,
+  validateLocation,
+  validateStatus,
+  validateFileExtension,
+  validateFileSize,
+  sanitizeFileName,
+  validateUUID,
+  checkRateLimit,
+  requireAuth,
+} from './security';
 
 
 export type Report = Database['public']['Tables']['reports']['Row'];
@@ -24,63 +38,91 @@ export interface ReportData {
   userId: string;
 }
 
+// ─── SUBMIT REPORT (Citizen) ─────────────────────────────────────────────────
+
 export const submitReport = async (data: ReportData) => {
-  console.log('Starting report submission...');
-  
-  // 1. Create Report first to get issue_id
+  // ── Auth check ──
+  const user = await requireAuth();
+
+  // ── Rate limit (max 5 reports per minute) ──
+  const rateCheck = checkRateLimit('submitReport', 5, 60000);
+  if (!rateCheck.allowed) {
+    const seconds = Math.ceil((rateCheck.retryAfterMs || 0) / 1000);
+    throw new Error(`Too many submissions. Please wait ${seconds} seconds.`);
+  }
+
+  // ── Sanitize & validate inputs ──
+  const sanitizedTitle = sanitizeText(data.title);
+  const titleCheck = validateTitle(sanitizedTitle);
+  if (!titleCheck.valid) throw new Error(titleCheck.error);
+
+  const sanitizedDescription = sanitizeText(data.description);
+  const descCheck = validateDescription(sanitizedDescription);
+  if (!descCheck.valid) throw new Error(descCheck.error);
+
+  const priority = data.priority || 2;
+  if (!validatePriority(priority)) {
+    throw new Error('Invalid priority value. Must be 1, 2, or 3.');
+  }
+
+  if (!validateLocation(data.location)) {
+    throw new Error('Invalid location coordinates.');
+  }
+
+  // Ensure the userId matches the authenticated user (prevent impersonation)
+  if (data.userId !== user.id) {
+    throw new Error('Unauthorized: Cannot submit reports for other users.');
+  }
+
+  // ── Create Report ──
   const { data: reportData, error: reportError } = await supabase
     .from('reports')
     .insert({
-      title: data.title,
-      description: data.description,
-      priority: data.priority || 2,
+      title: sanitizedTitle,
+      description: sanitizedDescription,
+      priority,
       status: 0, // Pending
-      reporter_id: data.userId,
+      reporter_id: user.id, // Use authenticated user ID, not the passed userId
       location: JSON.stringify(data.location),
     })
     .select()
     .single();
 
   if (reportError) {
-    console.error('Error creating report:', reportError);
     throw new Error(`Failed to create report: ${reportError.message}`);
   }
 
-  console.log('Report created with ID:', reportData.id);
-
-  // 2. Upload Image
+  // ── Upload Image ──
   if (data.imageUri) {
     try {
-      console.log('Preparing image upload for:', data.imageUri);
-      
-      // Use the new Expo 54 FileSystem API to read image as ArrayBuffer
+      // Validate file extension
+      const fileCheck = validateFileExtension(data.imageUri);
+      if (!fileCheck.valid) throw new Error(fileCheck.error);
+
       const file = new File(data.imageUri);
       const arrayBuffer = await file.arrayBuffer();
-      
-      const fileExt = data.imageUri.split('.').pop()?.toLowerCase() || 'jpg';
-      const cleanFileName = `photo_${Date.now()}.${fileExt}`;
+
+      // Validate file size (10MB max)
+      const sizeCheck = validateFileSize(arrayBuffer.byteLength);
+      if (!sizeCheck.valid) throw new Error(sizeCheck.error);
+
+      // Sanitize file name to prevent path traversal
+      const cleanFileName = sanitizeFileName(`photo_${Date.now()}.${fileCheck.extension}`);
       const filePath = `report-${reportData.id}/${cleanFileName}`;
 
-      console.log(`Uploading image to bucket "Attachments", path: ${filePath}`);
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('Attachments')
-
-
         .upload(filePath, arrayBuffer, {
-          contentType: `image/${fileExt === 'jpg' || fileExt === 'jpeg' ? 'jpeg' : fileExt}`,
+          contentType: `image/${fileCheck.extension === 'jpg' || fileCheck.extension === 'jpeg' ? 'jpeg' : fileCheck.extension}`,
           cacheControl: '3600',
           upsert: false,
         });
 
       if (uploadError) {
-        console.error('Supabase Storage Upload Error:', uploadError);
         throw new Error(`Storage upload failed: ${uploadError.message}`);
       }
 
-      console.log('Image uploaded successfully');
-
-      // 3. Save Attachment record in the database
+      // Save Attachment record
       const { error: attachError } = await supabase
         .from('attachments')
         .insert({
@@ -90,14 +132,9 @@ export const submitReport = async (data: ReportData) => {
         });
 
       if (attachError) {
-        console.error('Attachment Link Error:', attachError);
         throw attachError;
       }
-      
-      console.log('Attachment record created in database');
     } catch (e: any) {
-      console.error('Image upload phase failed:', e);
-      if (e.stack) console.error(e.stack);
       throw new Error(`Report created but image upload failed: ${e.message || 'Unknown error'}`);
     }
   }
@@ -105,12 +142,10 @@ export const submitReport = async (data: ReportData) => {
   return reportData.id;
 };
 
-export const getUserReports = async (): Promise<ReportWithAttachments[]> => {
-  const { data: userData, error: authError } = await supabase.auth.getUser();
+// ─── GET USER REPORTS (Citizen) ──────────────────────────────────────────────
 
-  if (authError || !userData?.user) {
-    throw new Error('User must be authenticated to fetch reports');
-  }
+export const getUserReports = async (): Promise<ReportWithAttachments[]> => {
+  const user = await requireAuth();
 
   const { data, error } = await supabase
     .from('reports')
@@ -118,13 +153,12 @@ export const getUserReports = async (): Promise<ReportWithAttachments[]> => {
       *,
       attachments (*)
     `)
-    .eq('reporter_id', userData.user.id)
+    .eq('reporter_id', user.id) // Always use authenticated user ID
     .order('created_at', { ascending: false });
 
   if (error) {
     return [];
   }
-
 
   const reportsWithUrls = data?.map((report: any) => {
     return {
@@ -140,34 +174,29 @@ export const getUserReports = async (): Promise<ReportWithAttachments[]> => {
     };
   });
 
-
-
-
-
-
-  
   return (reportsWithUrls || []) as ReportWithAttachments[];
 };
 
-export const getTeamLeaderReports = async (): Promise<ReportWithAttachments[]> => {
-  const { data: userData, error: authError } = await supabase.auth.getUser();
+// ─── GET TEAM LEADER REPORTS ─────────────────────────────────────────────────
 
-  if (authError || !userData?.user) {
-    throw new Error('User must be authenticated to fetch reports');
+export const getTeamLeaderReports = async (): Promise<ReportWithAttachments[]> => {
+  const user = await requireAuth();
+
+  // Verify role (only team leaders can access this)
+  const userRole = user.user_metadata?.role;
+  if (userRole !== 'team_leader') {
+    throw new Error('Unauthorized: Team leader access required.');
   }
 
   const { data, error } = await supabase
     .from('reports')
     .select(`*, attachments (*)`)
-    .eq('team_leader', userData.user.id)
+    .eq('team_leader', user.id) // Always use authenticated user ID
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Supabase error in getTeamLeaderReports:', error);
     return [];
   }
-
-  console.log('Team Leader Reports fetched:', data?.length);
 
   const reportsWithUrls = data?.map((report: any) => {
     return {
@@ -185,7 +214,39 @@ export const getTeamLeaderReports = async (): Promise<ReportWithAttachments[]> =
   return (reportsWithUrls || []) as ReportWithAttachments[];
 };
 
+// ─── UPDATE REPORT STATUS ────────────────────────────────────────────────────
+
 export const updateReportStatus = async (reportId: string, status: string | number) => {
+  // ── Auth check ──
+  const user = await requireAuth();
+
+  // ── Validate reportId is a valid UUID ──
+  if (!validateUUID(reportId)) {
+    throw new Error('Invalid report ID format.');
+  }
+
+  // ── Validate status value ──
+  if (!validateStatus(status)) {
+    throw new Error(`Invalid status value: "${status}"`);
+  }
+
+  // ── Verify the user is authorized to update this report ──
+  const { data: report, error: fetchError } = await supabase
+    .from('reports')
+    .select('team_leader, reporter_id, status')
+    .eq('id', reportId)
+    .single();
+
+  if (fetchError || !report) {
+    throw new Error('Report not found.');
+  }
+
+  // Only the assigned team leader can update status
+  if (report.team_leader !== user.id) {
+    throw new Error('Unauthorized: You are not assigned to this report.');
+  }
+
+  // Build update payload
   const updates: any = { status };
   
   if (status === 'completed') {
@@ -200,33 +261,77 @@ export const updateReportStatus = async (reportId: string, status: string | numb
     .eq('id', reportId);
 
   if (error) {
-    console.error('Error updating report status:', error);
     throw new Error(`Failed to update status: ${error.message}`);
   }
 };
 
+// ─── UPLOAD COMPLETION IMAGES ────────────────────────────────────────────────
+
 export const uploadCompletionImages = async (reportId: string, imageUris: string[]): Promise<string[]> => {
+  // ── Auth check ──
+  const user = await requireAuth();
+
+  // ── Validate reportId ──
+  if (!validateUUID(reportId)) {
+    throw new Error('Invalid report ID format.');
+  }
+
+  // ── Rate limit (max 3 completion uploads per minute) ──
+  const rateCheck = checkRateLimit('uploadCompletion', 3, 60000);
+  if (!rateCheck.allowed) {
+    const seconds = Math.ceil((rateCheck.retryAfterMs || 0) / 1000);
+    throw new Error(`Too many uploads. Please wait ${seconds} seconds.`);
+  }
+
+  // ── Verify authorization ──
+  const { data: report, error: fetchError } = await supabase
+    .from('reports')
+    .select('team_leader')
+    .eq('id', reportId)
+    .single();
+
+  if (fetchError || !report) {
+    throw new Error('Report not found.');
+  }
+
+  if (report.team_leader !== user.id) {
+    throw new Error('Unauthorized: You are not assigned to this report.');
+  }
+
+  // ── Limit number of images ──
+  if (imageUris.length > 6) {
+    throw new Error('Maximum 6 completion images allowed.');
+  }
+
   const uploadedPaths: string[] = [];
 
   for (let i = 0; i < imageUris.length; i++) {
     const uri = imageUris[i];
+
+    // Validate file extension
+    const fileCheck = validateFileExtension(uri);
+    if (!fileCheck.valid) throw new Error(fileCheck.error);
+
     const file = new File(uri);
     const arrayBuffer = await file.arrayBuffer();
-    
-    const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpg';
-    const cleanFileName = `completion_${reportId}_${Date.now()}_${i}.${fileExt}`;
+
+    // Validate file size
+    const sizeCheck = validateFileSize(arrayBuffer.byteLength);
+    if (!sizeCheck.valid) throw new Error(sizeCheck.error);
+
+    // Sanitize filename
+    const cleanFileName = sanitizeFileName(`completion_${Date.now()}_${i}.${fileCheck.extension}`);
     const filePath = `report-${reportId}/${cleanFileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('Attachments')
       .upload(filePath, arrayBuffer, {
-        contentType: `image/${fileExt === 'jpg' || fileExt === 'jpeg' ? 'jpeg' : fileExt}`,
+        contentType: `image/${fileCheck.extension === 'jpg' || fileCheck.extension === 'jpeg' ? 'jpeg' : fileCheck.extension}`,
         cacheControl: '3600',
         upsert: false,
       });
 
     if (uploadError) {
-      console.error('Storage upload failed:', uploadError);
       throw new Error(`Storage upload failed: ${uploadError.message}`);
     }
 
