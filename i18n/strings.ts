@@ -212,7 +212,7 @@ export const getStatusLabel = (status: string | number, lang: Language, is_resol
 
   // Rule 3: when is_resolved is true and state is 4 -> So task is done
   if (is_resolved === true && (status === 4 || status === 'approved')) {
-    return t('statusApproved', lang);
+    return t('statusCompleted', lang);
   }
 
   switch (status) {
@@ -220,7 +220,7 @@ export const getStatusLabel = (status: string | number, lang: Language, is_resol
     case 'assigned': return t('statusAssigned', lang);
     case 'in_progress': case 1: case 2: return t('statusInProgress', lang);
     case 'completed': case 3: return t('completedWaitingApproval', lang);
-    case 'approved': case 4: return t('statusApproved', lang);
+    case 'approved': case 4: return t('statusCompleted', lang);
     default: return '—';
   }
 };
