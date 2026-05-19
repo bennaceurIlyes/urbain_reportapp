@@ -256,7 +256,6 @@ export const updateReportStatus = async (reportId: string, status: string | numb
   if (status === 'completed' || status === 3) {
     updates.status = 3;
     updates.is_resolved = true;
-    updates.completed_at = new Date().toISOString();
     updates.resolved_at = new Date().toISOString();
   } else if (status === 'approved' || status === 4) {
     updates.status = 4;
@@ -372,7 +371,6 @@ export const uploadCompletionImages = async (reportId: string, imageUris: string
       completion_images: uploadedPaths,
       status: 3,
       is_resolved: true,
-      completed_at: new Date().toISOString(),
       resolved_at: new Date().toISOString()
     })
     .eq('id', reportId);
