@@ -202,153 +202,107 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
         {/* Content */}
         <View style={styles.contentCard}>
           {/* ─── Work Actions (Prominent, at top) ─── */}
-          <View style={styles.actionsCard}>
-            <Text style={[styles.actionsTitle, isRTL && styles.actionsTitleRTL]}>{t('workActions')}</Text>
+          {!isResolved && (
+            <View style={styles.actionsCard}>
+              <Text style={[styles.actionsTitle, isRTL && styles.actionsTitleRTL]}>{t('workActions')}</Text>
 
-            {loading ? (
-              <ActivityIndicator size="large" color={colors.republicGreen} style={{ padding: spacing.md }} />
-            ) : (
-              <View style={styles.actionsContainer}>
-                {(currentStatus === 'assigned' || currentStatus === 0 || currentStatus === 'in_progress' || currentStatus === 1) && (
-                  <>
-                    {addedImages.length === 0 ? (
-                      <>
-                        {/* 1. Insert Image Button (Primary, Active) */}
-                        <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-                          <TouchableOpacity
-                            style={styles.actionButtonGreen}
-                            onPress={handleAddImage}
-                            onPressIn={onBtnPressIn}
-                            onPressOut={onBtnPressOut}
-                            activeOpacity={1}
-                            disabled={imageLoading}
-                            accessibilityLabel={t('addImage')}
-                            accessibilityRole="button"
-                          >
-                            {imageLoading ? (
-                              <ActivityIndicator size="small" color="#FFFFFF" />
-                            ) : (
-                              <>
-                                <MaterialCommunityIcons name="camera-plus-outline" size={22} color="#FFFFFF" />
-                                <Text style={styles.actionButtonText}>{t('uploadProof')}</Text>
-                              </>
-                            )}
-                          </TouchableOpacity>
-                        </Animated.View>
+              {loading ? (
+                <ActivityIndicator size="large" color={colors.republicGreen} style={{ padding: spacing.md }} />
+              ) : (
+                <View style={styles.actionsContainer}>
+                  {addedImages.length === 0 ? (
+                    <>
+                      {/* 1. Insert Image Button (Primary, Active) */}
+                      <Animated.View style={{ transform: [{ scale: btnScale }] }}>
+                        <TouchableOpacity
+                          style={styles.actionButtonGreen}
+                          onPress={handleAddImage}
+                          onPressIn={onBtnPressIn}
+                          onPressOut={onBtnPressOut}
+                          activeOpacity={1}
+                          disabled={imageLoading}
+                          accessibilityLabel={t('addImage')}
+                          accessibilityRole="button"
+                        >
+                          {imageLoading ? (
+                            <ActivityIndicator size="small" color="#FFFFFF" />
+                          ) : (
+                            <>
+                              <MaterialCommunityIcons name="camera-plus-outline" size={22} color="#FFFFFF" />
+                              <Text style={styles.actionButtonText}>{t('uploadProof')}</Text>
+                            </>
+                          )}
+                        </TouchableOpacity>
+                      </Animated.View>
 
-                        {/* 2. Complete Button (Disabled with Alert) */}
-                        <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-                          <TouchableOpacity
-                            style={[styles.actionButtonOutline, { opacity: 0.5 }]}
-                            onPress={() => {
-                              Alert.alert(t('imagesRequired'), t('pleaseUploadImage'));
-                            }}
-                            activeOpacity={0.8}
-                            accessibilityLabel={t('markAsComplete')}
-                            accessibilityRole="button"
-                          >
-                            <MaterialCommunityIcons name="check-circle-outline" size={22} color={colors.republicGreen} />
-                            <Text style={styles.actionButtonTextGreen}>{t('markAsComplete')}</Text>
-                          </TouchableOpacity>
-                        </Animated.View>
-                      </>
-                    ) : (
-                      <>
-                        {/* 1. Complete Button (Primary, Active since image is uploaded) */}
-                        <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-                          <TouchableOpacity
-                            style={styles.actionButtonGreen}
-                            onPress={handleDirectComplete}
-                            onPressIn={onBtnPressIn}
-                            onPressOut={onBtnPressOut}
-                            activeOpacity={1}
-                            disabled={loading}
-                            accessibilityLabel={t('markAsComplete')}
-                            accessibilityRole="button"
-                          >
-                            {loading ? (
-                              <ActivityIndicator size="small" color="#FFFFFF" />
-                            ) : (
-                              <>
-                                <MaterialCommunityIcons name="check-decagram" size={22} color="#FFFFFF" />
-                                <Text style={styles.actionButtonText}>{t('markAsComplete')}</Text>
-                              </>
-                            )}
-                          </TouchableOpacity>
-                        </Animated.View>
+                      {/* 2. Complete Button (Disabled with Alert) */}
+                      <Animated.View style={{ transform: [{ scale: btnScale }] }}>
+                        <TouchableOpacity
+                          style={[styles.actionButtonOutline, { opacity: 0.5 }]}
+                          onPress={() => {
+                            Alert.alert(t('imagesRequired'), t('pleaseUploadImage'));
+                          }}
+                          activeOpacity={0.8}
+                          accessibilityLabel={t('markAsComplete')}
+                          accessibilityRole="button"
+                        >
+                          <MaterialCommunityIcons name="check-circle-outline" size={22} color={colors.republicGreen} />
+                          <Text style={styles.actionButtonTextGreen}>{t('markAsComplete')}</Text>
+                        </TouchableOpacity>
+                      </Animated.View>
+                    </>
+                  ) : (
+                    <>
+                      {/* 1. Complete Button (Primary, Active since image is uploaded) */}
+                      <Animated.View style={{ transform: [{ scale: btnScale }] }}>
+                        <TouchableOpacity
+                          style={styles.actionButtonGreen}
+                          onPress={handleDirectComplete}
+                          onPressIn={onBtnPressIn}
+                          onPressOut={onBtnPressOut}
+                          activeOpacity={1}
+                          disabled={loading}
+                          accessibilityLabel={t('markAsComplete')}
+                          accessibilityRole="button"
+                        >
+                          {loading ? (
+                            <ActivityIndicator size="small" color="#FFFFFF" />
+                          ) : (
+                            <>
+                              <MaterialCommunityIcons name="check-decagram" size={22} color="#FFFFFF" />
+                              <Text style={styles.actionButtonText}>{t('markAsComplete')}</Text>
+                            </>
+                          )}
+                        </TouchableOpacity>
+                      </Animated.View>
 
-                        {/* 2. Insert Another Image Button (Secondary Outline) */}
-                        <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-                          <TouchableOpacity
-                            style={styles.actionButtonOutline}
-                            onPress={handleAddImage}
-                            onPressIn={onBtnPressIn}
-                            onPressOut={onBtnPressOut}
-                            activeOpacity={1}
-                            disabled={imageLoading}
-                            accessibilityLabel={t('addImage')}
-                            accessibilityRole="button"
-                          >
-                            {imageLoading ? (
-                              <ActivityIndicator size="small" color={colors.republicGreen} />
-                            ) : (
-                              <>
-                                <MaterialCommunityIcons name="camera-plus-outline" size={22} color={colors.republicGreen} />
-                                <Text style={styles.actionButtonTextGreen}>{t('uploadProof')}</Text>
-                              </>
-                            )}
-                          </TouchableOpacity>
-                        </Animated.View>
-                      </>
-                    )}
-                  </>
-                )}
-
-                {currentStatus === 'approved' && (
-                  <View style={styles.approvedBanner}>
-                    <MaterialCommunityIcons name="check-decagram" size={24} color={colors.status.approved} />
-                    <Text style={[styles.approvedText, isRTL && { textAlign: 'right' }]}>
-                      {t('statusApproved')}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            )}
-          </View>
-
-          {/* ─── Add Image Button ─── */}
-          {currentStatus !== 'in_progress' && currentStatus !== 1 && currentStatus !== 'completed' && currentStatus !== 2 && currentStatus !== 'approved' && currentStatus !== 3 && (
-            <Animated.View style={{ transform: [{ scale: addBtnScale }] }}>
-              <TouchableOpacity
-                style={styles.addImageCard}
-                onPress={handleAddImage}
-                onPressIn={onAddBtnPressIn}
-                onPressOut={onAddBtnPressOut}
-                activeOpacity={1}
-                disabled={imageLoading}
-                accessibilityLabel={t('addImage')}
-                accessibilityRole="button"
-              >
-                {imageLoading ? (
-                  <ActivityIndicator size="small" color={colors.republicGreen} />
-                ) : (
-                  <>
-                    <View style={styles.addImageIconContainer}>
-                      <MaterialCommunityIcons name="camera-plus-outline" size={24} color={colors.republicGreen} />
-                    </View>
-                    <View style={[styles.addImageTextContainer, isRTL && { alignItems: 'flex-end' }]}>
-                      <Text style={[styles.addImageTitle, isRTL && { textAlign: 'right' }]}>{t('addImage')}</Text>
-                      <Text style={[styles.addImageSubtitle, isRTL && { textAlign: 'right' }]}>{t('addImageAfter')}</Text>
-                    </View>
-                    <MaterialCommunityIcons 
-                      name={isRTL ? 'chevron-left' : 'chevron-right'} 
-                      size={24} 
-                      color={colors.textMuted} 
-                    />
-                  </>
-                )}
-              </TouchableOpacity>
-            </Animated.View>
+                      {/* 2. Insert Another Image Button (Secondary Outline) */}
+                      <Animated.View style={{ transform: [{ scale: btnScale }] }}>
+                        <TouchableOpacity
+                          style={styles.actionButtonOutline}
+                          onPress={handleAddImage}
+                          onPressIn={onBtnPressIn}
+                          onPressOut={onBtnPressOut}
+                          activeOpacity={1}
+                          disabled={imageLoading}
+                          accessibilityLabel={t('addImage')}
+                          accessibilityRole="button"
+                        >
+                          {imageLoading ? (
+                            <ActivityIndicator size="small" color={colors.republicGreen} />
+                          ) : (
+                            <>
+                              <MaterialCommunityIcons name="camera-plus-outline" size={22} color={colors.republicGreen} />
+                              <Text style={styles.actionButtonTextGreen}>{t('uploadProof')}</Text>
+                            </>
+                          )}
+                        </TouchableOpacity>
+                      </Animated.View>
+                    </>
+                  )}
+                </View>
+              )}
+            </View>
           )}
 
           {/* ─── Added Images Preview ─── */}
