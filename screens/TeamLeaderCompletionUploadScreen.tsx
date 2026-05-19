@@ -16,24 +16,42 @@ export const TeamLeaderCompletionUploadScreen = ({ route, navigation }: any) => 
   const [uploading, setUploading] = useState(false);
 
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsMultipleSelection: true,
-      quality: 0.7,
-    });
-    if (!result.canceled) {
-      const selectedUris = result.assets.map(asset => asset.uri);
-      setImages([...images, ...selectedUris].slice(0, 6));
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (permission.status !== 'granted') {
+        Alert.alert(t('error'), lang === 'ar' ? 'يرجى تفعيل صلاحية الوصول إلى الصور في الإعدادات' : 'Veuillez activer la permission de galerie dans les paramètres');
+        return;
+      }
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsMultipleSelection: true,
+        quality: 0.5,
+      });
+      if (!result.canceled) {
+        const selectedUris = result.assets.map(asset => asset.uri);
+        setImages([...images, ...selectedUris].slice(0, 6));
+      }
+    } catch (error) {
+      console.error('Gallery picker error:', error);
     }
   };
 
   const takePhoto = async () => {
-    let result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ['images'],
-      quality: 0.7,
-    });
-    if (!result.canceled) {
-      setImages([...images, result.assets[0].uri].slice(0, 6));
+    try {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (permission.status !== 'granted') {
+        Alert.alert(t('error'), lang === 'ar' ? 'يرجى تفعيل صلاحية الكاميرا في الإعدادات' : 'Veuillez activer la permission de caméra dans les paramètres');
+        return;
+      }
+      let result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        quality: 0.5,
+      });
+      if (!result.canceled) {
+        setImages([...images, result.assets[0].uri].slice(0, 6));
+      }
+    } catch (error) {
+      console.error('Camera capture error:', error);
     }
   };
 

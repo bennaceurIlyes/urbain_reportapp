@@ -117,24 +117,42 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
         {
           text: t('camera'),
           onPress: async () => {
-            const result = await ImagePicker.launchCameraAsync({
-              mediaTypes: ['images'],
-              quality: 0.7,
-            });
-            if (!result.canceled) {
-              await uploadAddedImage(result.assets[0].uri);
+            try {
+              const permission = await ImagePicker.requestCameraPermissionsAsync();
+              if (permission.status !== 'granted') {
+                Alert.alert(t('error'), lang === 'ar' ? 'يرجى تفعيل صلاحية الكاميرا في الإعدادات' : 'Veuillez activer la permission de caméra dans les paramètres');
+                return;
+              }
+              const result = await ImagePicker.launchCameraAsync({
+                mediaTypes: ['images'],
+                quality: 0.5,
+              });
+              if (!result.canceled) {
+                await uploadAddedImage(result.assets[0].uri);
+              }
+            } catch (error) {
+              console.error('Camera launch error:', error);
             }
           },
         },
         {
           text: t('gallery'),
           onPress: async () => {
-            const result = await ImagePicker.launchImageLibraryAsync({
-              mediaTypes: ['images'],
-              quality: 0.7,
-            });
-            if (!result.canceled) {
-              await uploadAddedImage(result.assets[0].uri);
+            try {
+              const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+              if (permission.status !== 'granted') {
+                Alert.alert(t('error'), lang === 'ar' ? 'يرجى تفعيل صلاحية الوصول إلى الصور في الإعدادات' : 'Veuillez activer la permission de galerie dans les paramètres');
+                return;
+              }
+              const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ['images'],
+                quality: 0.5,
+              });
+              if (!result.canceled) {
+                await uploadAddedImage(result.assets[0].uri);
+              }
+            } catch (error) {
+              console.error('Gallery launch error:', error);
             }
           },
         },
