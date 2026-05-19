@@ -233,7 +233,7 @@ export const updateReportStatus = async (reportId: string, status: string | numb
   // ── Verify the user is authorized to update this report ──
   const { data: report, error: fetchError } = await supabase
     .from('reports')
-    .select('team_leader, reporter_id, status')
+    .select('team_leader, reporter_id, status, assigned_to_at, completed_at, approved_at')
     .eq('id', reportId)
     .single();
 
