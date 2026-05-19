@@ -106,7 +106,7 @@ export const validateLocation = (location: { latitude: number; longitude: number
  *   in_progress -> completed
  *   completed -> approved
  */
-const VALID_STATUS_VALUES = ['pending', 'assigned', 'in_progress', 'completed', 'approved', 0, 1, 2] as const;
+const VALID_STATUS_VALUES = ['pending', 'assigned', 'in_progress', 'completed', 'approved', 0, 1, 2, 3, 4] as const;
 
 export const validateStatus = (status: string | number): boolean => {
   return (VALID_STATUS_VALUES as readonly (string | number)[]).includes(status);

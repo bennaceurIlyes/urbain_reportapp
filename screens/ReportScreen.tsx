@@ -65,8 +65,8 @@ export const ReportScreen = ({ navigation }: any) => {
   };
 
   const handleSubmit = async (values: any, { setSubmitting }: any) => {
-    // Image is only required for Emergency/Critical priority (value 4)
-    if (selectedPriority === 4 && !imageUri) {
+    // Image is required for High and Emergency priorities (value >= 3)
+    if (selectedPriority >= 3 && !imageUri) {
       return Alert.alert(t('emergencyPhotoRequired'), t('pleaseAttachEmergencyPhoto'));
     }
     if (!location) return Alert.alert(t('locationRequired'), t('pleaseTagLocation'));

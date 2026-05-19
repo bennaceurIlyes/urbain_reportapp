@@ -24,6 +24,10 @@ export interface Database {
           completion_images: string[] | null
           completed_at: string | null
           approved_at: string | null
+          is_resolved: boolean
+          under_investigation_at: string | null
+          work_in_progress_at: string | null
+          resolved_at: string | null
         }
         Insert: {
           id?: string
@@ -39,6 +43,10 @@ export interface Database {
           completion_images?: string[] | null
           completed_at?: string | null
           approved_at?: string | null
+          is_resolved?: boolean
+          under_investigation_at?: string | null
+          work_in_progress_at?: string | null
+          resolved_at?: string | null
         }
         Update: {
           id?: string
@@ -54,6 +62,10 @@ export interface Database {
           completion_images?: string[] | null
           completed_at?: string | null
           approved_at?: string | null
+          is_resolved?: boolean
+          under_investigation_at?: string | null
+          work_in_progress_at?: string | null
+          resolved_at?: string | null
         }
         Relationships: [
           {

@@ -90,7 +90,7 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report, onPress, showAss
             >
               {report.title}
             </Text>
-            <StatusBadge status={report.status} lang={lang} />
+            <StatusBadge status={report.status} lang={lang} is_resolved={report.is_resolved} />
           </View>
 
           {/* Description */}

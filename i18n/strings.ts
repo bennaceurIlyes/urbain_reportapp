@@ -84,6 +84,11 @@ export const strings: Record<string, Record<Language, string>> = {
   issueFixed:        { ar: 'تم إصلاح المشكلة بنجاح', fr: 'Problème résolu avec succès' },
   approved:          { ar: 'مُعتمَد', fr: 'Approuvé' },
   approvedByAdmin:   { ar: 'تمت الموافقة من الإدارة', fr: "Approuvé par l'administration" },
+  submitted:         { ar: 'تم تقديم البلاغ', fr: 'Soumis' },
+  underInvestigationTimeline: { ar: 'قيد التحقيق والبحث', fr: 'Sous enquête' },
+  leaderAssignedTimeline: { ar: 'تم تعيين قائد الفريق', fr: 'Chef d\'équipe assigné' },
+  workInProgressTimeline: { ar: 'أشغال قيد التنفيذ', fr: 'Travaux en cours' },
+  resolvedTimeline:  { ar: 'تم حل المشكلة', fr: 'Résolu' },
   reportId:          { ar: 'رقم البلاغ', fr: 'ID du signalement' },
   locationLabel:     { ar: 'الموقع', fr: 'Localisation' },
 
@@ -188,13 +193,25 @@ export const t = (key: string, lang: Language): string => {
 /**
  * Get status label in the current language
  */
-export const getStatusLabel = (status: string | number, lang: Language): string => {
+export const getStatusLabel = (status: string | number, lang: Language, is_resolved?: boolean): string => {
+  if (is_resolved === false) {
+    return t('statusInProgress', lang);
+  }
+  if (is_resolved === true) {
+    if (status === 3 || status === 'completed' || status === 2) {
+      return t('completedWaitingApproval', lang);
+    }
+    if (status === 4 || status === 'approved') {
+      return t('statusApproved', lang);
+    }
+  }
+
   switch (status) {
     case 'pending': case 0: return t('statusPending', lang);
     case 'assigned': return t('statusAssigned', lang);
     case 'in_progress': case 1: return t('statusInProgress', lang);
-    case 'completed': case 2: return t('statusCompleted', lang);
-    case 'approved': return t('statusApproved', lang);
+    case 'completed': case 2: case 3: return t('completedWaitingApproval', lang);
+    case 'approved': case 4: return t('statusApproved', lang);
     default: return '—';
   }
 };

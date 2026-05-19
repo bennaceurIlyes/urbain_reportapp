@@ -82,8 +82,13 @@ export const submitReport = async (data: ReportData) => {
       description: sanitizedDescription,
       priority,
       status: 0, // Pending
+      is_resolved: false,
       reporter_id: user.id, // Use authenticated user ID, not the passed userId
       location: JSON.stringify(data.location),
+      under_investigation_at: null,
+      assigned_to_at: null,
+      work_in_progress_at: null,
+      resolved_at: null,
     })
     .select()
     .single();
@@ -233,7 +238,7 @@ export const updateReportStatus = async (reportId: string, status: string | numb
   // ── Verify the user is authorized to update this report ──
   const { data: report, error: fetchError } = await supabase
     .from('reports')
-    .select('team_leader, reporter_id, status, assigned_to_at, completed_at, approved_at')
+    .select('team_leader, reporter_id, status, assigned_to_at, completed_at, approved_at, under_investigation_at, work_in_progress_at')
     .eq('id', reportId)
     .single();
 
@@ -242,20 +247,35 @@ export const updateReportStatus = async (reportId: string, status: string | numb
   }
 
   // If the report is unassigned or assigned to someone else (in this MVP), allow this team leader to take ownership
-  const updates: any = { status };
+  const updates: any = {};
+  
+  if (status === 'completed' || status === 3) {
+    updates.status = 3;
+    updates.is_resolved = true;
+    updates.completed_at = new Date().toISOString();
+    updates.resolved_at = new Date().toISOString();
+  } else if (status === 'approved' || status === 4) {
+    updates.status = 4;
+    updates.is_resolved = true;
+    updates.approved_at = new Date().toISOString();
+  } else {
+    updates.status = status;
+    updates.is_resolved = false;
+  }
+
   if (!report.team_leader || report.team_leader !== user.id) {
     updates.team_leader = user.id; // Auto-assign to the current team leader
     updates.assigned_to_at = new Date().toISOString();
   }
   
-  if (status === 'assigned' && !report.assigned_to_at) {
+  if ((status === 'assigned' || status === 'in_progress') && !report.assigned_to_at) {
     updates.assigned_to_at = new Date().toISOString();
   }
-  if (status === 'completed') {
-    updates.completed_at = new Date().toISOString();
+  if ((status === 'assigned' || status === 'in_progress') && !report.under_investigation_at) {
+    updates.under_investigation_at = new Date().toISOString();
   }
-  if (status === 'approved') {
-    updates.approved_at = new Date().toISOString();
+  if (status === 'in_progress' && !report.work_in_progress_at) {
+    updates.work_in_progress_at = new Date().toISOString();
   }
 
   const { error } = await supabase
@@ -346,8 +366,10 @@ export const uploadCompletionImages = async (reportId: string, imageUris: string
     .from('reports')
     .update({ 
       completion_images: uploadedPaths,
-      status: 'completed',
-      completed_at: new Date().toISOString()
+      status: 3,
+      is_resolved: true,
+      completed_at: new Date().toISOString(),
+      resolved_at: new Date().toISOString()
     })
     .eq('id', reportId);
 

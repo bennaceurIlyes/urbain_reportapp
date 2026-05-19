@@ -102,11 +102,11 @@ export const ReportDetailsScreen = ({ route, navigation }: any) => {
   };
 
   const timelineSteps = [
-    { title: t('reportCreated'), subtitle: t('receivedByServices'), time: formatStepTime(report.created_at) },
-    { title: t('underInvestigation'), subtitle: t('techTeamAssigned'), time: formatStepTime(report.assigned_to_at) },
-    { title: t('workInProgress'), subtitle: t('maintenanceOnSite'), time: formatStepTime(report.assigned_to_at) }, // Using assignment time as proxy if missing
-    { title: t('resolved'), subtitle: t('issueFixed'), time: formatStepTime(report.completed_at) },
-    { title: t('approved'), subtitle: t('approvedByAdmin'), time: formatStepTime(report.approved_at) },
+    { title: t('submitted'), subtitle: t('receivedByServices'), time: formatStepTime(report.created_at) },
+    { title: t('underInvestigationTimeline'), subtitle: t('techTeamAssigned'), time: formatStepTime(report.under_investigation_at) },
+    { title: t('leaderAssignedTimeline'), subtitle: t('techTeamAssigned'), time: formatStepTime(report.assigned_to_at) },
+    { title: t('workInProgressTimeline'), subtitle: t('maintenanceOnSite'), time: formatStepTime(report.work_in_progress_at) },
+    { title: t('resolvedTimeline'), subtitle: t('issueFixed'), time: formatStepTime(report.resolved_at) },
   ];
 
   return (
@@ -145,7 +145,7 @@ export const ReportDetailsScreen = ({ route, navigation }: any) => {
         <View style={styles.contentCard}>
           {/* Status + Priority */}
           <View style={[styles.badgeRow, isRTL && styles.badgeRowRTL]}>
-            <StatusBadge status={report.status} lang={lang} />
+            <StatusBadge status={report.status} lang={lang} is_resolved={report.is_resolved} />
             <PriorityBadge priority={report.priority} lang={lang} />
           </View>
 

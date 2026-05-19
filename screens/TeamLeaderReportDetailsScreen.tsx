@@ -21,6 +21,7 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(report.status);
+  const [isResolved, setIsResolved] = useState(report.is_resolved);
   
   // Initialize with any existing additional attachments (index 1 and beyond)
   const initialAdditionalImages = report.attachments?.length > 1 
@@ -31,50 +32,55 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
   
   const btnScale = useRef(new Animated.Value(1)).current;
   const addBtnScale = useRef(new Animated.Value(1)).current;
-
+ 
   const location = typeof report.location === 'string'
     ? JSON.parse(report.location)
     : report.location;
-
+ 
   const imageUrl = report.attachments?.length > 0 ? report.attachments[0].file_url : null;
-
+ 
   const openMaps = () => {
     if (!location?.latitude || !location?.longitude) return;
     const url = `https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}`;
     Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
   };
-
+ 
   const handleStartWork = async () => {
     setLoading(true);
     try {
       await updateReportStatus(report.id, 'in_progress');
       setCurrentStatus('in_progress');
+      setIsResolved(false);
     } catch (error: any) {
       Alert.alert(t('error'), error.message);
     } finally {
       setLoading(false);
     }
   };
-
+ 
   const handleApprove = async () => {
     setLoading(true);
     try {
-      await updateReportStatus(report.id, 'approved');
-      setCurrentStatus('approved');
+      await updateReportStatus(report.id, 4);
+      setCurrentStatus(4);
+      setIsResolved(true);
     } catch (error: any) {
       Alert.alert(t('error'), error.message);
     } finally {
       setLoading(false);
     }
   };
-
+ 
   const handleMarkCompleted = () => {
     navigation.navigate('TeamLeaderCompletionUpload', {
       report,
-      onComplete: () => setCurrentStatus('completed'),
+      onComplete: () => {
+        setCurrentStatus(3);
+        setIsResolved(true);
+      },
     });
   };
-
+ 
   // ─── Direct mark as complete (without upload screen) ───
   const handleDirectComplete = async () => {
     Alert.alert(
@@ -88,8 +94,9 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
           onPress: async () => {
             setLoading(true);
             try {
-              await updateReportStatus(report.id, 'completed');
-              setCurrentStatus('completed');
+              await updateReportStatus(report.id, 3);
+              setCurrentStatus(3);
+              setIsResolved(true);
             } catch (error: any) {
               Alert.alert(t('error'), error.message);
             } finally {
@@ -325,7 +332,7 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
 
           {/* Status + Priority */}
           <View style={[styles.badgeRow, isRTL && styles.badgeRowRTL]}>
-            <StatusBadge status={currentStatus} lang={lang} />
+            <StatusBadge status={currentStatus} lang={lang} is_resolved={isResolved} />
             <PriorityBadge priority={report.priority} lang={lang} />
           </View>
 

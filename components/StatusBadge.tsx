@@ -8,11 +8,12 @@ import { getStatusColor } from '../theme';
 interface StatusBadgeProps {
   status: string | number;
   lang: Language;
+  is_resolved?: boolean;
 }
 
-export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, lang }) => {
-  const color = getStatusColor(status);
-  const label = getStatusLabel(status, lang);
+export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, lang, is_resolved }) => {
+  const color = getStatusColor(status, is_resolved);
+  const label = getStatusLabel(status, lang, is_resolved);
 
   return (
     <View

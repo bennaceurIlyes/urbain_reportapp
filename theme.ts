@@ -148,14 +148,25 @@ export const toArabicNumeral = (n: number | string, lang: string = 'ar'): string
   return str.replace(/[0-9]/g, (d) => arabicDigits[parseInt(d, 10)]);
 };
 
-/** Get status color from theme */
-export const getStatusColor = (status: string | number): string => {
+export const getStatusColor = (status: string | number, is_resolved?: boolean): string => {
+  if (is_resolved === false) {
+    return colors.status.inProgress;
+  }
+  if (is_resolved === true) {
+    if (status === 3 || status === 'completed' || status === 2) {
+      return colors.status.completed;
+    }
+    if (status === 4 || status === 'approved') {
+      return colors.status.approved;
+    }
+  }
+
   switch (status) {
     case 'pending': case 0: return colors.status.pending;
     case 'assigned': return colors.status.assigned;
     case 'in_progress': case 1: return colors.status.inProgress;
-    case 'completed': case 2: return colors.status.completed;
-    case 'approved': return colors.status.approved;
+    case 'completed': case 2: case 3: return colors.status.completed;
+    case 'approved': case 4: return colors.status.approved;
     default: return colors.textMuted;
   }
 };
