@@ -366,13 +366,13 @@ export const uploadCompletionImages = async (reportId: string, imageUris: string
   }
 
   const { error: updateError } = await supabase
-    .from('reports')
-    .update({ 
-      completion_images: uploadedPaths,
-      status: 3,
-      is_resolved: true,
-      resolved_at: new Date().toISOString()
-    })
+.from('reports')
+.update({ 
+  completion_images: uploadedPaths,
+  status: 3,
+  is_resolved: true,
+  resolved_at: new Date().toISOString()
+})
     .eq('id', reportId);
 
   if (updateError) {
