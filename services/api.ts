@@ -261,8 +261,17 @@ export const updateReportStatus = async (reportId: string, status: string | numb
     updates.status = 4;
     updates.is_resolved = true;
     updates.approved_at = new Date().toISOString();
+  } else if (status === 'in_progress' || status === 'assigned' || status === 2) {
+    updates.status = 2;
+    updates.is_resolved = false;
+  } else if (status === 'under_investigation' || status === 1) {
+    updates.status = 1;
+    updates.is_resolved = false;
+  } else if (status === 'pending' || status === 0) {
+    updates.status = 0;
+    updates.is_resolved = false;
   } else {
-    updates.status = status;
+    updates.status = typeof status === 'number' ? status : (parseInt(status as string, 10) || 0);
     updates.is_resolved = false;
   }
 

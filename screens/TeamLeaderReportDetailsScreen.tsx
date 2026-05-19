@@ -49,8 +49,8 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
   const handleStartWork = async () => {
     setLoading(true);
     try {
-      await updateReportStatus(report.id, 'in_progress');
-      setCurrentStatus('in_progress');
+      await updateReportStatus(report.id, 2);
+      setCurrentStatus(2);
       setWorkInProgressAt(new Date().toISOString());
       setIsResolved(false);
     } catch (error: any) {
