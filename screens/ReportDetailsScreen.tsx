@@ -145,7 +145,7 @@ export const ReportDetailsScreen = ({ route, navigation }: any) => {
         <View style={styles.contentCard}>
           {/* Status + Priority */}
           <View style={[styles.badgeRow, isRTL && styles.badgeRowRTL]}>
-            <StatusBadge status={report.status} lang={lang} is_resolved={report.is_resolved} />
+            <StatusBadge status={report.status} lang={lang} is_resolved={report.is_resolved} work_in_progress_at={report.work_in_progress_at} />
             <PriorityBadge priority={report.priority} lang={lang} />
           </View>
 

@@ -193,7 +193,7 @@ export const t = (key: string, lang: Language): string => {
 /**
  * Get status label in the current language
  */
-export const getStatusLabel = (status: string | number, lang: Language, is_resolved?: boolean): string => {
+export const getStatusLabel = (status: string | number, lang: Language, is_resolved?: boolean, work_in_progress_at?: string | null): string => {
   // If status is 4 or approved, it is ALWAYS Completed/Done (مكتمل / Terminé)
   if (status === 4 || status === 'approved') {
     return t('statusCompleted', lang);
@@ -207,6 +207,14 @@ export const getStatusLabel = (status: string | number, lang: Language, is_resol
   // Otherwise if is_resolved is true -> completed
   if (is_resolved === true) {
     return t('statusCompleted', lang);
+  }
+
+  // Handle status 2 (Assigned/Leader assigned)
+  if (status === 2) {
+    if (!work_in_progress_at) {
+      return t('statusAssigned', lang);
+    }
+    return t('statusInProgress', lang);
   }
 
   // Rule 1: when is_resolved is false -> So The task is still in progress

@@ -22,6 +22,7 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
   const [imageLoading, setImageLoading] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(report.status);
   const [isResolved, setIsResolved] = useState(report.is_resolved);
+  const [workInProgressAt, setWorkInProgressAt] = useState<string | null>(report.work_in_progress_at);
   
   // Initialize with any existing additional attachments (index 1 and beyond)
   const initialAdditionalImages = report.attachments?.length > 1 
@@ -50,6 +51,7 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
     try {
       await updateReportStatus(report.id, 'in_progress');
       setCurrentStatus('in_progress');
+      setWorkInProgressAt(new Date().toISOString());
       setIsResolved(false);
     } catch (error: any) {
       Alert.alert(t('error'), error.message);
@@ -228,7 +230,22 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
                 <ActivityIndicator size="large" color={colors.republicGreen} style={{ padding: spacing.md }} />
               ) : (
                 <View style={styles.actionsContainer}>
-                  {addedImages.length === 0 ? (
+                  {!workInProgressAt ? (
+                    <Animated.View style={{ transform: [{ scale: btnScale }] }}>
+                      <TouchableOpacity
+                        style={styles.actionButtonGreen}
+                        onPress={handleStartWork}
+                        onPressIn={onBtnPressIn}
+                        onPressOut={onBtnPressOut}
+                        activeOpacity={1}
+                        accessibilityLabel={t('startWork')}
+                        accessibilityRole="button"
+                      >
+                        <MaterialCommunityIcons name="play-circle-outline" size={24} color="#FFFFFF" />
+                        <Text style={styles.actionButtonText}>{t('startWork')}</Text>
+                      </TouchableOpacity>
+                    </Animated.View>
+                  ) : addedImages.length === 0 ? (
                     <>
                       {/* 1. Insert Image Button (Primary, Active) */}
                       <Animated.View style={{ transform: [{ scale: btnScale }] }}>
@@ -339,7 +356,7 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
 
           {/* Status + Priority */}
           <View style={[styles.badgeRow, isRTL && styles.badgeRowRTL]}>
-            <StatusBadge status={currentStatus} lang={lang} is_resolved={isResolved} />
+            <StatusBadge status={currentStatus} lang={lang} is_resolved={isResolved} work_in_progress_at={workInProgressAt} />
             <PriorityBadge priority={report.priority} lang={lang} />
           </View>
 

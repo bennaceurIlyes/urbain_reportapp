@@ -9,11 +9,12 @@ interface StatusBadgeProps {
   status: string | number;
   lang: Language;
   is_resolved?: boolean;
+  work_in_progress_at?: string | null;
 }
 
-export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, lang, is_resolved }) => {
-  const color = getStatusColor(status, is_resolved);
-  const label = getStatusLabel(status, lang, is_resolved);
+export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, lang, is_resolved, work_in_progress_at }) => {
+  const color = getStatusColor(status, is_resolved, work_in_progress_at);
+  const label = getStatusLabel(status, lang, is_resolved, work_in_progress_at);
 
   return (
     <View
