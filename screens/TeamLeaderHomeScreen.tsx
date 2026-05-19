@@ -12,7 +12,7 @@ import { colors, spacing, toArabicNumeral } from '../theme';
 import { useLanguage } from '../hooks/useLanguage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type FilterTab = 'all' | 'pending' | 'in_progress';
+type FilterTab = 'all' | 'pending' | 'in_progress' | 'completed';
 
 export const TeamLeaderHomeScreen = ({ navigation }: any) => {
   const { user } = useAuth();
@@ -50,15 +50,21 @@ export const TeamLeaderHomeScreen = ({ navigation }: any) => {
   };
 
   const filteredReports = reports.filter(r => {
+    const isCompleted = r.is_resolved === true || r.status === 3 || r.status === 4 || r.status === 'completed' || r.status === 'approved';
+    const isPending = !isCompleted && !r.work_in_progress_at;
+    const isInProgress = !isCompleted && !!r.work_in_progress_at;
+
     if (activeFilter === 'all') return true;
-    if (activeFilter === 'pending') return r.status === 'assigned' || r.status === 'pending' || r.status === 0;
-    if (activeFilter === 'in_progress') return r.status === 'in_progress' || r.status === 1;
+    if (activeFilter === 'pending') return isPending;
+    if (activeFilter === 'in_progress') return isInProgress;
+    if (activeFilter === 'completed') return isCompleted;
     return true;
   });
 
-  const pendingCount = reports.filter(r =>
-    r.status === 'assigned' || r.status === 'pending' || r.status === 0
-  ).length;
+  const pendingCount = reports.filter(r => {
+    const isCompleted = r.is_resolved === true || r.status === 3 || r.status === 4 || r.status === 'completed' || r.status === 'approved';
+    return !isCompleted && !r.work_in_progress_at;
+  }).length;
 
   const formatNum = (n: number) => toArabicNumeral(n, lang);
 
@@ -66,6 +72,7 @@ export const TeamLeaderHomeScreen = ({ navigation }: any) => {
     { key: 'all', label: t('all') },
     { key: 'pending', label: t('filterPending') },
     { key: 'in_progress', label: t('filterInProgress') },
+    { key: 'completed', label: t('filterCompleted') },
   ];
 
   const renderFilterTabs = () => (

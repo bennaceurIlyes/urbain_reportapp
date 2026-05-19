@@ -135,6 +135,7 @@ export const strings: Record<string, Record<Language, string>> = {
   all:               { ar: 'الكل', fr: 'Tout' },
   filterPending:     { ar: 'في الانتظار', fr: 'En attente' },
   filterInProgress:  { ar: 'قيد التنفيذ', fr: 'En cours' },
+  filterCompleted:   { ar: 'المكتملة', fr: 'Terminées' },
 
   // ─── General ────────────────────────────────────────────────────────────────
   submit:            { ar: 'إرسال', fr: 'Envoyer' },

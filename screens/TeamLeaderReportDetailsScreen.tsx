@@ -14,6 +14,56 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { height, width } = Dimensions.get('window');
 
+/** Status timeline step component */
+const TimelineStep: React.FC<{
+  title: string;
+  subtitle: string;
+  time?: string;
+  completed: boolean;
+  current: boolean;
+  isLast: boolean;
+  isRTL: boolean;
+}> = ({ title, subtitle, time, completed, current, isLast, isRTL }) => {
+  return (
+    <View style={[tlStyles.item, isRTL && tlStyles.itemRTL]}>
+      <View style={tlStyles.lineColumn}>
+        <View style={[
+          tlStyles.dot,
+          completed && tlStyles.dotCompleted,
+          current && tlStyles.dotCurrent,
+        ]}>
+          {completed && <MaterialCommunityIcons name="check" size={10} color="#FFFFFF" />}
+        </View>
+        {!isLast && (
+          <View style={[
+            tlStyles.line,
+            completed && tlStyles.lineCompleted,
+          ]} />
+        )}
+      </View>
+      <View style={[tlStyles.content, isRTL && tlStyles.contentRTL]}>
+        <View style={[tlStyles.header, isRTL && tlStyles.headerRTL]}>
+          <Text style={[
+            tlStyles.title,
+            { opacity: completed || current ? 1 : 0.4 },
+            isRTL && tlStyles.titleRTL,
+          ]}>
+            {title}
+          </Text>
+          {time && <Text style={tlStyles.time}>{time}</Text>}
+        </View>
+        <Text style={[
+          tlStyles.subtitle,
+          { opacity: completed || current ? 0.7 : 0.3 },
+          isRTL && tlStyles.subtitleRTL,
+        ]}>
+          {subtitle}
+        </Text>
+      </View>
+    </View>
+  );
+};
+
 export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
   const { report } = route.params;
   const { t, lang, isRTL } = useLanguage();
@@ -21,7 +71,14 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(report.status);
-  const [isResolved, setIsResolved] = useState(report.is_resolved);
+  const [isResolved, setIsResolved] = useState(
+    report.is_resolved === true ||
+    report.is_resolved === 'true' ||
+    report.status === 3 ||
+    report.status === 4 ||
+    report.status === 'completed' ||
+    report.status === 'approved'
+  );
   const [workInProgressAt, setWorkInProgressAt] = useState<string | null>(report.work_in_progress_at);
   
   // Initialize with any existing additional attachments (index 1 and beyond)
@@ -40,6 +97,37 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
  
   const imageUrl = report.attachments?.length > 0 ? report.attachments[0].file_url : null;
  
+  const statusIndex = (() => {
+    if (isResolved || currentStatus === 3 || currentStatus === 4 || currentStatus === 'completed' || currentStatus === 'approved') {
+      return 4;
+    }
+    if (workInProgressAt) {
+      return 3;
+    }
+    if (report.assigned_to_at) {
+      return 2;
+    }
+    if (report.under_investigation_at) {
+      return 1;
+    }
+    return 0;
+  })();
+
+  const formatStepTime = (dateString?: string | null) => {
+    if (!dateString) return undefined;
+    return new Date(dateString).toLocaleDateString(lang === 'ar' ? 'ar-DZ' : 'fr-DZ', {
+      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+  };
+
+  const timelineSteps = [
+    { title: t('submitted'), subtitle: t('receivedByServices'), time: formatStepTime(report.created_at) },
+    { title: t('underInvestigationTimeline'), subtitle: t('techTeamAssigned'), time: formatStepTime(report.under_investigation_at) },
+    { title: t('leaderAssignedTimeline'), subtitle: t('techTeamAssigned'), time: formatStepTime(report.assigned_to_at) },
+    { title: t('workInProgressTimeline'), subtitle: t('maintenanceOnSite'), time: formatStepTime(workInProgressAt) },
+    { title: t('resolvedTimeline'), subtitle: t('issueFixed'), time: formatStepTime(report.resolved_at || report.approved_at || (isResolved ? new Date().toISOString() : null)) },
+  ];
+
   const openMaps = () => {
     if (!location?.latitude || !location?.longitude) return;
     const url = `https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}`;
@@ -221,211 +309,321 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
 
         {/* Content */}
         <View style={styles.contentCard}>
-          {/* ─── Work Actions (Prominent, at top) ─── */}
-          {!isResolved && (
-            <View style={styles.actionsCard}>
-              <Text style={[styles.actionsTitle, isRTL && styles.actionsTitleRTL]}>{t('workActions')}</Text>
+          {isResolved ? (
+            <>
+              {/* Status + Priority */}
+              <View style={[styles.badgeRow, isRTL && styles.badgeRowRTL]}>
+                <StatusBadge status={currentStatus} lang={lang} is_resolved={isResolved} work_in_progress_at={workInProgressAt} />
+                <PriorityBadge priority={report.priority} lang={lang} />
+              </View>
 
-              {loading ? (
-                <ActivityIndicator size="large" color={colors.republicGreen} style={{ padding: spacing.md }} />
-              ) : (
-                <View style={styles.actionsContainer}>
-                  {!workInProgressAt ? (
-                    <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-                      <TouchableOpacity
-                        style={styles.actionButtonGreen}
-                        onPress={handleStartWork}
-                        onPressIn={onBtnPressIn}
-                        onPressOut={onBtnPressOut}
-                        activeOpacity={1}
-                        accessibilityLabel={t('startWork')}
-                        accessibilityRole="button"
-                      >
-                        <MaterialCommunityIcons name="play-circle-outline" size={24} color="#FFFFFF" />
-                        <Text style={styles.actionButtonText}>{t('startWork')}</Text>
-                      </TouchableOpacity>
-                    </Animated.View>
-                  ) : addedImages.length === 0 ? (
-                    <>
-                      {/* 1. Insert Image Button (Primary, Active) */}
-                      <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-                        <TouchableOpacity
-                          style={styles.actionButtonGreen}
-                          onPress={handleAddImage}
-                          onPressIn={onBtnPressIn}
-                          onPressOut={onBtnPressOut}
-                          activeOpacity={1}
-                          disabled={imageLoading}
-                          accessibilityLabel={t('addImage')}
-                          accessibilityRole="button"
-                        >
-                          {imageLoading ? (
-                            <ActivityIndicator size="small" color="#FFFFFF" />
-                          ) : (
-                            <>
-                              <MaterialCommunityIcons name="camera-plus-outline" size={22} color="#FFFFFF" />
-                              <Text style={styles.actionButtonText}>{t('uploadProof')}</Text>
-                            </>
-                          )}
-                        </TouchableOpacity>
-                      </Animated.View>
+              <Text style={[styles.title, isRTL && styles.titleRTL]}>{report.title}</Text>
 
-                      {/* 2. Complete Button (Disabled with Alert) */}
-                      <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-                        <TouchableOpacity
-                          style={[styles.actionButtonOutline, { opacity: 0.5 }]}
-                          onPress={() => {
-                            Alert.alert(t('imagesRequired'), t('pleaseUploadImage'));
-                          }}
-                          activeOpacity={0.8}
-                          accessibilityLabel={t('markAsComplete')}
-                          accessibilityRole="button"
-                        >
-                          <MaterialCommunityIcons name="check-circle-outline" size={22} color={colors.republicGreen} />
-                          <Text style={styles.actionButtonTextGreen}>{t('markAsComplete')}</Text>
-                        </TouchableOpacity>
-                      </Animated.View>
-                    </>
-                  ) : (
-                    <>
-                      {/* 1. Complete Button (Primary, Active since image is uploaded) */}
-                      <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-                        <TouchableOpacity
-                          style={styles.actionButtonGreen}
-                          onPress={handleDirectComplete}
-                          onPressIn={onBtnPressIn}
-                          onPressOut={onBtnPressOut}
-                          activeOpacity={1}
-                          disabled={loading}
-                          accessibilityLabel={t('markAsComplete')}
-                          accessibilityRole="button"
-                        >
-                          {loading ? (
-                            <ActivityIndicator size="small" color="#FFFFFF" />
-                          ) : (
-                            <>
-                              <MaterialCommunityIcons name="check-decagram" size={22} color="#FFFFFF" />
-                              <Text style={styles.actionButtonText}>{t('markAsComplete')}</Text>
-                            </>
-                          )}
-                        </TouchableOpacity>
-                      </Animated.View>
+              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL]}>{t('description')}</Text>
+              <Text style={[styles.description, isRTL && styles.descriptionRTL]}>{report.description}</Text>
 
-                      {/* 2. Insert Another Image Button (Secondary Outline) */}
-                      <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-                        <TouchableOpacity
-                          style={styles.actionButtonOutline}
-                          onPress={handleAddImage}
-                          onPressIn={onBtnPressIn}
-                          onPressOut={onBtnPressOut}
-                          activeOpacity={1}
-                          disabled={imageLoading}
-                          accessibilityLabel={t('addImage')}
-                          accessibilityRole="button"
-                        >
-                          {imageLoading ? (
-                            <ActivityIndicator size="small" color={colors.republicGreen} />
-                          ) : (
-                            <>
-                              <MaterialCommunityIcons name="camera-plus-outline" size={22} color={colors.republicGreen} />
-                              <Text style={styles.actionButtonTextGreen}>{t('uploadProof')}</Text>
-                            </>
-                          )}
-                        </TouchableOpacity>
-                      </Animated.View>
-                    </>
+              {/* Timeline Section */}
+              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md, marginBottom: spacing.xs }]}>
+                {lang === 'ar' ? 'الجدول الزمني للمتابعة' : 'Timeline de suivi'}
+              </Text>
+              <View style={tlStyles.timeline}>
+                {timelineSteps.map((step, index) => {
+                  const isStepCompleted = index < statusIndex;
+                  const isStepCurrent = index === statusIndex;
+                  return (
+                    <TimelineStep
+                      key={index}
+                      title={step.title}
+                      subtitle={step.subtitle}
+                      time={step.time}
+                      completed={isStepCompleted}
+                      current={isStepCurrent}
+                      isLast={index === timelineSteps.length - 1}
+                      isRTL={isRTL}
+                    />
+                  );
+                })}
+              </View>
+
+              {/* Location Card */}
+              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md }]}>
+                {t('locationLabel')}
+              </Text>
+              <TouchableOpacity
+                style={[styles.infoCard, location?.latitude && styles.locationCardActive, { width: '100%', marginHorizontal: 0 }]}
+                onPress={openMaps}
+                disabled={!location?.latitude}
+                activeOpacity={0.7}
+                accessibilityLabel={t('openGoogleMaps')}
+                accessibilityRole="button"
+              >
+                <View style={[styles.locationHeader, isRTL && { flexDirection: 'row-reverse' }]}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.infoLabel, isRTL && { textAlign: 'right' }]}>{t('locationLabel')}</Text>
+                    <Text style={[styles.infoValue, location?.latitude && { color: colors.republicGreen }, isRTL && { textAlign: 'right' }]}>
+                      {location?.latitude ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}` : 'N/A'}
+                    </Text>
+                  </View>
+                  {location?.latitude && (
+                    <View style={styles.googleMapsButton}>
+                      <MaterialCommunityIcons name="google-maps" size={28} color="#4285F4" />
+                    </View>
                   )}
                 </View>
-              )}
-            </View>
-          )}
-
-          {/* ─── Added Images Preview ─── */}
-          {addedImages.length > 0 && (
-            <>
-              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md }]}>
-                {t('additionalPhotos')}
-              </Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.md }}>
-                {addedImages.map((uri, i) => (
-                  <Image key={i} source={{ uri }} style={styles.addedImage} accessibilityLabel={`${t('addImage')} ${i + 1}`} />
-                ))}
-              </ScrollView>
-            </>
-          )}
-
-          {/* Status + Priority */}
-          <View style={[styles.badgeRow, isRTL && styles.badgeRowRTL]}>
-            <StatusBadge status={currentStatus} lang={lang} is_resolved={isResolved} work_in_progress_at={workInProgressAt} />
-            <PriorityBadge priority={report.priority} lang={lang} />
-          </View>
-
-          <Text style={[styles.title, isRTL && styles.titleRTL]}>{report.title}</Text>
-
-          {/* Meta */}
-          <View style={[styles.metaRow, isRTL && styles.metaRowRTL]}>
-            <View style={[styles.metaItem, isRTL && styles.metaItemRTL]}>
-              <MaterialCommunityIcons name="calendar-outline" size={16} color={colors.textMuted} />
-              <Text style={styles.metaText}>
-                {t('assigned')}: {new Date(report.assigned_to_at || report.created_at).toLocaleDateString(
-                  lang === 'ar' ? 'ar-DZ' : 'fr-DZ'
-                )}
-              </Text>
-            </View>
-          </View>
-
-          <Divider style={styles.divider} />
-
-          <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL]}>{t('description')}</Text>
-          <Text style={[styles.description, isRTL && styles.descriptionRTL]}>{report.description}</Text>
-
-          {/* Info Cards */}
-          <View style={[styles.infoGrid, isRTL && styles.infoGridRTL]}>
-            <View style={styles.infoCard}>
-              <Text style={[styles.infoLabel, isRTL && { textAlign: 'right' }]}>{t('reportId')}</Text>
-              <Text style={[styles.infoValue, isRTL && { textAlign: 'right' }]}>#{report.id.substring(0, 8).toUpperCase()}</Text>
-            </View>
-
-            {/* ─── Location Card with Google Maps Logo ─── */}
-            <TouchableOpacity
-              style={[styles.infoCard, location?.latitude && styles.locationCardActive]}
-              onPress={openMaps}
-              disabled={!location?.latitude}
-              activeOpacity={0.7}
-              accessibilityLabel={t('openGoogleMaps')}
-              accessibilityRole="button"
-            >
-              <View style={[styles.locationHeader, isRTL && { flexDirection: 'row-reverse' }]}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.infoLabel, isRTL && { textAlign: 'right' }]}>{t('locationLabel')}</Text>
-                  <Text style={[styles.infoValue, location?.latitude && { color: colors.republicGreen }, isRTL && { textAlign: 'right' }]}>
-                    {location?.latitude ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}` : 'N/A'}
-                  </Text>
-                </View>
                 {location?.latitude && (
-                  <View style={styles.googleMapsButton}>
-                    <MaterialCommunityIcons name="google-maps" size={28} color="#4285F4" />
+                  <View style={[styles.viewOnMapRow, isRTL && { flexDirection: 'row-reverse' }]}>
+                    <MaterialCommunityIcons name="open-in-new" size={12} color={colors.info} />
+                    <Text style={styles.viewOnMapText}>{t('viewOnMap')}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              {/* Completion images */}
+              {report.completion_images && report.completion_images.length > 0 && (
+                <>
+                  <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md }]}>
+                    {t('completionImages')}
+                  </Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: spacing.xs }}>
+                    {report.completion_images.map((uri: string, i: number) => (
+                      <Image key={i} source={{ uri }} style={styles.completionImage} accessibilityLabel={`${t('completionImages')} ${i + 1}`} />
+                    ))}
+                  </ScrollView>
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              {/* ─── Work Actions (Prominent, at top) ─── */}
+              <View style={styles.actionsCard}>
+                <Text style={[styles.actionsTitle, isRTL && styles.actionsTitleRTL]}>{t('workActions')}</Text>
+
+                {loading ? (
+                  <ActivityIndicator size="large" color={colors.republicGreen} style={{ padding: spacing.md }} />
+                ) : (
+                  <View style={styles.actionsContainer}>
+                    {!workInProgressAt ? (
+                      <Animated.View style={{ transform: [{ scale: btnScale }] }}>
+                        <TouchableOpacity
+                          style={styles.actionButtonGreen}
+                          onPress={handleStartWork}
+                          onPressIn={onBtnPressIn}
+                          onPressOut={onBtnPressOut}
+                          activeOpacity={1}
+                          accessibilityLabel={t('startWork')}
+                          accessibilityRole="button"
+                        >
+                          <MaterialCommunityIcons name="play-circle-outline" size={24} color="#FFFFFF" />
+                          <Text style={styles.actionButtonText}>{t('startWork')}</Text>
+                        </TouchableOpacity>
+                      </Animated.View>
+                    ) : addedImages.length === 0 ? (
+                      <>
+                        {/* 1. Insert Image Button (Primary, Active) */}
+                        <Animated.View style={{ transform: [{ scale: btnScale }] }}>
+                          <TouchableOpacity
+                            style={styles.actionButtonGreen}
+                            onPress={handleAddImage}
+                            onPressIn={onBtnPressIn}
+                            onPressOut={onBtnPressOut}
+                            activeOpacity={1}
+                            disabled={imageLoading}
+                            accessibilityLabel={t('addImage')}
+                            accessibilityRole="button"
+                          >
+                            {imageLoading ? (
+                              <ActivityIndicator size="small" color="#FFFFFF" />
+                            ) : (
+                              <>
+                                <MaterialCommunityIcons name="camera-plus-outline" size={22} color="#FFFFFF" />
+                                <Text style={styles.actionButtonText}>{t('uploadProof')}</Text>
+                              </>
+                            )}
+                          </TouchableOpacity>
+                        </Animated.View>
+
+                        {/* 2. Complete Button (Disabled with Alert) */}
+                        <Animated.View style={{ transform: [{ scale: btnScale }] }}>
+                          <TouchableOpacity
+                            style={[styles.actionButtonOutline, { opacity: 0.5 }]}
+                            onPress={() => {
+                              Alert.alert(t('imagesRequired'), t('pleaseUploadImage'));
+                            }}
+                            activeOpacity={0.8}
+                            accessibilityLabel={t('markAsComplete')}
+                            accessibilityRole="button"
+                          >
+                            <MaterialCommunityIcons name="check-circle-outline" size={22} color={colors.republicGreen} />
+                            <Text style={styles.actionButtonTextGreen}>{t('markAsComplete')}</Text>
+                          </TouchableOpacity>
+                        </Animated.View>
+                      </>
+                    ) : (
+                      <>
+                        {/* 1. Complete Button (Primary, Active since image is uploaded) */}
+                        <Animated.View style={{ transform: [{ scale: btnScale }] }}>
+                          <TouchableOpacity
+                            style={styles.actionButtonGreen}
+                            onPress={handleDirectComplete}
+                            onPressIn={onBtnPressIn}
+                            onPressOut={onBtnPressOut}
+                            activeOpacity={1}
+                            disabled={loading}
+                            accessibilityLabel={t('markAsComplete')}
+                            accessibilityRole="button"
+                          >
+                            {loading ? (
+                              <ActivityIndicator size="small" color="#FFFFFF" />
+                            ) : (
+                              <>
+                                <MaterialCommunityIcons name="check-decagram" size={22} color="#FFFFFF" />
+                                <Text style={styles.actionButtonText}>{t('markAsComplete')}</Text>
+                              </>
+                            )}
+                          </TouchableOpacity>
+                        </Animated.View>
+
+                        {/* 2. Insert Another Image Button (Secondary Outline) */}
+                        <Animated.View style={{ transform: [{ scale: btnScale }] }}>
+                          <TouchableOpacity
+                            style={styles.actionButtonOutline}
+                            onPress={handleAddImage}
+                            onPressIn={onBtnPressIn}
+                            onPressOut={onBtnPressOut}
+                            activeOpacity={1}
+                            disabled={imageLoading}
+                            accessibilityLabel={t('addImage')}
+                            accessibilityRole="button"
+                          >
+                            {imageLoading ? (
+                              <ActivityIndicator size="small" color={colors.republicGreen} />
+                            ) : (
+                              <>
+                                <MaterialCommunityIcons name="camera-plus-outline" size={22} color={colors.republicGreen} />
+                                <Text style={styles.actionButtonTextGreen}>{t('uploadProof')}</Text>
+                              </>
+                            )}
+                          </TouchableOpacity>
+                        </Animated.View>
+                      </>
+                    )}
                   </View>
                 )}
               </View>
-              {location?.latitude && (
-                <View style={[styles.viewOnMapRow, isRTL && { flexDirection: 'row-reverse' }]}>
-                  <MaterialCommunityIcons name="open-in-new" size={12} color={colors.info} />
-                  <Text style={styles.viewOnMapText}>{t('viewOnMap')}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
 
-          {/* Completion images */}
-          {report.completion_images && report.completion_images.length > 0 && (
-            <>
-              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL]}>{t('completionImages')}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {report.completion_images.map((uri: string, i: number) => (
-                  <Image key={i} source={{ uri }} style={styles.completionImage} accessibilityLabel={`${t('completionImages')} ${i + 1}`} />
-                ))}
-              </ScrollView>
+              {/* Added Images Preview */}
+              {addedImages.length > 0 && (
+                <>
+                  <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md }]}>
+                    {t('additionalPhotos')}
+                  </Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.md }}>
+                    {addedImages.map((uri, i) => (
+                      <Image key={i} source={{ uri }} style={styles.addedImage} accessibilityLabel={`${t('addImage')} ${i + 1}`} />
+                    ))}
+                  </ScrollView>
+                </>
+              )}
+
+              {/* Status + Priority */}
+              <View style={[styles.badgeRow, isRTL && styles.badgeRowRTL]}>
+                <StatusBadge status={currentStatus} lang={lang} is_resolved={isResolved} work_in_progress_at={workInProgressAt} />
+                <PriorityBadge priority={report.priority} lang={lang} />
+              </View>
+
+              <Text style={[styles.title, isRTL && styles.titleRTL]}>{report.title}</Text>
+
+              {/* Meta */}
+              <View style={[styles.metaRow, isRTL && styles.metaRowRTL]}>
+                <View style={[styles.metaItem, isRTL && styles.metaItemRTL]}>
+                  <MaterialCommunityIcons name="calendar-outline" size={16} color={colors.textMuted} />
+                  <Text style={styles.metaText}>
+                    {t('assigned')}: {new Date(report.assigned_to_at || report.created_at).toLocaleDateString(
+                      lang === 'ar' ? 'ar-DZ' : 'fr-DZ'
+                    )}
+                  </Text>
+                </View>
+              </View>
+
+              <Divider style={styles.divider} />
+
+              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL]}>{t('description')}</Text>
+              <Text style={[styles.description, isRTL && styles.descriptionRTL]}>{report.description}</Text>
+
+              {/* Timeline Section */}
+              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md, marginBottom: spacing.xs }]}>
+                {lang === 'ar' ? 'الجدول الزمني للمتابعة' : 'Timeline de suivi'}
+              </Text>
+              <View style={tlStyles.timeline}>
+                {timelineSteps.map((step, index) => {
+                  const isStepCompleted = index < statusIndex;
+                  const isStepCurrent = index === statusIndex;
+                  return (
+                    <TimelineStep
+                      key={index}
+                      title={step.title}
+                      subtitle={step.subtitle}
+                      time={step.time}
+                      completed={isStepCompleted}
+                      current={isStepCurrent}
+                      isLast={index === timelineSteps.length - 1}
+                      isRTL={isRTL}
+                    />
+                  );
+                })}
+              </View>
+
+              {/* Info Cards */}
+              <View style={[styles.infoGrid, isRTL && styles.infoGridRTL]}>
+                <View style={styles.infoCard}>
+                  <Text style={[styles.infoLabel, isRTL && { textAlign: 'right' }]}>{t('reportId')}</Text>
+                  <Text style={[styles.infoValue, isRTL && { textAlign: 'right' }]}>#{report.id.substring(0, 8).toUpperCase()}</Text>
+                </View>
+
+                {/* Location Card */}
+                <TouchableOpacity
+                  style={[styles.infoCard, location?.latitude && styles.locationCardActive]}
+                  onPress={openMaps}
+                  disabled={!location?.latitude}
+                  activeOpacity={0.7}
+                  accessibilityLabel={t('openGoogleMaps')}
+                  accessibilityRole="button"
+                >
+                  <View style={[styles.locationHeader, isRTL && { flexDirection: 'row-reverse' }]}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.infoLabel, isRTL && { textAlign: 'right' }]}>{t('locationLabel')}</Text>
+                      <Text style={[styles.infoValue, location?.latitude && { color: colors.republicGreen }, isRTL && { textAlign: 'right' }]}>
+                        {location?.latitude ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}` : 'N/A'}
+                      </Text>
+                    </View>
+                    {location?.latitude && (
+                      <View style={styles.googleMapsButton}>
+                        <MaterialCommunityIcons name="google-maps" size={28} color="#4285F4" />
+                      </View>
+                    )}
+                  </View>
+                  {location?.latitude && (
+                    <View style={[styles.viewOnMapRow, isRTL && { flexDirection: 'row-reverse' }]}>
+                      <MaterialCommunityIcons name="open-in-new" size={12} color={colors.info} />
+                      <Text style={styles.viewOnMapText}>{t('viewOnMap')}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              {/* Completion images */}
+              {report.completion_images && report.completion_images.length > 0 && (
+                <>
+                  <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md }]}>
+                    {t('completionImages')}
+                  </Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    {report.completion_images.map((uri: string, i: number) => (
+                      <Image key={i} source={{ uri }} style={styles.completionImage} accessibilityLabel={`${t('completionImages')} ${i + 1}`} />
+                    ))}
+                  </ScrollView>
+                </>
+              )}
             </>
           )}
 
@@ -645,3 +843,104 @@ const styles = StyleSheet.create({
     backgroundColor: colors.offWhite,
   },
 });
+
+const tlStyles = StyleSheet.create({
+  timeline: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    backgroundColor: '#F9FBF9',
+    borderRadius: borderRadius.card,
+    borderWidth: 1,
+    borderColor: '#EAF0EA',
+    marginBottom: spacing.xl,
+  },
+  item: {
+    flexDirection: 'row',
+    marginBottom: 0,
+  },
+  itemRTL: {
+    flexDirection: 'row-reverse',
+  },
+  lineColumn: {
+    alignItems: 'center',
+    width: 24,
+  },
+  dot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#EAEAEA',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
+    elevation: 2,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+  },
+  dotCompleted: {
+    backgroundColor: colors.republicGreen,
+    borderColor: '#FFFFFF',
+  },
+  dotCurrent: {
+    backgroundColor: '#FFFFFF',
+    borderColor: colors.republicGreen,
+    borderWidth: 3,
+  },
+  line: {
+    width: 2,
+    flex: 1,
+    backgroundColor: '#EAEAEA',
+    marginVertical: -2,
+    zIndex: 1,
+    minHeight: 36,
+  },
+  lineCompleted: {
+    backgroundColor: colors.republicGreen,
+  },
+  content: {
+    flex: 1,
+    paddingLeft: spacing.md,
+    paddingBottom: spacing.lg,
+  },
+  contentRTL: {
+    paddingLeft: 0,
+    paddingRight: spacing.md,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  headerRTL: {
+    flexDirection: 'row-reverse',
+  },
+  title: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    textAlign: 'left',
+  },
+  titleRTL: {
+    textAlign: 'right',
+  },
+  time: {
+    fontSize: 11,
+    color: colors.textMuted,
+    fontWeight: '500',
+  },
+  subtitle: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    lineHeight: 16,
+    textAlign: 'left',
+  },
+  subtitleRTL: {
+    textAlign: 'right',
+  },
+});
+
