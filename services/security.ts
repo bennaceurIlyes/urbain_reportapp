@@ -80,7 +80,7 @@ export const validateDescription = (description: string): { valid: boolean; erro
  * Validate priority value is within allowed range
  */
 export const validatePriority = (priority: number): boolean => {
-  return Number.isInteger(priority) && priority >= 1 && priority <= 3;
+  return Number.isInteger(priority) && priority >= 1 && priority <= 4;
 };
 
 /**

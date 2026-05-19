@@ -45,6 +45,7 @@ export const strings: Record<string, Record<Language, string>> = {
   priorityLow:       { ar: 'منخفض', fr: 'Faible' },
   priorityMedium:    { ar: 'متوسط', fr: 'Moyen' },
   priorityHigh:      { ar: 'عالي', fr: 'Élevé' },
+  priorityEmergency: { ar: 'حالة طارئة / مستعجل', fr: 'Urgent / Urgence' },
 
   // ─── Empty States ───────────────────────────────────────────────────────────
   noReports:         { ar: 'لا توجد بلاغات بعد', fr: 'Aucun signalement pour l\'instant' },
@@ -144,6 +145,9 @@ export const strings: Record<string, Record<Language, string>> = {
   thankYou:          { ar: 'شكراً لمساهمتك في تحسين مدينتنا.', fr: 'Merci pour votre contribution à l\'amélioration de notre ville.' },
   photoRequired:     { ar: 'الصورة مطلوبة', fr: 'Photo requise' },
   pleaseAttachPhoto: { ar: 'يرجى إرفاق صورة للمشكلة.', fr: 'Veuillez joindre une photo du problème.' },
+  emergencyPhotoRequired: { ar: 'الصورة مطلوبة للحالات الطارئة', fr: 'Photo requise pour les urgences' },
+  pleaseAttachEmergencyPhoto: { ar: 'يرجى إرفاق صورة لإثبات الحالة الطارئة المستعجلة.', fr: 'Veuillez joindre une photo pour prouver le caractère urgent.' },
+  completedWaitingApproval: { ar: 'بانتظار موافقة الإدارة', fr: "En attente d'approbation" },
   locationRequired:  { ar: 'الموقع مطلوب', fr: 'Localisation requise' },
   pleaseTagLocation: { ar: 'يرجى تحديد الموقع.', fr: 'Veuillez marquer la localisation.' },
   titleRequired:     { ar: 'العنوان مطلوب', fr: 'Le titre est requis' },
@@ -203,6 +207,7 @@ export const getPriorityLabel = (priority: number, lang: Language): string => {
     case 1: return t('priorityLow', lang);
     case 2: return t('priorityMedium', lang);
     case 3: return t('priorityHigh', lang);
+    case 4: return t('priorityEmergency', lang);
     default: return '—';
   }
 };

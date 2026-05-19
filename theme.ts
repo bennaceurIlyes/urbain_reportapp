@@ -34,6 +34,7 @@ export const colors = {
     low: '#388E3C',           // منخفض
     medium: '#F57F17',        // متوسط
     high: '#C62828',          // عالي
+    emergency: '#D32F2F',     // طوارئ
   },
 
   // Semantic
@@ -165,6 +166,7 @@ export const getPriorityColor = (priority: number): string => {
     case 1: return colors.priority.low;
     case 2: return colors.priority.medium;
     case 3: return colors.priority.high;
+    case 4: return colors.priority.emergency;
     default: return colors.textMuted;
   }
 };

@@ -62,7 +62,7 @@ export const submitReport = async (data: ReportData) => {
 
   const priority = data.priority || 2;
   if (!validatePriority(priority)) {
-    throw new Error('Invalid priority value. Must be 1, 2, or 3.');
+    throw new Error('Invalid priority value. Must be 1, 2, 3, or 4.');
   }
 
   if (!validateLocation(data.location)) {

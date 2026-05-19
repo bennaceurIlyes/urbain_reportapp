@@ -65,7 +65,10 @@ export const ReportScreen = ({ navigation }: any) => {
   };
 
   const handleSubmit = async (values: any, { setSubmitting }: any) => {
-    if (!imageUri) return Alert.alert(t('photoRequired'), t('pleaseAttachPhoto'));
+    // Image is only required for Emergency/Critical priority (value 4)
+    if (selectedPriority === 4 && !imageUri) {
+      return Alert.alert(t('emergencyPhotoRequired'), t('pleaseAttachEmergencyPhoto'));
+    }
     if (!location) return Alert.alert(t('locationRequired'), t('pleaseTagLocation'));
 
     setSubmitting(true);
@@ -85,6 +88,7 @@ export const ReportScreen = ({ navigation }: any) => {
     { value: 1, label: t('priorityLow'), color: colors.priority.low },
     { value: 2, label: t('priorityMedium'), color: colors.priority.medium },
     { value: 3, label: t('priorityHigh'), color: colors.priority.high },
+    { value: 4, label: t('priorityEmergency'), color: colors.priority.emergency },
   ];
 
   return (

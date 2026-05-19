@@ -83,24 +83,6 @@ export const ProfileScreen = ({ navigation }: any) => {
           <Text style={styles.userEmail}>{user?.email}</Text>
         </View>
 
-        {/* Stats */}
-        <View style={[styles.statsContainer, isRTL && styles.statsContainerRTL]}>
-          <View style={styles.statBox}>
-            <Text style={styles.statNumber}>١٢</Text>
-            <Text style={styles.statLabel}>{t('totalReports')}</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statBox}>
-            <Text style={[styles.statNumber, { color: colors.status.completed }]}>٨</Text>
-            <Text style={styles.statLabel}>{t('resolvedCount')}</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statBox}>
-            <Text style={[styles.statNumber, { color: colors.status.pending }]}>٤</Text>
-            <Text style={styles.statLabel}>{t('pendingCount')}</Text>
-          </View>
-        </View>
-
         {/* Language Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionLabel, isRTL && styles.sectionLabelRTL]}>{t('appLanguage')}</Text>
@@ -114,26 +96,6 @@ export const ProfileScreen = ({ navigation }: any) => {
                 <LanguageToggle />
               </View>
             </View>
-          </View>
-        </View>
-
-        {/* Settings */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionLabel, isRTL && styles.sectionLabelRTL]}>{t('appSettings')}</Text>
-          <View style={styles.menuGroup}>
-            <ProfileItem
-              icon="help-circle-outline"
-              label={t('helpCenter')}
-              color={colors.textSecondary}
-              onPress={() => {}}
-            />
-            <Divider style={styles.menuDivider} />
-            <ProfileItem
-              icon="file-document-outline"
-              label={t('termsPrivacy')}
-              color={colors.textSecondary}
-              onPress={() => {}}
-            />
           </View>
         </View>
 

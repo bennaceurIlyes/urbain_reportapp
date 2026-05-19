@@ -256,20 +256,12 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
                 )}
 
                 {(currentStatus === 'completed' || currentStatus === 2) && (
-                  <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-                    <TouchableOpacity
-                      style={styles.actionButtonGold}
-                      onPress={handleApprove}
-                      onPressIn={onBtnPressIn}
-                      onPressOut={onBtnPressOut}
-                      activeOpacity={1}
-                      accessibilityLabel={t('approveWork')}
-                      accessibilityRole="button"
-                    >
-                      <MaterialCommunityIcons name="shield-check" size={22} color="#FFFFFF" />
-                      <Text style={styles.actionButtonText}>{t('approveWork')}</Text>
-                    </TouchableOpacity>
-                  </Animated.View>
+                  <View style={styles.completedBanner}>
+                    <MaterialCommunityIcons name="clock-outline" size={24} color={colors.status.pending} />
+                    <Text style={[styles.completedText, isRTL && { textAlign: 'right' }]}>
+                      {t('completedWaitingApproval')}
+                    </Text>
+                  </View>
                 )}
 
                 {currentStatus === 'approved' && (
@@ -489,6 +481,13 @@ const styles = StyleSheet.create({
   },
   approvedText: {
     color: colors.status.approved, fontSize: 16, fontWeight: '700',
+  },
+  completedBanner: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    padding: spacing.md, gap: spacing.sm,
+  },
+  completedText: {
+    color: colors.status.pending, fontSize: 16, fontWeight: '700',
   },
 
   // Add Image Card
