@@ -149,6 +149,19 @@ export const toArabicNumeral = (n: number | string, lang: string = 'ar'): string
 };
 
 export const getStatusColor = (status: string | number, is_resolved?: boolean): string => {
+  // If status is 4 or approved, it is ALWAYS colors.status.approved (green)
+  if (status === 4 || status === 'approved') {
+    return colors.status.approved;
+  }
+
+  // If status is 3 or completed:
+  if (status === 3 || status === 'completed') {
+    if (is_resolved === true) {
+      return colors.status.completed;
+    }
+    return colors.status.inProgress;
+  }
+
   // Rule 1: when is_resolved is false -> So The task is still in progress
   if (is_resolved === false) {
     if (status === 0 || status === 'pending') {
@@ -158,16 +171,6 @@ export const getStatusColor = (status: string | number, is_resolved?: boolean): 
       return colors.status.assigned;
     }
     return colors.status.inProgress;
-  }
-
-  // Rule 2: when is_resolved is true and state is 3 -> So wait for admin acceptance
-  if (is_resolved === true && (status === 3 || status === 'completed')) {
-    return colors.status.completed;
-  }
-
-  // Rule 3: when is_resolved is true and state is 4 -> So task is done
-  if (is_resolved === true && (status === 4 || status === 'approved')) {
-    return colors.status.approved;
   }
 
   switch (status) {
