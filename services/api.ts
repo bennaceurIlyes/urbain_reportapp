@@ -238,11 +238,15 @@ export const updateReportStatus = async (reportId: string, status: string | numb
   // ── Verify the user is authorized to update this report ──
   const { data: report, error: fetchError } = await supabase
     .from('reports')
-    .select('team_leader, reporter_id, status, assigned_to_at, completed_at, approved_at, under_investigation_at, work_in_progress_at')
+    .select('*')
     .eq('id', reportId)
     .single();
 
   if (fetchError || !report) {
+    if (fetchError) {
+      console.error('updateReportStatus query error:', fetchError);
+      throw new Error(`Report check failed: ${fetchError.message} (code: ${fetchError.code})`);
+    }
     throw new Error('Report not found.');
   }
 
