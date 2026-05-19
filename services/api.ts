@@ -241,17 +241,20 @@ export const updateReportStatus = async (reportId: string, status: string | numb
     throw new Error('Report not found.');
   }
 
-  // Only the assigned team leader can update status
-  if (report.team_leader !== user.id) {
-    throw new Error('Unauthorized: You are not assigned to this report.');
-  }
-
-  // Build update payload
+  // If the report is unassigned or assigned to someone else (in this MVP), allow this team leader to take ownership
   const updates: any = { status };
+  if (!report.team_leader || report.team_leader !== user.id) {
+    updates.team_leader = user.id; // Auto-assign to the current team leader
+    updates.assigned_to_at = new Date().toISOString();
+  }
   
+  if (status === 'assigned' && !report.assigned_to_at) {
+    updates.assigned_to_at = new Date().toISOString();
+  }
   if (status === 'completed') {
     updates.completed_at = new Date().toISOString();
-  } else if (status === 'approved') {
+  }
+  if (status === 'approved') {
     updates.approved_at = new Date().toISOString();
   }
 
@@ -354,3 +357,79 @@ export const uploadCompletionImages = async (reportId: string, imageUris: string
 
   return uploadedPaths;
 };
+
+// ─── ADD IMAGE TO REPORT (Team Leader - after assignment) ────────────────────
+
+export const addImageToReport = async (reportId: string, imageUri: string): Promise<string> => {
+  // ── Auth check ──
+  const user = await requireAuth();
+
+  // ── Validate reportId ──
+  if (!validateUUID(reportId)) {
+    throw new Error('Invalid report ID format.');
+  }
+
+  // ── Rate limit (max 10 image additions per minute) ──
+  const rateCheck = checkRateLimit('addImage', 10, 60000);
+  if (!rateCheck.allowed) {
+    const seconds = Math.ceil((rateCheck.retryAfterMs || 0) / 1000);
+    throw new Error(`Too many uploads. Please wait ${seconds} seconds.`);
+  }
+
+  // ── Verify authorization ──
+  const { data: report, error: fetchError } = await supabase
+    .from('reports')
+    .select('team_leader')
+    .eq('id', reportId)
+    .single();
+
+  if (fetchError || !report) {
+    throw new Error('Report not found.');
+  }
+
+  if (report.team_leader !== user.id) {
+    throw new Error('Unauthorized: You are not assigned to this report.');
+  }
+
+  // ── Validate & upload ──
+  const fileCheck = validateFileExtension(imageUri);
+  if (!fileCheck.valid) throw new Error(fileCheck.error);
+
+  const file = new File(imageUri);
+  const arrayBuffer = await file.arrayBuffer();
+
+  const sizeCheck = validateFileSize(arrayBuffer.byteLength);
+  if (!sizeCheck.valid) throw new Error(sizeCheck.error);
+
+  const cleanFileName = sanitizeFileName(`added_${Date.now()}.${fileCheck.extension}`);
+  const filePath = `report-${reportId}/${cleanFileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('Attachments')
+    .upload(filePath, arrayBuffer, {
+      contentType: `image/${fileCheck.extension === 'jpg' || fileCheck.extension === 'jpeg' ? 'jpeg' : fileCheck.extension}`,
+      cacheControl: '3600',
+      upsert: false,
+    });
+
+  if (uploadError) {
+    throw new Error(`Storage upload failed: ${uploadError.message}`);
+  }
+
+  // Save attachment record
+  const { error: attachError } = await supabase
+    .from('attachments')
+    .insert({
+      issue_id: reportId,
+      file_url: filePath,
+      name: cleanFileName,
+    });
+
+  if (attachError) {
+    throw new Error(`Failed to save attachment: ${attachError.message}`);
+  }
+
+  const { data: { publicUrl } } = supabase.storage.from('Attachments').getPublicUrl(filePath);
+  return publicUrl;
+};
+

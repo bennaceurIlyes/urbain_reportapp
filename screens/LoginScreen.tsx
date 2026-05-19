@@ -28,44 +28,9 @@ const AlgerianFlag = () => (
   <View style={flagStyles.container}>
     <View style={flagStyles.shadowWrapper}>
       <Svg width="90" height="60" viewBox="0 0 900 600">
-        {/* Green half (hoist side) */}
-        <Rect x="0" y="0" width="450" height="600" fill="#006233" />
-        {/* White half (fly side) */}
-        <Rect x="450" y="0" width="450" height="600" fill="#FFFFFF" />
-        {/* Red crescent — constructed as a compound path with two arcs */}
-        <Path
-          d={[
-            // Outer arc (r=150, center at 450,300) — full circle path
-            'M450,150',
-            'A150,150 0 1,0 450,450',
-            'A150,150 0 1,0 450,150',
-            'Z',
-            // Inner cutout (r=120, center offset to 475,300) — reverse winding
-            'M475,180',
-            'A120,120 0 1,1 475,420',
-            'A120,120 0 1,1 475,180',
-            'Z',
-          ].join(' ')}
-          fill="#D21034"
-          fillRule="evenodd"
-        />
-        {/* Red 5-pointed star — centered at (490, 300), outer r=75 */}
-        <Path
-          d={[
-            'M490,225',          // top point
-            'L506.36,271.67',    // inner right-top
-            'L556.36,271.67',    // outer right-top
-            'L515.68,300',       // inner right-bottom
-            'L531.36,346.67',    // outer right-bottom
-            'L490,318.33',       // inner bottom center
-            'L448.64,346.67',    // outer left-bottom
-            'L464.32,300',       // inner left-bottom
-            'L423.64,271.67',    // outer left-top
-            'L473.64,271.67',   // inner left-top
-            'Z',
-          ].join(' ')}
-          fill="#D21034"
-        />
+        <Path fill="#fff" d="M0 0h900v600H0z"/>
+        <Path fill="#063" d="M0 0h450v600H0z"/>
+        <Path fill="#d21034" d="M579.903811 225a150 150 0 1 0 0 150 120 120 0 1 1 0-150M585.676275 300 450 255.916106 533.852549 371.329239v-142.658277L450 344.083894z"/>
       </Svg>
     </View>
   </View>

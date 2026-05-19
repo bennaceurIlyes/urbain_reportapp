@@ -1,25 +1,36 @@
 import React, { useState, useRef } from 'react';
-import { View, StyleSheet, ScrollView, Image, Dimensions, TouchableOpacity, StatusBar, Alert, Linking, Animated } from 'react-native';
+import { View, StyleSheet, ScrollView, Image, Dimensions, TouchableOpacity, StatusBar, Alert, Linking, Animated, Platform } from 'react-native';
 import { Text, Divider, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
 import { colors, spacing, borderRadius, shadows, getStatusColor, toArabicNumeral } from '../theme';
 import { StatusBadge } from '../components/StatusBadge';
 import { PriorityBadge } from '../components/PriorityBadge';
 import { useLanguage } from '../hooks/useLanguage';
 import { getStatusLabel } from '../i18n/strings';
-import { updateReportStatus } from '../services/api';
+import { updateReportStatus, addImageToReport } from '../services/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const { height } = Dimensions.get('window');
+const { height, width } = Dimensions.get('window');
 
 export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
   const { report } = route.params;
   const { t, lang, isRTL } = useLanguage();
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(report.status);
+  
+  // Initialize with any existing additional attachments (index 1 and beyond)
+  const initialAdditionalImages = report.attachments?.length > 1 
+    ? report.attachments.slice(1).map((att: any) => att.file_url)
+    : [];
+  
+  const [addedImages, setAddedImages] = useState<string[]>(initialAdditionalImages);
+  
   const btnScale = useRef(new Animated.Value(1)).current;
+  const addBtnScale = useRef(new Animated.Value(1)).current;
 
   const location = typeof report.location === 'string'
     ? JSON.parse(report.location)
@@ -64,11 +75,91 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
     });
   };
 
+  // ─── Direct mark as complete (without upload screen) ───
+  const handleDirectComplete = async () => {
+    Alert.alert(
+      t('completeReport'),
+      t('markAsComplete') + '?',
+      [
+        { text: t('cancel'), style: 'cancel' },
+        {
+          text: t('done'),
+          style: 'default',
+          onPress: async () => {
+            setLoading(true);
+            try {
+              await updateReportStatus(report.id, 'completed');
+              setCurrentStatus('completed');
+            } catch (error: any) {
+              Alert.alert(t('error'), error.message);
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // ─── Add Image (from gallery or camera) ───
+  const handleAddImage = () => {
+    Alert.alert(
+      t('addImage'),
+      '',
+      [
+        {
+          text: t('camera'),
+          onPress: async () => {
+            const result = await ImagePicker.launchCameraAsync({
+              mediaTypes: ['images'],
+              quality: 0.7,
+            });
+            if (!result.canceled) {
+              await uploadAddedImage(result.assets[0].uri);
+            }
+          },
+        },
+        {
+          text: t('gallery'),
+          onPress: async () => {
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ['images'],
+              quality: 0.7,
+            });
+            if (!result.canceled) {
+              await uploadAddedImage(result.assets[0].uri);
+            }
+          },
+        },
+        { text: t('cancel'), style: 'cancel' },
+      ]
+    );
+  };
+
+  const uploadAddedImage = async (uri: string) => {
+    setImageLoading(true);
+    try {
+      const publicUrl = await addImageToReport(report.id, uri);
+      setAddedImages(prev => [...prev, publicUrl]);
+      Alert.alert(t('imageAdded'), t('imageAddedSuccess'));
+    } catch (error: any) {
+      Alert.alert(t('error'), error.message);
+    } finally {
+      setImageLoading(false);
+    }
+  };
+
   const onBtnPressIn = () => {
     Animated.spring(btnScale, { toValue: 0.97, useNativeDriver: true, speed: 50 }).start();
   };
   const onBtnPressOut = () => {
     Animated.spring(btnScale, { toValue: 1, useNativeDriver: true, speed: 50 }).start();
+  };
+  const onAddBtnPressIn = () => {
+    Animated.spring(addBtnScale, { toValue: 0.95, useNativeDriver: true, speed: 50 }).start();
+  };
+  const onAddBtnPressOut = () => {
+    Animated.spring(addBtnScale, { toValue: 1, useNativeDriver: true, speed: 50 }).start();
   };
 
   return (
@@ -129,20 +220,39 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
                 )}
 
                 {(currentStatus === 'in_progress' || currentStatus === 1) && (
-                  <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-                    <TouchableOpacity
-                      style={styles.actionButtonGreen}
-                      onPress={handleMarkCompleted}
-                      onPressIn={onBtnPressIn}
-                      onPressOut={onBtnPressOut}
-                      activeOpacity={1}
-                      accessibilityLabel={t('uploadProof')}
-                      accessibilityRole="button"
-                    >
-                      <MaterialCommunityIcons name="camera-outline" size={22} color="#FFFFFF" />
-                      <Text style={styles.actionButtonText}>{t('uploadProof')}</Text>
-                    </TouchableOpacity>
-                  </Animated.View>
+                  <>
+                    {/* Upload Proof (navigate to full upload screen) */}
+                    <Animated.View style={{ transform: [{ scale: btnScale }] }}>
+                      <TouchableOpacity
+                        style={styles.actionButtonGreen}
+                        onPress={handleMarkCompleted}
+                        onPressIn={onBtnPressIn}
+                        onPressOut={onBtnPressOut}
+                        activeOpacity={1}
+                        accessibilityLabel={t('uploadProof')}
+                        accessibilityRole="button"
+                      >
+                        <MaterialCommunityIcons name="camera-outline" size={22} color="#FFFFFF" />
+                        <Text style={styles.actionButtonText}>{t('uploadProof')}</Text>
+                      </TouchableOpacity>
+                    </Animated.View>
+
+                    {/* Direct mark complete button */}
+                    <Animated.View style={{ transform: [{ scale: btnScale }] }}>
+                      <TouchableOpacity
+                        style={styles.actionButtonOutline}
+                        onPress={handleDirectComplete}
+                        onPressIn={onBtnPressIn}
+                        onPressOut={onBtnPressOut}
+                        activeOpacity={1}
+                        accessibilityLabel={t('markAsComplete')}
+                        accessibilityRole="button"
+                      >
+                        <MaterialCommunityIcons name="check-circle-outline" size={22} color={colors.republicGreen} />
+                        <Text style={styles.actionButtonTextGreen}>{t('markAsComplete')}</Text>
+                      </TouchableOpacity>
+                    </Animated.View>
+                  </>
                 )}
 
                 {(currentStatus === 'completed' || currentStatus === 2) && (
@@ -173,6 +283,53 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
               </View>
             )}
           </View>
+
+          {/* ─── Add Image Button ─── */}
+          <Animated.View style={{ transform: [{ scale: addBtnScale }] }}>
+            <TouchableOpacity
+              style={styles.addImageCard}
+              onPress={handleAddImage}
+              onPressIn={onAddBtnPressIn}
+              onPressOut={onAddBtnPressOut}
+              activeOpacity={1}
+              disabled={imageLoading}
+              accessibilityLabel={t('addImage')}
+              accessibilityRole="button"
+            >
+              {imageLoading ? (
+                <ActivityIndicator size="small" color={colors.republicGreen} />
+              ) : (
+                <>
+                  <View style={styles.addImageIconContainer}>
+                    <MaterialCommunityIcons name="camera-plus-outline" size={24} color={colors.republicGreen} />
+                  </View>
+                  <View style={[styles.addImageTextContainer, isRTL && { alignItems: 'flex-end' }]}>
+                    <Text style={[styles.addImageTitle, isRTL && { textAlign: 'right' }]}>{t('addImage')}</Text>
+                    <Text style={[styles.addImageSubtitle, isRTL && { textAlign: 'right' }]}>{t('addImageAfter')}</Text>
+                  </View>
+                  <MaterialCommunityIcons 
+                    name={isRTL ? 'chevron-left' : 'chevron-right'} 
+                    size={24} 
+                    color={colors.textMuted} 
+                  />
+                </>
+              )}
+            </TouchableOpacity>
+          </Animated.View>
+
+          {/* ─── Added Images Preview ─── */}
+          {addedImages.length > 0 && (
+            <>
+              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md }]}>
+                {t('additionalPhotos')}
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.md }}>
+                {addedImages.map((uri, i) => (
+                  <Image key={i} source={{ uri }} style={styles.addedImage} accessibilityLabel={`${t('addImage')} ${i + 1}`} />
+                ))}
+              </ScrollView>
+            </>
+          )}
 
           {/* Status + Priority */}
           <View style={[styles.badgeRow, isRTL && styles.badgeRowRTL]}>
@@ -205,8 +362,17 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
               <Text style={[styles.infoLabel, isRTL && { textAlign: 'right' }]}>{t('reportId')}</Text>
               <Text style={[styles.infoValue, isRTL && { textAlign: 'right' }]}>#{report.id.substring(0, 8).toUpperCase()}</Text>
             </View>
-            <TouchableOpacity style={styles.infoCard} onPress={openMaps} disabled={!location?.latitude} activeOpacity={0.7}>
-              <View style={[{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, isRTL && { flexDirection: 'row-reverse' }]}>
+
+            {/* ─── Location Card with Google Maps Logo ─── */}
+            <TouchableOpacity
+              style={[styles.infoCard, location?.latitude && styles.locationCardActive]}
+              onPress={openMaps}
+              disabled={!location?.latitude}
+              activeOpacity={0.7}
+              accessibilityLabel={t('openGoogleMaps')}
+              accessibilityRole="button"
+            >
+              <View style={[styles.locationHeader, isRTL && { flexDirection: 'row-reverse' }]}>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.infoLabel, isRTL && { textAlign: 'right' }]}>{t('locationLabel')}</Text>
                   <Text style={[styles.infoValue, location?.latitude && { color: colors.republicGreen }, isRTL && { textAlign: 'right' }]}>
@@ -214,9 +380,17 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
                   </Text>
                 </View>
                 {location?.latitude && (
-                  <MaterialCommunityIcons name="map-marker-radius" size={24} color={colors.republicGreen} />
+                  <View style={styles.googleMapsButton}>
+                    <MaterialCommunityIcons name="google-maps" size={28} color="#4285F4" />
+                  </View>
                 )}
               </View>
+              {location?.latitude && (
+                <View style={[styles.viewOnMapRow, isRTL && { flexDirection: 'row-reverse' }]}>
+                  <MaterialCommunityIcons name="open-in-new" size={12} color={colors.info} />
+                  <Text style={styles.viewOnMapText}>{t('viewOnMap')}</Text>
+                </View>
+              )}
             </TouchableOpacity>
           </View>
 
@@ -272,7 +446,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceGreen,
     borderRadius: borderRadius.card,
     padding: spacing.md,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.republicGreen + '20',
   },
@@ -289,6 +463,14 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.button,
     paddingVertical: 14, gap: spacing.sm,
   },
+  actionButtonOutline: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'transparent',
+    borderRadius: borderRadius.button,
+    borderWidth: 2,
+    borderColor: colors.republicGreen,
+    paddingVertical: 12, gap: spacing.sm,
+  },
   actionButtonGold: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     backgroundColor: colors.governmentGold,
@@ -298,12 +480,57 @@ const styles = StyleSheet.create({
   actionButtonText: {
     color: '#FFFFFF', fontSize: 16, fontWeight: '700',
   },
+  actionButtonTextGreen: {
+    color: colors.republicGreen, fontSize: 16, fontWeight: '700',
+  },
   approvedBanner: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     padding: spacing.md, gap: spacing.sm,
   },
   approvedText: {
     color: colors.status.approved, fontSize: 16, fontWeight: '700',
+  },
+
+  // Add Image Card
+  addImageCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.cardWhite,
+    borderRadius: borderRadius.card,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    borderStyle: 'dashed',
+    ...shadows.card,
+  },
+  addImageIconContainer: {
+    width: 48, height: 48,
+    borderRadius: 12,
+    backgroundColor: colors.surfaceGreen,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  addImageTextContainer: {
+    flex: 1,
+  },
+  addImageTitle: {
+    fontSize: 15, fontWeight: '700',
+    color: colors.textPrimary,
+    textAlign: 'left',
+  },
+  addImageSubtitle: {
+    fontSize: 12, color: colors.textMuted,
+    marginTop: 2, textAlign: 'left',
+  },
+
+  // Added images preview
+  addedImage: {
+    width: 80, height: 80,
+    borderRadius: borderRadius.badge,
+    marginRight: spacing.sm,
+    backgroundColor: colors.offWhite,
   },
 
   badgeRow: {
@@ -345,6 +572,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.offWhite,
     borderWidth: 1, borderColor: colors.borderLight,
   },
+  locationCardActive: {
+    borderColor: colors.info + '40',
+    backgroundColor: '#F0F7FF',
+  },
   infoLabel: {
     color: colors.textMuted, fontWeight: '700',
     marginBottom: 4, fontSize: 11, letterSpacing: 0.5,
@@ -354,6 +585,29 @@ const styles = StyleSheet.create({
     color: colors.textPrimary, fontWeight: '600', fontSize: 13,
     textAlign: 'left',
   },
+
+  // Google Maps location card
+  locationHeader: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  googleMapsButton: {
+    width: 40, height: 40,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.card,
+  },
+  viewOnMapRow: {
+    flexDirection: 'row', alignItems: 'center',
+    marginTop: spacing.sm, gap: 4,
+  },
+  viewOnMapText: {
+    fontSize: 11, color: colors.info,
+    fontWeight: '600',
+  },
+
   completionImage: {
     width: 120, height: 120,
     borderRadius: borderRadius.badge,

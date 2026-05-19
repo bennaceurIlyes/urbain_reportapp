@@ -2,7 +2,7 @@ export type Language = 'ar' | 'fr';
 
 export const strings: Record<string, Record<Language, string>> = {
   // ─── App Identity ───────────────────────────────────────────────────────────
-  appName:           { ar: 'الجزائر الحضرية', fr: 'Algérie Urbaine' },
+  appName:           { ar: 'انشغالاتي', fr: 'Incheghalati' },
   appSubtitle:       { ar: 'منصة الإبلاغ عن المشاكل الحضرية', fr: 'Plateforme de signalement urbain' },
   ministry:          { ar: 'بلدية - ولاية', fr: 'Commune - Wilaya' },
 
@@ -98,6 +98,16 @@ export const strings: Record<string, Record<Language, string>> = {
   uploading:         { ar: 'جاري الرفع...', fr: 'Téléchargement en cours...' },
   workActions:       { ar: 'إجراءات العمل', fr: 'Actions de travail' },
   assignedToYou:     { ar: 'مُسنَد إليك', fr: 'Assigné à vous' },
+  addImage:          { ar: 'إضافة صورة', fr: 'Ajouter une photo' },
+  addImageAfter:     { ar: 'إضافة صورة لاحقاً', fr: 'Ajouter une photo après' },
+  openGoogleMaps:    { ar: 'فتح في خرائط جوجل', fr: 'Ouvrir dans Google Maps' },
+  viewOnMap:         { ar: 'عرض على الخريطة', fr: 'Voir sur la carte' },
+  markAsComplete:    { ar: 'تعليم كمكتمل', fr: 'Marquer comme terminé' },
+  completeReport:    { ar: 'إتمام البلاغ', fr: 'Terminer le signalement' },
+  addCompletionPhoto:{ ar: 'إضافة صورة إنجاز', fr: "Ajouter une photo d'achèvement" },
+  imageAdded:        { ar: 'تمت إضافة الصورة', fr: 'Photo ajoutée' },
+  imageAddedSuccess: { ar: 'تمت إضافة الصورة بنجاح.', fr: 'La photo a été ajoutée avec succès.' },
+  additionalPhotos:  { ar: 'صور إضافية', fr: 'Photos supplémentaires' },
 
   // ─── Profile ────────────────────────────────────────────────────────────────
   logout:            { ar: 'تسجيل الخروج', fr: 'Déconnexion' },
@@ -105,6 +115,7 @@ export const strings: Record<string, Record<Language, string>> = {
   cancel:            { ar: 'إلغاء', fr: 'Annuler' },
   appLanguage:       { ar: 'لغة التطبيق', fr: 'Langue' },
   notifications:     { ar: 'الإشعارات', fr: 'Notifications' },
+  testNotification:  { ar: 'إشعار تجريبي', fr: 'Notification de test' },
   helpCenter:        { ar: 'مركز المساعدة', fr: "Centre d'aide" },
   termsPrivacy:      { ar: 'الشروط والخصوصية', fr: 'Conditions et confidentialité' },
   appSettings:       { ar: 'إعدادات التطبيق', fr: "Paramètres de l'application" },

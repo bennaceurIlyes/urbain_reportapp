@@ -1,12 +1,6 @@
 import React from 'react';
-import { 
-  Button as GButton, 
-  ButtonText, 
-  ButtonSpinner,
-  ButtonIcon,
-  HStack
-} from '@gluestack-ui/themed';
-import { StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import { TouchableOpacity, Text, View, StyleSheet, ViewStyle, StyleProp, ActivityIndicator } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface ButtonProps {
   title: string;
@@ -15,7 +9,7 @@ interface ButtonProps {
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
   disabled?: boolean;
-  icon?: any;
+  icon?: keyof typeof MaterialCommunityIcons.glyphMap;
 }
 
 export const Button: React.FC<ButtonProps> = ({ 
@@ -27,47 +21,57 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   icon
 }) => {
-  const getAction = () => {
+  const getButtonStyle = () => {
     switch(variant) {
-      case 'primary': return 'primary';
-      case 'secondary': return 'secondary';
-      case 'outline': return 'outline';
-      case 'link': return 'link';
-      default: return 'primary';
+      case 'primary': return styles.primary;
+      case 'secondary': return styles.secondary;
+      case 'outline': return styles.outline;
+      case 'link': return styles.link;
+      default: return styles.primary;
+    }
+  };
+
+  const getTextColor = () => {
+    switch(variant) {
+      case 'secondary': return '#1A1A2E';
+      case 'outline': return '#006233';
+      case 'link': return '#006233';
+      default: return '#FFFFFF';
     }
   };
 
   return (
-    <GButton
-      size="lg"
-      variant={variant === 'outline' || variant === 'link' ? variant : 'solid'}
-      action={getAction() as any}
-      isDisabled={disabled || loading}
+    <TouchableOpacity
       onPress={onPress}
+      disabled={disabled || loading}
+      activeOpacity={0.85}
       style={[
         styles.base,
-        variant === 'primary' && styles.primary,
-        variant === 'secondary' && styles.secondary,
-        variant === 'outline' && styles.outline,
+        getButtonStyle(),
+        (disabled || loading) && styles.disabled,
         style
       ]}
-      borderRadius="$full"
+      accessibilityRole="button"
+      accessibilityLabel={title}
     >
       {loading ? (
-        <ButtonSpinner color={variant === 'outline' ? '#006233' : '$white'} />
+        <ActivityIndicator color={getTextColor()} size="small" />
       ) : (
-        <HStack space="xs" alignItems="center">
-          {icon && <ButtonIcon as={icon} size="md" color={variant === 'outline' ? '#006233' : '$white'} />}
-          <ButtonText 
-            fontWeight="$bold" 
-            fontSize="$md"
-            color={variant === 'secondary' ? '$textLight900' : variant === 'outline' ? '#006233' : '$white'}
-          >
+        <View style={styles.content}>
+          {icon && (
+            <MaterialCommunityIcons 
+              name={icon} 
+              size={20} 
+              color={getTextColor()} 
+              style={styles.icon}
+            />
+          )}
+          <Text style={[styles.text, { color: getTextColor() }]}>
             {title}
-          </ButtonText>
-        </HStack>
+          </Text>
+        </View>
       )}
-    </GButton>
+    </TouchableOpacity>
   );
 };
 
@@ -77,6 +81,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 28,
   },
   primary: {
     backgroundColor: '#006233',
@@ -94,6 +99,25 @@ const styles = StyleSheet.create({
     borderColor: '#006233',
     borderWidth: 2,
     backgroundColor: 'transparent',
-  }
+  },
+  link: {
+    backgroundColor: 'transparent',
+    height: 'auto' as any,
+    paddingHorizontal: 0,
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  icon: {
+    marginRight: 0,
+  },
+  text: {
+    fontWeight: '700',
+    fontSize: 16,
+  },
 });
-

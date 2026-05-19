@@ -122,14 +122,6 @@ export const ProfileScreen = ({ navigation }: any) => {
           <Text style={[styles.sectionLabel, isRTL && styles.sectionLabelRTL]}>{t('appSettings')}</Text>
           <View style={styles.menuGroup}>
             <ProfileItem
-              icon="bell-outline"
-              label={t('notifications')}
-              color={colors.status.pending}
-              onPress={() => {}}
-              value={t('on')}
-            />
-            <Divider style={styles.menuDivider} />
-            <ProfileItem
               icon="help-circle-outline"
               label={t('helpCenter')}
               color={colors.textSecondary}

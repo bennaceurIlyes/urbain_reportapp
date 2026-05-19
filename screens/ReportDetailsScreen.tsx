@@ -94,12 +94,19 @@ export const ReportDetailsScreen = ({ route, navigation }: any) => {
     Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
   };
 
+  const formatStepTime = (dateString?: string | null) => {
+    if (!dateString) return undefined;
+    return new Date(dateString).toLocaleDateString(lang === 'ar' ? 'ar-DZ' : 'fr-DZ', {
+      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+  };
+
   const timelineSteps = [
-    { title: t('reportCreated'), subtitle: t('receivedByServices') },
-    { title: t('underInvestigation'), subtitle: t('techTeamAssigned') },
-    { title: t('workInProgress'), subtitle: t('maintenanceOnSite') },
-    { title: t('resolved'), subtitle: t('issueFixed') },
-    { title: t('approved'), subtitle: t('approvedByAdmin') },
+    { title: t('reportCreated'), subtitle: t('receivedByServices'), time: formatStepTime(report.created_at) },
+    { title: t('underInvestigation'), subtitle: t('techTeamAssigned'), time: formatStepTime(report.assigned_to_at) },
+    { title: t('workInProgress'), subtitle: t('maintenanceOnSite'), time: formatStepTime(report.assigned_to_at) }, // Using assignment time as proxy if missing
+    { title: t('resolved'), subtitle: t('issueFixed'), time: formatStepTime(report.completed_at) },
+    { title: t('approved'), subtitle: t('approvedByAdmin'), time: formatStepTime(report.approved_at) },
   ];
 
   return (
@@ -176,11 +183,11 @@ export const ReportDetailsScreen = ({ route, navigation }: any) => {
               </Text>
             </View>
             <TouchableOpacity
-              style={styles.infoCard}
+              style={[styles.infoCard, location?.latitude && styles.locationCardActive]}
               onPress={openMaps}
               disabled={!location?.latitude}
               activeOpacity={0.7}
-              accessibilityLabel={t('locationLabel')}
+              accessibilityLabel={t('openGoogleMaps')}
               accessibilityRole="button"
             >
               <View style={[styles.locationCardInner, isRTL && styles.locationCardInnerRTL]}>
@@ -193,9 +200,17 @@ export const ReportDetailsScreen = ({ route, navigation }: any) => {
                   </Text>
                 </View>
                 {location?.latitude && (
-                  <MaterialCommunityIcons name="map-marker-radius" size={24} color={colors.republicGreen} />
+                  <View style={styles.googleMapsButton}>
+                    <MaterialCommunityIcons name="google-maps" size={28} color="#4285F4" />
+                  </View>
                 )}
               </View>
+              {location?.latitude && (
+                <View style={[styles.viewOnMapRow, isRTL && { flexDirection: 'row-reverse' }]}>
+                  <MaterialCommunityIcons name="open-in-new" size={12} color={colors.info} />
+                  <Text style={styles.viewOnMapText}>{t('viewOnMap')}</Text>
+                </View>
+              )}
             </TouchableOpacity>
           </View>
 
@@ -207,9 +222,7 @@ export const ReportDetailsScreen = ({ route, navigation }: any) => {
                 key={index}
                 title={step.title}
                 subtitle={step.subtitle}
-                time={index === 0
-                  ? new Date(report.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                  : undefined}
+                time={step.time}
                 completed={index < statusIndex}
                 current={index === statusIndex}
                 isLast={index === timelineSteps.length - 1}
@@ -217,6 +230,25 @@ export const ReportDetailsScreen = ({ route, navigation }: any) => {
               />
             ))}
           </View>
+
+          {/* Additional images (added by team leader) */}
+          {report.attachments?.length > 1 && (
+            <>
+              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md }]}>
+                {t('additionalPhotos')}
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.completionScroll}>
+                {report.attachments.slice(1).map((att: any, i: number) => (
+                  <Image
+                    key={i}
+                    source={{ uri: att.file_url }}
+                    style={styles.completionImage}
+                    accessibilityLabel={`${t('additionalPhotos')} ${i + 1}`}
+                  />
+                ))}
+              </ScrollView>
+            </>
+          )}
 
           {/* Completion images */}
           {report.completion_images && report.completion_images.length > 0 && (
@@ -326,6 +358,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   locationCardInnerRTL: { flexDirection: 'row-reverse' },
+  locationCardActive: {
+    borderColor: '#1565C0' + '40',
+    backgroundColor: '#F0F7FF',
+  },
+  googleMapsButton: {
+    width: 40, height: 40,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  viewOnMapRow: {
+    flexDirection: 'row', alignItems: 'center',
+    marginTop: 8, gap: 4,
+  },
+  viewOnMapText: {
+    fontSize: 11, color: '#1565C0',
+    fontWeight: '600',
+  },
   timeline: { marginTop: spacing.sm, marginBottom: spacing.lg },
   completionScroll: { marginBottom: spacing.lg },
   completionImage: {

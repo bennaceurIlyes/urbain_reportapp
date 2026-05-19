@@ -12,6 +12,7 @@ import { TeamLeaderReportDetailsScreen } from '../screens/TeamLeaderReportDetail
 import { TeamLeaderCompletionUploadScreen } from '../screens/TeamLeaderCompletionUploadScreen';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
+import { useReportNotifications } from '../hooks/useReportNotifications';
 import { View, Platform, StyleSheet } from 'react-native';
 import { ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -190,6 +191,7 @@ const TeamLeaderTabNavigator = () => {
 export const AppNavigator = () => {
   const { user, loading } = useAuth();
   const { isRTL } = useLanguage();
+  useReportNotifications();
 
   if (loading) {
     return (
