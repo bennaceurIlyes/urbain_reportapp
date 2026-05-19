@@ -154,12 +154,14 @@ export const getStatusColor = (status: string | number, is_resolved?: boolean): 
     return colors.status.approved;
   }
 
-  // If status is 3 or completed:
+  // If status is 3 or completed, it is ALWAYS colors.status.completed (orange)
   if (status === 3 || status === 'completed') {
-    if (is_resolved === true) {
-      return colors.status.completed;
-    }
-    return colors.status.inProgress;
+    return colors.status.completed;
+  }
+
+  // Otherwise if is_resolved is true -> approved (green)
+  if (is_resolved === true) {
+    return colors.status.approved;
   }
 
   // Rule 1: when is_resolved is false -> So The task is still in progress

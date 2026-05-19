@@ -199,14 +199,14 @@ export const getStatusLabel = (status: string | number, lang: Language, is_resol
     return t('statusCompleted', lang);
   }
 
-  // If status is 3 or completed:
+  // If status is 3 or completed, it is ALWAYS Waiting for Admin Acceptance (بانتظار موافقة الإدارة)
   if (status === 3 || status === 'completed') {
-    // If is_resolved is true -> wait for admin acceptance
-    if (is_resolved === true) {
-      return t('completedWaitingApproval', lang);
-    }
-    // If is_resolved is false -> still in progress
-    return t('statusInProgress', lang);
+    return t('completedWaitingApproval', lang);
+  }
+
+  // Otherwise if is_resolved is true -> completed
+  if (is_resolved === true) {
+    return t('statusCompleted', lang);
   }
 
   // Rule 1: when is_resolved is false -> So The task is still in progress
