@@ -209,24 +209,7 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
               <ActivityIndicator size="large" color={colors.republicGreen} style={{ padding: spacing.md }} />
             ) : (
               <View style={styles.actionsContainer}>
-                {(currentStatus === 'assigned' || currentStatus === 0) && (
-                  <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-                    <TouchableOpacity
-                      style={styles.actionButtonGreen}
-                      onPress={handleStartWork}
-                      onPressIn={onBtnPressIn}
-                      onPressOut={onBtnPressOut}
-                      activeOpacity={1}
-                      accessibilityLabel={t('startWork')}
-                      accessibilityRole="button"
-                    >
-                      <MaterialCommunityIcons name="play-circle-outline" size={22} color="#FFFFFF" />
-                      <Text style={styles.actionButtonText}>{t('startWork')}</Text>
-                    </TouchableOpacity>
-                  </Animated.View>
-                )}
-
-                {(currentStatus === 'in_progress' || currentStatus === 1) && (
+                {(currentStatus === 'assigned' || currentStatus === 0 || currentStatus === 'in_progress' || currentStatus === 1) && (
                   <>
                     {addedImages.length === 0 ? (
                       <>
@@ -319,15 +302,6 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
                       </>
                     )}
                   </>
-                )}
-
-                {(currentStatus === 'completed' || currentStatus === 2) && (
-                  <View style={styles.completedBanner}>
-                    <MaterialCommunityIcons name="clock-outline" size={24} color={colors.status.pending} />
-                    <Text style={[styles.completedText, isRTL && { textAlign: 'right' }]}>
-                      {t('completedWaitingApproval')}
-                    </Text>
-                  </View>
                 )}
 
                 {currentStatus === 'approved' && (

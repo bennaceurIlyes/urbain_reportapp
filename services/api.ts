@@ -268,13 +268,13 @@ export const updateReportStatus = async (reportId: string, status: string | numb
     updates.assigned_to_at = new Date().toISOString();
   }
   
-  if ((status === 'assigned' || status === 'in_progress') && !report.assigned_to_at) {
+  if ((status === 'assigned' || status === 'in_progress' || status === 3 || status === 'completed') && !report.assigned_to_at) {
     updates.assigned_to_at = new Date().toISOString();
   }
-  if ((status === 'assigned' || status === 'in_progress') && !report.under_investigation_at) {
+  if ((status === 'assigned' || status === 'in_progress' || status === 3 || status === 'completed') && !report.under_investigation_at) {
     updates.under_investigation_at = new Date().toISOString();
   }
-  if (status === 'in_progress' && !report.work_in_progress_at) {
+  if ((status === 'in_progress' || status === 3 || status === 'completed') && !report.work_in_progress_at) {
     updates.work_in_progress_at = new Date().toISOString();
   }
 
