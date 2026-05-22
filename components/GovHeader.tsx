@@ -48,9 +48,9 @@ export const GovHeader: React.FC<GovHeaderProps> = ({
 
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor="#1A6FA3" />
+      <StatusBar barStyle="light-content" backgroundColor={colors.primaryLight} />
       <LinearGradient
-        colors={['#1A6FA3', '#0A4C78']}
+        colors={[colors.primaryLight, colors.primary]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={[styles.container, { paddingTop: insets.top + spacing.sm }]}

@@ -8,12 +8,12 @@ import { MD3LightTheme as DefaultTheme } from 'react-native-paper';
 export const colors = {
 
   // ── BRAND BLUES (the only colors used boldly) ────────────────────
-  primary:          '#0A4C78',   // ADE Official Deep Blue — headers, primary buttons, nav bars
-  primaryDark:      '#073858',   // Pressed state, active selected items
-  primaryLight:     '#1A6FA3',   // Secondary buttons, icons, links
-  primaryBorder:    '#2980B9',   // Input focus borders, tab indicators
-  primaryTint:      '#E8F4FB',   // Blue-tinted white — stat card backgrounds, row highlights
-  primaryUltraLight:'#F5FAFE',   // Near-white with a cold blue hint — page backgrounds
+  primary:          '#1A6FA3',   // ADE Official Light Blue — headers, primary buttons, nav bars
+  primaryDark:      '#0E4B72',   // Pressed state, active selected items
+  primaryLight:     '#3498DB',   // Secondary buttons, icons, links
+  primaryBorder:    '#5DADE2',   // Input focus borders, tab indicators
+  primaryTint:      '#EBF5FB',   // Blue-tinted white — stat card backgrounds, row highlights
+  primaryUltraLight:'#F4F9FC',   // Near-white with a cold blue hint — page backgrounds
 
   // ── WHITES & GRAYS (the dominant surfaces) ────────────────────────
   white:            '#FFFFFF',   // Pure white — cards, modals, form backgrounds
@@ -63,15 +63,15 @@ export const colors = {
   flagRed:          '#D21034',
 
   // ── LEGACY ALIASES — safe backward compatibility ──────────────────
-  republicGreen:    '#0A4C78',   // → primary
-  activeGreen:      '#1A6FA3',   // → primaryLight
+  republicGreen:    '#1A6FA3',   // → primary
+  activeGreen:      '#3498DB',   // → primaryLight
   pendingYellow:    '#E59C2A',   // → statusPendingBorder
   resolvedGreen:    '#28A760',   // → priorityLow
-  adeDeepBlue:      '#0A4C78',
-  adeMediumBlue:    '#1A6FA3',
-  adeSkyBlue:       '#2980B9',
-  adePaleBlue:      '#E8F4FB',
-  adeIceBlue:       '#F5FAFE',
+  adeDeepBlue:      '#1A6FA3',
+  adeMediumBlue:    '#3498DB',
+  adeSkyBlue:       '#5DADE2',
+  adePaleBlue:      '#EBF5FB',
+  adeIceBlue:       '#F4F9FC',
   screenBackground: '#F7FAFD',   // → pageBg
   dividerColor:      '#DDE8F0',   // → borderLight
   offWhite:          '#F7FAFD',   // → pageBg
@@ -84,10 +84,10 @@ export const colors = {
 
   status: {
     pending: '#E59C2A',
-    assigned: '#2980B9',
+    assigned: '#5DADE2',
     inProgress: '#7B4FBF',
     completed: '#28A760',
-    approved: '#0A4C78',
+    approved: '#1A6FA3',
   },
 
   priority: {
