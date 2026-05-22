@@ -138,7 +138,7 @@ export const HomeScreen = ({ navigation }: any) => {
         )}
       </View>
 
-      {/* FAB (Square-ish, 12px rounding) */}
+      {/* FAB (Circular, Light Color) */}
       <Animated.View style={[styles.fabContainer, isRTL ? styles.fabLeft : styles.fabRight, { transform: [{ scale: fabScale }] }]}>
         <TouchableOpacity
           style={styles.fab}
@@ -149,7 +149,7 @@ export const HomeScreen = ({ navigation }: any) => {
           accessibilityLabel={t('newReport')}
           accessibilityRole="button"
         >
-          <MaterialCommunityIcons name="plus" size={28} color="#FFFFFF" />
+          <MaterialCommunityIcons name="plus" size={28} color={colors.primary} />
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -206,10 +206,12 @@ const styles = StyleSheet.create({
   fab: {
     width: 56,
     height: 56,
-    borderRadius: radius.lg, // 12px modest rounding (FAB)
-    backgroundColor: colors.primary,
+    borderRadius: 28, // Perfect circle border radius
+    backgroundColor: colors.primaryTint, // Premium light blue tone
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.borderMedium, // High-contrast border outline
     ...shadows.elevated,
   },
 });
