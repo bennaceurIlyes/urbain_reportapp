@@ -257,10 +257,7 @@ export const theme = {
 
 /** Convert Western digits (0-9) to Eastern Arabic numerals (٠-٩) when lang is 'ar' */
 export const toArabicNumeral = (n: number | string, lang: string = 'ar'): string => {
-  const str = String(n);
-  if (lang !== 'ar') return str;
-  const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-  return str.replace(/[0-9]/g, (d) => arabicDigits[parseInt(d, 10)]);
+  return String(n);
 };
 
 export const getStatusColor = (status: string | number, is_resolved?: boolean, work_in_progress_at?: string | null): string => {
