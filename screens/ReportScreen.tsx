@@ -62,10 +62,30 @@ export const ReportScreen = ({ navigation }: any) => {
   const getLocation = async () => {
     setLocating(true);
     try {
-      const loc = await Location.getCurrentPositionAsync({});
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(t('error'), t('locationRequired'));
+        setLocating(false);
+        return;
+      }
+
+      // Try balanced accuracy first (much faster and more reliable than high accuracy GPS lock)
+      const loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
       setLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
     } catch (error) {
-      Alert.alert(t('error'), t('locationRequired'));
+      console.warn('getCurrentPositionAsync failed, trying getLastKnownPositionAsync:', error);
+      try {
+        const lastLoc = await Location.getLastKnownPositionAsync({});
+        if (lastLoc) {
+          setLocation({ latitude: lastLoc.coords.latitude, longitude: lastLoc.coords.longitude });
+        } else {
+          Alert.alert(t('error'), t('locationRequired'));
+        }
+      } catch (innerError) {
+        Alert.alert(t('error'), t('locationRequired'));
+      }
     } finally {
       setLocating(false);
     }
