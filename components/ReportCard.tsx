@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { View, TouchableOpacity, Image, StyleSheet, Animated } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { colors, spacing, borderRadius, shadows, getPriorityColor, toArabicNumeral } from '../theme';
+import { colors, spacing, radius, shadows, getPriorityColor, toArabicNumeral } from '../theme';
 import { StatusBadge } from './StatusBadge';
 import { useLanguage } from '../hooks/useLanguage';
 import { ReportWithAttachments } from '../services/api';
@@ -14,7 +14,7 @@ interface ReportCardProps {
 }
 
 export const ReportCard: React.FC<ReportCardProps> = ({ report, onPress, showAssignedTime = false }) => {
-  const { lang, isRTL } = useLanguage();
+  const { t, lang, isRTL } = useLanguage();
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const imageUrl = report.attachments?.length > 0 ? report.attachments[0].file_url : null;
@@ -85,17 +85,25 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report, onPress, showAss
           {/* Top row: Title + Status */}
           <View style={[styles.topRow, isRTL && styles.topRowRTL]}>
             <Text
-              style={[styles.title, isRTL && styles.titleRTL]}
+              style={[
+                styles.title, 
+                isRTL && styles.titleRTL,
+                { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }
+              ]}
               numberOfLines={1}
             >
-              {report.title}
+              {report.title && report.title.startsWith('cat_') ? t(report.title) : report.title}
             </Text>
             <StatusBadge status={report.status} lang={lang} is_resolved={report.is_resolved} work_in_progress_at={report.work_in_progress_at} />
           </View>
 
           {/* Description */}
           <Text
-            style={[styles.description, isRTL && styles.descriptionRTL]}
+            style={[
+              styles.description, 
+              isRTL && styles.descriptionRTL,
+              { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
+            ]}
             numberOfLines={2}
           >
             {report.description}
@@ -108,13 +116,25 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report, onPress, showAss
                 <MaterialCommunityIcons
                   name="map-marker-outline"
                   size={14}
-                  color={colors.textMuted}
+                  color={colors.textSecondary}
                 />
-                <Text style={styles.metaText}>
+                <Text 
+                  style={[
+                    styles.metaText,
+                    { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
+                  ]}
+                >
                   {lang === 'ar' ? 'الموقع محدد' : 'Localisé'}
                 </Text>
               </View>
-              <Text style={styles.timeText}>{timeStr}</Text>
+              <Text 
+                style={[
+                  styles.timeText,
+                  { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
+                ]}
+              >
+                {timeStr}
+              </Text>
             </View>
 
             {imageUrl && (
@@ -133,10 +153,10 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report, onPress, showAss
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.cardWhite,
-    borderRadius: borderRadius.card,
+    backgroundColor: colors.white,
+    borderRadius: radius.md, // 8px Modest rounding
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: colors.borderLight, // thin 1px border
     marginBottom: spacing.md,
     overflow: 'hidden',
     flexDirection: 'row',
@@ -163,7 +183,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: '700',
     color: colors.textPrimary,
     flex: 1,
     marginRight: spacing.sm,
@@ -190,7 +209,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.borderLight + '60',
+    borderTopColor: colors.divider, // crisp hairline divider
   },
   bottomRowRTL: {
     flexDirection: 'row-reverse',
@@ -211,19 +230,17 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: colors.textSecondary,
     marginLeft: 4,
-    fontWeight: '500',
   },
   timeText: {
     fontSize: 11,
-    color: colors.textMuted,
-    fontWeight: '400',
+    color: colors.textSecondary,
   },
   thumbnail: {
     width: 60,
     height: 60,
-    borderRadius: 8,
-    backgroundColor: colors.offWhite,
+    borderRadius: radius.xs,
+    backgroundColor: colors.pageBg,
   },
 });

@@ -1,18 +1,17 @@
 import React, { useState, useRef } from 'react';
-import { View, StyleSheet, ScrollView, Image, Dimensions, TouchableOpacity, StatusBar, Alert, Linking, Animated, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, Image, Dimensions, TouchableOpacity, StatusBar, Alert, Linking, Animated } from 'react-native';
 import { Text, Divider, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
-import { colors, spacing, borderRadius, shadows, getStatusColor, toArabicNumeral } from '../theme';
+import { colors, spacing, radius, shadows, toArabicNumeral } from '../theme';
 import { StatusBadge } from '../components/StatusBadge';
 import { PriorityBadge } from '../components/PriorityBadge';
 import { useLanguage } from '../hooks/useLanguage';
-import { getStatusLabel } from '../i18n/strings';
 import { updateReportStatus, addImageToReport } from '../services/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const { height, width } = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 
 /** Status timeline step component */
 const TimelineStep: React.FC<{
@@ -45,16 +44,16 @@ const TimelineStep: React.FC<{
         <View style={[tlStyles.header, isRTL && tlStyles.headerRTL]}>
           <Text style={[
             tlStyles.title,
-            { opacity: completed || current ? 1 : 0.4 },
+            { opacity: completed || current ? 1 : 0.4, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' },
             isRTL && tlStyles.titleRTL,
           ]}>
             {title}
           </Text>
-          {time && <Text style={tlStyles.time}>{time}</Text>}
+          {time && <Text style={[tlStyles.time, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>{time}</Text>}
         </View>
         <Text style={[
           tlStyles.subtitle,
-          { opacity: completed || current ? 0.7 : 0.3 },
+          { opacity: completed || current ? 0.7 : 0.3, fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' },
           isRTL && tlStyles.subtitleRTL,
         ]}>
           {subtitle}
@@ -89,7 +88,6 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
   const [addedImages, setAddedImages] = useState<string[]>(initialAdditionalImages);
   
   const btnScale = useRef(new Animated.Value(1)).current;
-  const addBtnScale = useRef(new Animated.Value(1)).current;
  
   const location = typeof report.location === 'string'
     ? JSON.parse(report.location)
@@ -122,7 +120,7 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
 
   const timelineSteps = [
     { title: t('submitted'), subtitle: t('receivedByServices'), time: formatStepTime(report.created_at) },
-    { title: t('underInvestigationTimeline'), subtitle: t('techTeamAssigned'), time: formatStepTime(report.under_investigation_at) },
+    { title: t('underInvestigationTimeline'), subtitle: t('underInvestigationTimeline'), time: formatStepTime(report.under_investigation_at) },
     { title: t('leaderAssignedTimeline'), subtitle: t('techTeamAssigned'), time: formatStepTime(report.assigned_to_at) },
     { title: t('workInProgressTimeline'), subtitle: t('maintenanceOnSite'), time: formatStepTime(workInProgressAt) },
     { title: t('resolvedTimeline'), subtitle: t('issueFixed'), time: formatStepTime(report.resolved_at || report.approved_at || (isResolved ? new Date().toISOString() : null)) },
@@ -141,19 +139,6 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
       setCurrentStatus(2);
       setWorkInProgressAt(new Date().toISOString());
       setIsResolved(false);
-    } catch (error: any) {
-      Alert.alert(t('error'), error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
- 
-  const handleApprove = async () => {
-    setLoading(true);
-    try {
-      await updateReportStatus(report.id, 4);
-      setCurrentStatus(4);
-      setIsResolved(true);
     } catch (error: any) {
       Alert.alert(t('error'), error.message);
     } finally {
@@ -270,12 +255,8 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
   const onBtnPressOut = () => {
     Animated.spring(btnScale, { toValue: 1, useNativeDriver: true, speed: 50 }).start();
   };
-  const onAddBtnPressIn = () => {
-    Animated.spring(addBtnScale, { toValue: 0.95, useNativeDriver: true, speed: 50 }).start();
-  };
-  const onAddBtnPressOut = () => {
-    Animated.spring(addBtnScale, { toValue: 1, useNativeDriver: true, speed: 50 }).start();
-  };
+
+  const displayTitle = report.title && report.title.startsWith('cat_') ? t(report.title) : report.title;
 
   return (
     <View style={styles.container}>
@@ -288,11 +269,11 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
             <Image source={{ uri: imageUrl }} style={styles.heroImage} accessibilityLabel={t('evidencePhoto')} />
           ) : (
             <View style={styles.placeholderImage}>
-              <MaterialCommunityIcons name="image-off-outline" size={64} color={colors.borderLight} />
+              <MaterialCommunityIcons name="image-off-outline" size={54} color={colors.textSecondary} />
             </View>
           )}
           <LinearGradient
-            colors={['rgba(0,0,0,0.4)', 'transparent', 'rgba(0,0,0,0.08)']}
+            colors={['rgba(0,0,0,0.3)', 'transparent', 'rgba(0,0,0,0.05)']}
             style={StyleSheet.absoluteFillObject}
           />
           <View style={[styles.headerOverlay, { paddingTop: insets.top + spacing.sm }]}>
@@ -302,7 +283,7 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
               accessibilityLabel={t('back')}
               accessibilityRole="button"
             >
-              <MaterialCommunityIcons name={isRTL ? 'chevron-right' : 'chevron-left'} size={28} color={colors.textPrimary} />
+              <MaterialCommunityIcons name={isRTL ? 'chevron-right' : 'chevron-left'} size={26} color={colors.textPrimary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -317,13 +298,13 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
                 <PriorityBadge priority={report.priority} lang={lang} />
               </View>
 
-              <Text style={[styles.title, isRTL && styles.titleRTL]}>{report.title}</Text>
+              <Text style={[styles.title, isRTL && styles.titleRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{displayTitle}</Text>
 
-              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL]}>{t('description')}</Text>
-              <Text style={[styles.description, isRTL && styles.descriptionRTL]}>{report.description}</Text>
+              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('description')}</Text>
+              <Text style={[styles.description, isRTL && styles.descriptionRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>{report.description}</Text>
 
               {/* Timeline Section */}
-              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md, marginBottom: spacing.xs }]}>
+              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md, marginBottom: spacing.xs, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
                 {lang === 'ar' ? 'الجدول الزمني للمتابعة' : 'Timeline de suivi'}
               </Text>
               <View style={tlStyles.timeline}>
@@ -346,34 +327,34 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
               </View>
 
               {/* Location Card */}
-              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md }]}>
+              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
                 {t('locationLabel')}
               </Text>
               <TouchableOpacity
                 style={[styles.infoCard, location?.latitude && styles.locationCardActive, { width: '100%', marginHorizontal: 0 }]}
                 onPress={openMaps}
                 disabled={!location?.latitude}
-                activeOpacity={0.7}
+                activeOpacity={0.8}
                 accessibilityLabel={t('openGoogleMaps')}
                 accessibilityRole="button"
               >
                 <View style={[styles.locationHeader, isRTL && { flexDirection: 'row-reverse' }]}>
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.infoLabel, isRTL && { textAlign: 'right' }]}>{t('locationLabel')}</Text>
-                    <Text style={[styles.infoValue, location?.latitude && { color: colors.republicGreen }, isRTL && { textAlign: 'right' }]}>
+                    <Text style={[styles.infoLabel, isRTL && { textAlign: 'right' }, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('locationLabel')}</Text>
+                    <Text style={[styles.infoValue, location?.latitude && { color: colors.primary }, isRTL && { textAlign: 'right' }, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
                       {location?.latitude ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}` : 'N/A'}
                     </Text>
                   </View>
                   {location?.latitude && (
                     <View style={styles.googleMapsButton}>
-                      <MaterialCommunityIcons name="google-maps" size={28} color="#4285F4" />
+                      <MaterialCommunityIcons name="google-maps" size={24} color="#4285F4" />
                     </View>
                   )}
                 </View>
                 {location?.latitude && (
                   <View style={[styles.viewOnMapRow, isRTL && { flexDirection: 'row-reverse' }]}>
-                    <MaterialCommunityIcons name="open-in-new" size={12} color={colors.info} />
-                    <Text style={styles.viewOnMapText}>{t('viewOnMap')}</Text>
+                    <MaterialCommunityIcons name="open-in-new" size={12} color={colors.primary} />
+                    <Text style={[styles.viewOnMapText, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('viewOnMap')}</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -381,7 +362,7 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
               {/* Completion images */}
               {report.completion_images && report.completion_images.length > 0 && (
                 <>
-                  <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md }]}>
+                  <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
                     {t('completionImages')}
                   </Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: spacing.xs }}>
@@ -396,10 +377,10 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
             <>
               {/* ─── Work Actions (Prominent, at top) ─── */}
               <View style={styles.actionsCard}>
-                <Text style={[styles.actionsTitle, isRTL && styles.actionsTitleRTL]}>{t('workActions')}</Text>
+                <Text style={[styles.actionsTitle, isRTL && styles.actionsTitleRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('workActions')}</Text>
 
                 {loading ? (
-                  <ActivityIndicator size="large" color={colors.republicGreen} style={{ padding: spacing.md }} />
+                  <ActivityIndicator size="large" color={colors.primary} style={{ padding: spacing.md }} />
                 ) : (
                   <View style={styles.actionsContainer}>
                     {!workInProgressAt ? (
@@ -413,77 +394,29 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
                           accessibilityLabel={t('startWork')}
                           accessibilityRole="button"
                         >
-                          <MaterialCommunityIcons name="play-circle-outline" size={24} color="#FFFFFF" />
-                          <Text style={styles.actionButtonText}>{t('startWork')}</Text>
+                          <MaterialCommunityIcons name="play-circle-outline" size={20} color="#FFFFFF" />
+                          <Text style={[styles.actionButtonText, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('startWork')}</Text>
                         </TouchableOpacity>
                       </Animated.View>
-                    ) : addedImages.length === 0 ? (
-                      <>
-                        {/* 1. Insert Image Button (Primary, Active) */}
-                        <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-                          <TouchableOpacity
-                            style={styles.actionButtonGreen}
-                            onPress={handleAddImage}
-                            onPressIn={onBtnPressIn}
-                            onPressOut={onBtnPressOut}
-                            activeOpacity={1}
-                            disabled={imageLoading}
-                            accessibilityLabel={t('addImage')}
-                            accessibilityRole="button"
-                          >
-                            {imageLoading ? (
-                              <ActivityIndicator size="small" color="#FFFFFF" />
-                            ) : (
-                              <>
-                                <MaterialCommunityIcons name="camera-plus-outline" size={22} color="#FFFFFF" />
-                                <Text style={styles.actionButtonText}>{t('uploadProof')}</Text>
-                              </>
-                            )}
-                          </TouchableOpacity>
-                        </Animated.View>
-
-                        {/* 2. Complete Button (Disabled with Alert) */}
-                        <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-                          <TouchableOpacity
-                            style={[styles.actionButtonOutline, { opacity: 0.5 }]}
-                            onPress={() => {
-                              Alert.alert(t('imagesRequired'), t('pleaseUploadImage'));
-                            }}
-                            activeOpacity={0.8}
-                            accessibilityLabel={t('markAsComplete')}
-                            accessibilityRole="button"
-                          >
-                            <MaterialCommunityIcons name="check-circle-outline" size={22} color={colors.republicGreen} />
-                            <Text style={styles.actionButtonTextGreen}>{t('markAsComplete')}</Text>
-                          </TouchableOpacity>
-                        </Animated.View>
-                      </>
                     ) : (
                       <>
-                        {/* 1. Complete Button (Primary, Active since image is uploaded) */}
+                        {/* Under implementation flow: complete report (requires completion photo upload) */}
                         <Animated.View style={{ transform: [{ scale: btnScale }] }}>
                           <TouchableOpacity
                             style={styles.actionButtonGreen}
-                            onPress={handleDirectComplete}
+                            onPress={handleMarkCompleted}
                             onPressIn={onBtnPressIn}
                             onPressOut={onBtnPressOut}
                             activeOpacity={1}
-                            disabled={loading}
                             accessibilityLabel={t('markAsComplete')}
                             accessibilityRole="button"
                           >
-                            {loading ? (
-                              <ActivityIndicator size="small" color="#FFFFFF" />
-                            ) : (
-                              <>
-                                <MaterialCommunityIcons name="check-decagram" size={22} color="#FFFFFF" />
-                                <Text style={styles.actionButtonText}>{t('markAsComplete')}</Text>
-                              </>
-                            )}
+                            <MaterialCommunityIcons name="check-decagram" size={20} color="#FFFFFF" />
+                            <Text style={[styles.actionButtonText, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('completeReport')}</Text>
                           </TouchableOpacity>
                         </Animated.View>
 
-                        {/* 2. Insert Another Image Button (Secondary Outline) */}
+                        {/* Upload supplementary work proof images */}
                         <Animated.View style={{ transform: [{ scale: btnScale }] }}>
                           <TouchableOpacity
                             style={styles.actionButtonOutline}
@@ -496,11 +429,11 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
                             accessibilityRole="button"
                           >
                             {imageLoading ? (
-                              <ActivityIndicator size="small" color={colors.republicGreen} />
+                              <ActivityIndicator size="small" color={colors.primary} />
                             ) : (
                               <>
-                                <MaterialCommunityIcons name="camera-plus-outline" size={22} color={colors.republicGreen} />
-                                <Text style={styles.actionButtonTextGreen}>{t('uploadProof')}</Text>
+                                <MaterialCommunityIcons name="camera-plus-outline" size={20} color={colors.primary} />
+                                <Text style={[styles.actionButtonTextGreen, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('uploadProof')}</Text>
                               </>
                             )}
                           </TouchableOpacity>
@@ -514,7 +447,7 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
               {/* Added Images Preview */}
               {addedImages.length > 0 && (
                 <>
-                  <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md }]}>
+                  <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
                     {t('additionalPhotos')}
                   </Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.md }}>
@@ -531,13 +464,13 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
                 <PriorityBadge priority={report.priority} lang={lang} />
               </View>
 
-              <Text style={[styles.title, isRTL && styles.titleRTL]}>{report.title}</Text>
+              <Text style={[styles.title, isRTL && styles.titleRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{displayTitle}</Text>
 
               {/* Meta */}
               <View style={[styles.metaRow, isRTL && styles.metaRowRTL]}>
                 <View style={[styles.metaItem, isRTL && styles.metaItemRTL]}>
-                  <MaterialCommunityIcons name="calendar-outline" size={16} color={colors.textMuted} />
-                  <Text style={styles.metaText}>
+                  <MaterialCommunityIcons name="calendar-outline" size={15} color={colors.textSecondary} />
+                  <Text style={[styles.metaText, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>
                     {t('assigned')}: {new Date(report.assigned_to_at || report.created_at).toLocaleDateString(
                       lang === 'ar' ? 'ar-DZ' : 'fr-DZ'
                     )}
@@ -547,11 +480,11 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
 
               <Divider style={styles.divider} />
 
-              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL]}>{t('description')}</Text>
-              <Text style={[styles.description, isRTL && styles.descriptionRTL]}>{report.description}</Text>
+              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('description')}</Text>
+              <Text style={[styles.description, isRTL && styles.descriptionRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>{report.description}</Text>
 
               {/* Timeline Section */}
-              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md, marginBottom: spacing.xs }]}>
+              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md, marginBottom: spacing.xs, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
                 {lang === 'ar' ? 'الجدول الزمني للمتابعة' : 'Timeline de suivi'}
               </Text>
               <View style={tlStyles.timeline}>
@@ -576,8 +509,8 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
               {/* Info Cards */}
               <View style={[styles.infoGrid, isRTL && styles.infoGridRTL]}>
                 <View style={styles.infoCard}>
-                  <Text style={[styles.infoLabel, isRTL && { textAlign: 'right' }]}>{t('reportId')}</Text>
-                  <Text style={[styles.infoValue, isRTL && { textAlign: 'right' }]}>#{report.id.substring(0, 8).toUpperCase()}</Text>
+                  <Text style={[styles.infoLabel, isRTL && { textAlign: 'right' }, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('reportId')}</Text>
+                  <Text style={[styles.infoValue, isRTL && { textAlign: 'right' }, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>#{report.id.substring(0, 8).toUpperCase()}</Text>
                 </View>
 
                 {/* Location Card */}
@@ -585,27 +518,27 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
                   style={[styles.infoCard, location?.latitude && styles.locationCardActive]}
                   onPress={openMaps}
                   disabled={!location?.latitude}
-                  activeOpacity={0.7}
+                  activeOpacity={0.8}
                   accessibilityLabel={t('openGoogleMaps')}
                   accessibilityRole="button"
                 >
                   <View style={[styles.locationHeader, isRTL && { flexDirection: 'row-reverse' }]}>
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.infoLabel, isRTL && { textAlign: 'right' }]}>{t('locationLabel')}</Text>
-                      <Text style={[styles.infoValue, location?.latitude && { color: colors.republicGreen }, isRTL && { textAlign: 'right' }]}>
+                      <Text style={[styles.infoLabel, isRTL && { textAlign: 'right' }, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('locationLabel')}</Text>
+                      <Text style={[styles.infoValue, location?.latitude && { color: colors.primary }, isRTL && { textAlign: 'right' }, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
                         {location?.latitude ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}` : 'N/A'}
                       </Text>
                     </View>
                     {location?.latitude && (
                       <View style={styles.googleMapsButton}>
-                        <MaterialCommunityIcons name="google-maps" size={28} color="#4285F4" />
+                        <MaterialCommunityIcons name="google-maps" size={24} color="#4285F4" />
                       </View>
                     )}
                   </View>
                   {location?.latitude && (
                     <View style={[styles.viewOnMapRow, isRTL && { flexDirection: 'row-reverse' }]}>
-                      <MaterialCommunityIcons name="open-in-new" size={12} color={colors.info} />
-                      <Text style={styles.viewOnMapText}>{t('viewOnMap')}</Text>
+                      <MaterialCommunityIcons name="open-in-new" size={12} color={colors.primary} />
+                      <Text style={[styles.viewOnMapText, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('viewOnMap')}</Text>
                     </View>
                   )}
                 </TouchableOpacity>
@@ -614,7 +547,7 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
               {/* Completion images */}
               {report.completion_images && report.completion_images.length > 0 && (
                 <>
-                  <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md }]}>
+                  <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
                     {t('completionImages')}
                   </Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -635,130 +568,80 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.offWhite },
+  container: { flex: 1, backgroundColor: colors.pageBg },
   heroContainer: { height: height * 0.35, width: '100%' },
   heroImage: { width: '100%', height: '100%', resizeMode: 'cover' },
   placeholderImage: {
     width: '100%', height: '100%',
     justifyContent: 'center', alignItems: 'center',
-    backgroundColor: colors.surfaceGreen,
+    backgroundColor: '#F0F4F8',
   },
   headerOverlay: {
     position: 'absolute', top: 0, left: 0, right: 0,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
   },
   backButton: {
-    width: 44, height: 44, borderRadius: 22,
+    width: 36, height: 36, borderRadius: 18,
     backgroundColor: 'rgba(255,255,255,0.9)',
     justifyContent: 'center', alignItems: 'center',
-    ...shadows.card,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
   backButtonRTL: { alignSelf: 'flex-end' },
   contentCard: {
-    flex: 1, marginTop: -32,
-    borderTopLeftRadius: 28, borderTopRightRadius: 28,
-    backgroundColor: colors.cardWhite,
-    padding: spacing.lg,
+    flex: 1, marginTop: -24,
+    borderTopLeftRadius: radius.md, borderTopRightRadius: radius.md,
+    borderWidth: 1, borderColor: colors.borderLight,
+    backgroundColor: colors.white,
+    padding: spacing.md,
     minHeight: height * 0.65,
   },
 
   // Work actions card
   actionsCard: {
-    backgroundColor: colors.surfaceGreen,
-    borderRadius: borderRadius.card,
+    backgroundColor: colors.primaryTint,
+    borderRadius: radius.md,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.republicGreen + '20',
+    borderColor: colors.primaryBorder,
   },
   actionsTitle: {
-    fontSize: 14, fontWeight: '700',
-    color: colors.republicGreen, marginBottom: spacing.sm,
+    fontSize: 13,
+    color: colors.primary, marginBottom: spacing.xs,
     textAlign: 'left',
   },
   actionsTitleRTL: { textAlign: 'right' },
   actionsContainer: { gap: spacing.sm },
   actionButtonGreen: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: colors.republicGreen,
-    borderRadius: borderRadius.button,
-    paddingVertical: 14, gap: spacing.sm,
+    backgroundColor: colors.primary,
+    borderRadius: radius.sm, // 6px rounded button
+    paddingVertical: 12, gap: spacing.sm,
   },
   actionButtonOutline: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     backgroundColor: 'transparent',
-    borderRadius: borderRadius.button,
-    borderWidth: 2,
-    borderColor: colors.republicGreen,
-    paddingVertical: 12, gap: spacing.sm,
-  },
-  actionButtonGold: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: colors.governmentGold,
-    borderRadius: borderRadius.button,
-    paddingVertical: 14, gap: spacing.sm,
+    borderRadius: radius.sm, // 6px rounded button
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    paddingVertical: 10, gap: spacing.sm,
   },
   actionButtonText: {
-    color: '#FFFFFF', fontSize: 16, fontWeight: '700',
+    color: '#FFFFFF', fontSize: 14,
   },
   actionButtonTextGreen: {
-    color: colors.republicGreen, fontSize: 16, fontWeight: '700',
-  },
-  approvedBanner: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    padding: spacing.md, gap: spacing.sm,
-  },
-  approvedText: {
-    color: colors.status.approved, fontSize: 16, fontWeight: '700',
-  },
-  completedBanner: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    padding: spacing.md, gap: spacing.sm,
-  },
-  completedText: {
-    color: colors.status.pending, fontSize: 16, fontWeight: '700',
-  },
-
-  // Add Image Card
-  addImageCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.cardWhite,
-    borderRadius: borderRadius.card,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    borderStyle: 'dashed',
-    ...shadows.card,
-  },
-  addImageIconContainer: {
-    width: 48, height: 48,
-    borderRadius: 12,
-    backgroundColor: colors.surfaceGreen,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.md,
-  },
-  addImageTextContainer: {
-    flex: 1,
-  },
-  addImageTitle: {
-    fontSize: 15, fontWeight: '700',
-    color: colors.textPrimary,
-    textAlign: 'left',
-  },
-  addImageSubtitle: {
-    fontSize: 12, color: colors.textMuted,
-    marginTop: 2, textAlign: 'left',
+    color: colors.primary, fontSize: 14,
   },
 
   // Added images preview
   addedImage: {
-    width: 80, height: 80,
-    borderRadius: borderRadius.badge,
+    width: 70, height: 70,
+    borderRadius: radius.sm,
     marginRight: spacing.sm,
-    backgroundColor: colors.offWhite,
+    backgroundColor: '#F0F4F8',
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
 
   badgeRow: {
@@ -767,50 +650,50 @@ const styles = StyleSheet.create({
   },
   badgeRowRTL: { flexDirection: 'row-reverse' },
   title: {
-    fontSize: 22, fontWeight: '700',
-    color: colors.textPrimary, marginBottom: spacing.md,
-    letterSpacing: -0.5, textAlign: 'left',
+    fontSize: 20,
+    color: colors.textPrimary, marginBottom: spacing.sm,
+    textAlign: 'left',
   },
   titleRTL: { textAlign: 'right' },
-  metaRow: { flexDirection: 'row', gap: spacing.lg, marginBottom: spacing.lg },
+  metaRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.md },
   metaRowRTL: { flexDirection: 'row-reverse' },
   metaItem: { flexDirection: 'row', alignItems: 'center' },
   metaItemRTL: { flexDirection: 'row-reverse' },
   metaText: {
-    color: colors.textMuted, marginLeft: 6,
-    fontWeight: '500', fontSize: 13,
+    color: colors.textSecondary, marginLeft: 4,
+    fontSize: 12,
   },
-  divider: { backgroundColor: colors.borderLight, marginBottom: spacing.lg },
+  divider: { backgroundColor: colors.borderLight, marginBottom: spacing.md },
   sectionTitle: {
-    fontSize: 16, fontWeight: '700',
-    color: colors.textPrimary, marginBottom: spacing.sm,
+    fontSize: 14,
+    color: colors.textPrimary, marginBottom: spacing.xs,
     textAlign: 'left',
   },
   sectionTitleRTL: { textAlign: 'right' },
   description: {
-    color: colors.textSecondary, lineHeight: 26,
-    marginBottom: spacing.xl, fontSize: 15, textAlign: 'left',
+    color: colors.textSecondary, lineHeight: 22,
+    marginBottom: spacing.lg, fontSize: 13, textAlign: 'left',
   },
   descriptionRTL: { textAlign: 'right' },
-  infoGrid: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.xl },
+  infoGrid: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
   infoGridRTL: { flexDirection: 'row-reverse' },
   infoCard: {
-    flex: 1, padding: spacing.md,
-    borderRadius: borderRadius.card,
-    backgroundColor: colors.offWhite,
+    flex: 1, padding: spacing.sm,
+    borderRadius: radius.md,
+    backgroundColor: colors.pageBg,
     borderWidth: 1, borderColor: colors.borderLight,
   },
   locationCardActive: {
-    borderColor: colors.info + '40',
-    backgroundColor: '#F0F7FF',
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryTint,
   },
   infoLabel: {
-    color: colors.textMuted, fontWeight: '700',
-    marginBottom: 4, fontSize: 11, letterSpacing: 0.5,
+    color: colors.textSecondary,
+    marginBottom: 2, fontSize: 10, letterSpacing: 0.3,
     textTransform: 'uppercase', textAlign: 'left',
   },
   infoValue: {
-    color: colors.textPrimary, fontWeight: '600', fontSize: 13,
+    color: colors.textPrimary, fontSize: 12,
     textAlign: 'left',
   },
 
@@ -820,39 +703,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   googleMapsButton: {
-    width: 40, height: 40,
-    borderRadius: 10,
+    width: 32, height: 32,
+    borderRadius: radius.sm,
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.card,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
   viewOnMapRow: {
     flexDirection: 'row', alignItems: 'center',
-    marginTop: spacing.sm, gap: 4,
+    marginTop: 6, gap: 2,
   },
   viewOnMapText: {
-    fontSize: 11, color: colors.info,
-    fontWeight: '600',
+    fontSize: 10, color: colors.primary,
   },
 
   completionImage: {
-    width: 120, height: 120,
-    borderRadius: borderRadius.badge,
+    width: 100, height: 100,
+    borderRadius: radius.sm,
     marginRight: spacing.sm,
-    backgroundColor: colors.offWhite,
+    backgroundColor: '#F0F4F8',
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
 });
 
 const tlStyles = StyleSheet.create({
   timeline: {
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
-    backgroundColor: '#F9FBF9',
-    borderRadius: borderRadius.card,
+    backgroundColor: colors.pageBg,
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: '#EAF0EA',
-    marginBottom: spacing.xl,
+    borderColor: colors.borderLight,
+    marginBottom: spacing.md,
   },
   item: {
     flexDirection: 'row',
@@ -866,49 +751,41 @@ const tlStyles = StyleSheet.create({
     width: 24,
   },
   dot: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#EAEAEA',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.borderLight,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 2,
-    elevation: 2,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
   },
   dotCompleted: {
-    backgroundColor: colors.republicGreen,
-    borderColor: '#FFFFFF',
+    backgroundColor: colors.primary,
   },
   dotCurrent: {
-    backgroundColor: '#FFFFFF',
-    borderColor: colors.republicGreen,
-    borderWidth: 3,
+    backgroundColor: colors.primaryTint,
+    borderColor: colors.primary,
+    borderWidth: 2,
   },
   line: {
     width: 2,
     flex: 1,
-    backgroundColor: '#EAEAEA',
+    backgroundColor: colors.borderLight,
     marginVertical: -2,
     zIndex: 1,
     minHeight: 36,
   },
   lineCompleted: {
-    backgroundColor: colors.republicGreen,
+    backgroundColor: colors.primary,
   },
   content: {
     flex: 1,
-    paddingLeft: spacing.md,
-    paddingBottom: spacing.lg,
+    paddingLeft: spacing.sm,
+    paddingBottom: spacing.sm,
   },
   contentRTL: {
     paddingLeft: 0,
-    paddingRight: spacing.md,
+    paddingRight: spacing.sm,
   },
   header: {
     flexDirection: 'row',
@@ -920,8 +797,7 @@ const tlStyles = StyleSheet.create({
     flexDirection: 'row-reverse',
   },
   title: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 13,
     color: colors.textPrimary,
     textAlign: 'left',
   },
@@ -929,18 +805,16 @@ const tlStyles = StyleSheet.create({
     textAlign: 'right',
   },
   time: {
-    fontSize: 11,
-    color: colors.textMuted,
-    fontWeight: '500',
+    fontSize: 10,
+    color: colors.textSecondary,
   },
   subtitle: {
-    fontSize: 12,
+    fontSize: 11,
     color: colors.textSecondary,
-    lineHeight: 16,
+    lineHeight: 14,
     textAlign: 'left',
   },
   subtitleRTL: {
     textAlign: 'right',
   },
 });
-

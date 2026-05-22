@@ -6,7 +6,7 @@ import { supabase } from '../services/supabaseConfig';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { GovHeader } from '../components/GovHeader';
 import { LanguageToggle } from '../components/LanguageToggle';
-import { colors, spacing, borderRadius, shadows } from '../theme';
+import { colors, spacing, radius } from '../theme';
 import { useLanguage } from '../hooks/useLanguage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -37,29 +37,6 @@ export const ProfileScreen = ({ navigation }: any) => {
     );
   };
 
-  const ProfileItem = ({ icon, label, color, onPress, value }: any) => (
-    <TouchableOpacity
-      style={[styles.profileItem, isRTL && styles.profileItemRTL]}
-      onPress={onPress}
-      activeOpacity={0.6}
-      accessibilityLabel={label}
-      accessibilityRole="button"
-    >
-      <View style={[styles.iconContainer, { backgroundColor: color + '15' }]}>
-        <MaterialCommunityIcons name={icon as any} size={22} color={color} />
-      </View>
-      <Text style={[styles.itemLabel, isRTL && styles.itemLabelRTL]}>{label}</Text>
-      <View style={[styles.itemRight, isRTL && styles.itemRightRTL]}>
-        {value && <Text style={styles.itemValue}>{value}</Text>}
-        <MaterialCommunityIcons
-          name={isRTL ? 'chevron-left' : 'chevron-right'}
-          size={20}
-          color={colors.borderLight}
-        />
-      </View>
-    </TouchableOpacity>
-  );
-
   return (
     <View style={styles.container}>
       <GovHeader title={t('profile')} subtitle={role} />
@@ -72,26 +49,26 @@ export const ProfileScreen = ({ navigation }: any) => {
         <View style={styles.profileHeader}>
           <View style={styles.avatarWrapper}>
             <View style={styles.avatarCircle}>
-              <Text style={styles.avatarInitial}>{initial}</Text>
+              <Text style={[styles.avatarInitial, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{initial}</Text>
             </View>
             {/* Role badge */}
             <View style={styles.roleBadge}>
-              <Text style={styles.roleBadgeText}>{role}</Text>
+              <Text style={[styles.roleBadgeText, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{role}</Text>
             </View>
           </View>
-          <Text style={[styles.userName, isRTL && styles.userNameRTL]}>{displayName}</Text>
-          <Text style={styles.userEmail}>{user?.email}</Text>
+          <Text style={[styles.userName, isRTL && styles.userNameRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{displayName}</Text>
+          <Text style={[styles.userEmail, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>{user?.email}</Text>
         </View>
 
         {/* Language Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionLabel, isRTL && styles.sectionLabelRTL]}>{t('appLanguage')}</Text>
+          <Text style={[styles.sectionLabel, isRTL && styles.sectionLabelRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('appLanguage')}</Text>
           <View style={styles.languageCard}>
             <View style={[styles.languageRow, isRTL && styles.languageRowRTL]}>
-              <View style={[styles.iconContainer, { backgroundColor: colors.republicGreen + '15' }]}>
-                <MaterialCommunityIcons name="translate" size={22} color={colors.republicGreen} />
+              <View style={[styles.iconContainer, { backgroundColor: colors.primaryTint }]}>
+                <MaterialCommunityIcons name="translate" size={20} color={colors.primary} />
               </View>
-              <Text style={[styles.languageLabel, isRTL && styles.languageLabelRTL]}>{t('appLanguage')}</Text>
+              <Text style={[styles.languageLabel, isRTL && styles.languageLabelRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('appLanguage')}</Text>
               <View style={styles.toggleWrapper}>
                 <LanguageToggle />
               </View>
@@ -106,11 +83,12 @@ export const ProfileScreen = ({ navigation }: any) => {
             onPress={handleLogout}
             accessibilityLabel={t('logout')}
             accessibilityRole="button"
+            activeOpacity={0.8}
           >
             <MaterialCommunityIcons name="logout" size={20} color={colors.error} />
-            <Text style={styles.logoutText}>{t('logout')}</Text>
+            <Text style={[styles.logoutText, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('logout')}</Text>
           </TouchableOpacity>
-          <Text style={styles.versionText}>{t('version')}</Text>
+          <Text style={[styles.versionText, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>{t('version')}</Text>
         </View>
       </ScrollView>
     </View>
@@ -118,130 +96,93 @@ export const ProfileScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.offWhite },
+  container: { flex: 1, backgroundColor: colors.pageBg },
   scroll: { paddingBottom: 120 },
 
   // Profile Header
   profileHeader: { alignItems: 'center', padding: spacing.lg },
   avatarWrapper: { marginBottom: spacing.md, alignItems: 'center' },
   avatarCircle: {
-    width: 90, height: 90, borderRadius: 45,
-    backgroundColor: colors.republicGreen,
+    width: 80, height: 80, borderRadius: 40,
+    backgroundColor: colors.primary,
     justifyContent: 'center', alignItems: 'center',
-    ...shadows.elevated,
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
   },
-  avatarInitial: { fontSize: 38, fontWeight: '800', color: '#FFFFFF' },
+  avatarInitial: { fontSize: 32, color: '#FFFFFF' },
   roleBadge: {
-    marginTop: -12,
-    backgroundColor: colors.governmentGold,
-    paddingHorizontal: 14, paddingVertical: 3,
-    borderRadius: 12,
+    marginTop: -10,
+    backgroundColor: colors.primaryTint,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    paddingHorizontal: 12, paddingVertical: 2,
+    borderRadius: radius.sm, // 6px modest radius
   },
   roleBadgeText: {
-    color: '#FFFFFF', fontSize: 11, fontWeight: '700',
+    color: colors.primary, fontSize: 10,
   },
   userName: {
-    fontSize: 20, fontWeight: '700', color: colors.textPrimary,
+    fontSize: 18, color: colors.textPrimary,
     marginBottom: 2, textAlign: 'center',
   },
   userNameRTL: { textAlign: 'center' },
   userEmail: {
-    color: colors.textMuted, fontWeight: '500', fontSize: 14,
-  },
-
-  // Stats
-  statsContainer: {
-    flexDirection: 'row',
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
-    padding: spacing.lg,
-    borderRadius: borderRadius.card,
-    backgroundColor: colors.cardWhite,
-    borderWidth: 1, borderColor: colors.borderLight,
-    ...shadows.card,
-  },
-  statsContainerRTL: { flexDirection: 'row-reverse' },
-  statBox: { flex: 1, alignItems: 'center' },
-  statNumber: {
-    fontSize: 22, fontWeight: '800', color: colors.republicGreen,
-  },
-  statLabel: {
-    color: colors.textMuted, fontWeight: '600', marginTop: 4,
-    fontSize: 11,
-  },
-  statDivider: {
-    width: 1, height: '60%',
-    backgroundColor: colors.borderLight, alignSelf: 'center',
+    color: colors.textSecondary, fontSize: 13,
   },
 
   // Language
   languageCard: {
-    backgroundColor: colors.cardWhite, borderRadius: borderRadius.card,
-    borderWidth: 1, borderColor: colors.borderLight,
+    backgroundColor: colors.white,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
     padding: spacing.md,
-    ...shadows.card,
   },
   languageRow: {
     flexDirection: 'row', alignItems: 'center',
   },
   languageRowRTL: { flexDirection: 'row-reverse' },
   languageLabel: {
-    flex: 1, fontWeight: '600', color: colors.textPrimary,
-    marginLeft: spacing.md, fontSize: 15,
+    flex: 1, color: colors.textPrimary,
+    marginLeft: spacing.md, fontSize: 14,
   },
   languageLabelRTL: { marginLeft: 0, marginRight: spacing.md, textAlign: 'right' },
   toggleWrapper: {
-    backgroundColor: colors.republicGreen,
+    backgroundColor: colors.primary,
     borderRadius: 20,
     padding: 2,
   },
 
   // Sections
-  section: { paddingHorizontal: spacing.lg, marginTop: spacing.xl },
+  section: { paddingHorizontal: spacing.lg, marginTop: spacing.md },
   sectionLabel: {
-    color: colors.textMuted, fontWeight: '700', marginBottom: spacing.sm,
-    letterSpacing: 0.5, fontSize: 12, textTransform: 'uppercase',
+    color: colors.textSecondary, marginBottom: spacing.xs,
+    letterSpacing: 0.3, fontSize: 11, textTransform: 'uppercase',
     textAlign: 'left',
   },
   sectionLabelRTL: { textAlign: 'right' },
-  menuGroup: {
-    backgroundColor: colors.cardWhite, borderRadius: borderRadius.card,
-    borderWidth: 1, borderColor: colors.borderLight,
-    overflow: 'hidden',
-    ...shadows.card,
-  },
-  profileItem: {
-    flexDirection: 'row', alignItems: 'center',
-    padding: spacing.md, paddingRight: spacing.lg,
-  },
-  profileItemRTL: {
-    flexDirection: 'row-reverse',
-    paddingRight: spacing.md, paddingLeft: spacing.lg,
-  },
+
   iconContainer: {
-    width: 40, height: 40, borderRadius: 12,
-    justifyContent: 'center', alignItems: 'center',
-    marginRight: spacing.md,
+    width: 36,
+    height: 36,
+    borderRadius: radius.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.sm,
   },
-  itemLabel: {
-    flex: 1, fontWeight: '600', color: colors.textPrimary,
-    fontSize: 15, textAlign: 'left',
-  },
-  itemLabelRTL: { textAlign: 'right', marginLeft: spacing.md, marginRight: 0 },
-  itemRight: { flexDirection: 'row', alignItems: 'center' },
-  itemRightRTL: { flexDirection: 'row-reverse' },
-  itemValue: { color: colors.textMuted, marginRight: spacing.sm, fontWeight: '500', fontSize: 14 },
-  menuDivider: { backgroundColor: colors.offWhite, marginHorizontal: spacing.md },
 
   // Footer
   footer: { marginTop: spacing.xl * 1.5, paddingHorizontal: spacing.lg, alignItems: 'center' },
   logoutBtn: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 14, paddingHorizontal: spacing.xl,
-    borderRadius: borderRadius.button,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: spacing.xl,
+    borderRadius: radius.sm, // 6px rounded square button
     backgroundColor: '#FEF2F2',
-    borderWidth: 1, borderColor: '#FEE2E2',
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
   },
-  logoutText: { color: colors.error, fontWeight: '700', marginLeft: 10, fontSize: 15 },
-  versionText: { marginTop: spacing.lg, color: colors.textMuted, fontWeight: '500', fontSize: 12 },
+  logoutText: { color: colors.error, marginLeft: 8, fontSize: 14 },
+  versionText: { marginTop: spacing.md, color: colors.textSecondary, fontSize: 11 },
 });

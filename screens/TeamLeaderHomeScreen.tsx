@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
-import { Text, ActivityIndicator } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { useAuth } from '../hooks/useAuth';
 import { getTeamLeaderReports, ReportWithAttachments } from '../services/api';
 import { GovHeader } from '../components/GovHeader';
@@ -85,7 +85,13 @@ export const TeamLeaderHomeScreen = ({ navigation }: any) => {
           accessibilityLabel={f.label}
           accessibilityRole="button"
         >
-          <Text style={[styles.filterText, activeFilter === f.key && styles.filterTextActive]}>
+          <Text 
+            style={[
+              styles.filterText, 
+              activeFilter === f.key && styles.filterTextActive,
+              { fontFamily: isRTL ? (activeFilter === f.key ? 'IBMPlexArabic-Bold' : 'IBMPlexArabic-Regular') : (activeFilter === f.key ? 'IBMPlexSans-Bold' : 'IBMPlexSans-Regular') }
+            ]}
+          >
             {f.label}
           </Text>
           {activeFilter === f.key && <View style={styles.filterIndicator} />}
@@ -127,13 +133,17 @@ export const TeamLeaderHomeScreen = ({ navigation }: any) => {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                tintColor={colors.republicGreen}
-                colors={[colors.republicGreen]}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
               />
             }
             contentContainerStyle={[styles.listContainer, { paddingBottom: 100 + insets.bottom }]}
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={<EmptyState type="no-tasks" />}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            removeClippedSubviews={true}
           />
         )}
       </View>
@@ -142,13 +152,13 @@ export const TeamLeaderHomeScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.offWhite },
+  container: { flex: 1, backgroundColor: colors.pageBg },
   content: { flex: 1 },
   skeletonContainer: { paddingHorizontal: spacing.md, paddingTop: spacing.md },
-  listContainer: { paddingHorizontal: spacing.md },
+  listContainer: { paddingHorizontal: spacing.md, paddingTop: spacing.md },
   filterRow: {
     flexDirection: 'row',
-    backgroundColor: colors.cardWhite,
+    backgroundColor: colors.white,
     paddingHorizontal: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.borderLight,
@@ -164,13 +174,11 @@ const styles = StyleSheet.create({
   },
   filterTabActive: {},
   filterText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.textMuted,
+    fontSize: 12,
+    color: colors.textSecondary,
   },
   filterTextActive: {
-    color: colors.republicGreen,
-    fontWeight: '700',
+    color: colors.primary,
   },
   filterIndicator: {
     position: 'absolute',
@@ -178,7 +186,7 @@ const styles = StyleSheet.create({
     left: spacing.md,
     right: spacing.md,
     height: 3,
-    backgroundColor: colors.republicGreen,
+    backgroundColor: colors.primary,
     borderTopLeftRadius: 3,
     borderTopRightRadius: 3,
   },

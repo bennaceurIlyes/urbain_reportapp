@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing } from '../theme';
 import { useLanguage } from '../hooks/useLanguage';
-import Svg, { Path, Pattern, Rect, Defs } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 
 interface GovHeaderProps {
   title: string;
@@ -17,28 +17,16 @@ interface GovHeaderProps {
   badge?: number | string;
 }
 
-/** Zellij-inspired geometric overlay pattern */
-const ZellijPattern = () => (
-  <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
-    <Defs>
-      <Pattern id="zellij" patternUnits="userSpaceOnUse" width="40" height="40">
-        <Path
-          d="M0 20 L20 0 L40 20 L20 40 Z"
-          stroke="white"
-          strokeWidth="0.5"
-          fill="none"
-          opacity="0.07"
-        />
-        <Path
-          d="M10 10 L20 0 L30 10 L20 20 Z"
-          stroke="white"
-          strokeWidth="0.3"
-          fill="none"
-          opacity="0.05"
-        />
-      </Pattern>
-    </Defs>
-    <Rect width="100%" height="100%" fill="url(#zellij)" />
+const WaterDropIcon = () => (
+  <Svg width={22} height={28} viewBox="0 0 22 28">
+    <Path
+      d="M11 0 C11 0 1 12 1 18 C1 23.5 5.5 27 11 27 C16.5 27 21 23.5 21 18 C21 12 11 0 11 0 Z"
+      fill="rgba(255,255,255,0.90)"
+    />
+    <Path
+      d="M11 10 Q8 16 8 18 Q8 21 11 22 Q14 21 14 18 Q14 16 11 10 Z"
+      fill="rgba(255,255,255,0.30)"
+    />
   </Svg>
 );
 
@@ -53,16 +41,30 @@ export const GovHeader: React.FC<GovHeaderProps> = ({
   const insets = useSafeAreaInsets();
   const { lang, isRTL } = useLanguage();
 
+  const brandSubtitle = subtitle || (isRTL 
+    ? 'وحدة بشار  ·  الجزائرية للمياه' 
+    : 'ADE BÉCHAR  ·  ALGÉRIENNE DES EAUX'
+  );
+
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor={colors.republicGreen} />
+      <StatusBar barStyle="light-content" backgroundColor="#073858" />
       <LinearGradient
-        colors={[colors.republicGreen, colors.activeGreen]}
+        colors={['#073858', '#0A4C78']}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 0, y: 1 }}
         style={[styles.container, { paddingTop: insets.top + spacing.sm }]}
       >
-        <ZellijPattern />
+        {/* Thin bright blue accent bottom line */}
+        <View style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 2,
+          backgroundColor: colors.primaryBorder,
+          opacity: 0.6,
+        }} />
         
         <View style={[styles.headerRow, isRTL && styles.headerRowRTL]}>
           {showBack && (
@@ -80,17 +82,38 @@ export const GovHeader: React.FC<GovHeaderProps> = ({
             </TouchableOpacity>
           )}
           
+          {/* Water drop logo element */}
+          <View style={isRTL ? { marginLeft: spacing.xs } : { marginRight: spacing.xs }}>
+            <WaterDropIcon />
+          </View>
+
           <View style={[styles.titleContainer, isRTL && styles.titleContainerRTL]}>
             <View style={[styles.titleRow, isRTL && styles.titleRowRTL]}>
-              <Text style={[styles.title, isRTL && styles.titleRTL]}>{title}</Text>
+              <Text 
+                style={[
+                  styles.title, 
+                  isRTL && styles.titleRTL,
+                  { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }
+                ]}
+              >
+                {title}
+              </Text>
               {badge !== undefined && (
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>{badge}</Text>
                 </View>
               )}
             </View>
-            {subtitle && (
-              <Text style={[styles.subtitle, isRTL && styles.subtitleRTL]}>{subtitle}</Text>
+            {brandSubtitle && (
+              <Text 
+                style={[
+                  styles.subtitle, 
+                  isRTL && styles.subtitleRTL,
+                  { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
+                ]}
+              >
+                {brandSubtitle}
+              </Text>
             )}
           </View>
 
@@ -118,10 +141,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row-reverse',
   },
   backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    padding: 8,
+    marginRight: spacing.xs,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -141,30 +162,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row-reverse',
   },
   title: {
-    fontSize: 22,
-    fontWeight: '700',
     color: '#FFFFFF',
+    fontSize: 18,
+    letterSpacing: 0.2,
+    lineHeight: 24,
     textAlign: 'left',
   },
   titleRTL: {
     textAlign: 'right',
   },
   badge: {
-    backgroundColor: colors.governmentGold,
-    borderRadius: 12,
-    paddingHorizontal: 10,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    borderRadius: 4,
+    paddingHorizontal: 8,
     paddingVertical: 2,
     marginLeft: spacing.sm,
     marginRight: spacing.sm,
   },
   badgeText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
   },
   subtitle: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.75)',
+    color: 'rgba(255, 255, 255, 0.65)',
+    fontSize: 11,
+    letterSpacing: 0.8,
     marginTop: 2,
     textAlign: 'left',
   },

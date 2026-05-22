@@ -1,10 +1,21 @@
 export type Language = 'ar' | 'fr';
 
 export const strings: Record<string, Record<Language, string>> = {
+  // ─── Water Categories ───────────────────────────────────────────────────────
+  cat_water_leak:    { ar: 'تسرب مياه', fr: "Fuite d'eau" },
+  cat_water_cutoff:  { ar: 'انقطاع الماء', fr: "Coupure d'eau" },
+  cat_low_pressure:  { ar: 'ضعف الضغط', fr: "Faible pression" },
+  cat_contamination: { ar: 'تلوث المياه', fr: "Contamination de l'eau" },
+  cat_meter_fault:   { ar: 'خلل في العداد', fr: "Problème de compteur" },
+  cat_sewage:        { ar: 'فيضان الصرف الصحي', fr: "Débordement d'égout" },
+  cat_network_damage:{ ar: 'تخريب الشبكة', fr: "Dommage au réseau" },
+  cat_other:         { ar: 'بلاغ آخر', fr: "Autre signalement" },
+  selectCategory:    { ar: 'اختر فئة البلاغ', fr: "Sélectionnez une catégorie" },
+
   // ─── App Identity ───────────────────────────────────────────────────────────
-  appName:           { ar: 'انشغالاتي', fr: 'Incheghalati' },
-  appSubtitle:       { ar: 'منصة الإبلاغ عن المشاكل الحضرية', fr: 'Plateforme de signalement urbain' },
-  ministry:          { ar: 'بلدية - ولاية', fr: 'Commune - Wilaya' },
+  appName:           { ar: 'الجزائرية للمياه', fr: 'Algérienne Des Eaux' },
+  appSubtitle:       { ar: 'وحدة بشار — بوابة الإبلاغ التقني', fr: 'ADE Béchar — Signalement Technique' },
+  ministry:          { ar: 'المديرية العامة — وحدة بشار', fr: 'Direction Générale — Unité de Béchar' },
 
   // ─── Roles ──────────────────────────────────────────────────────────────────
   citizen:           { ar: 'مواطن', fr: 'Citoyen' },
@@ -125,7 +136,7 @@ export const strings: Record<string, Record<Language, string>> = {
   helpCenter:        { ar: 'مركز المساعدة', fr: "Centre d'aide" },
   termsPrivacy:      { ar: 'الشروط والخصوصية', fr: 'Conditions et confidentialité' },
   appSettings:       { ar: 'إعدادات التطبيق', fr: "Paramètres de l'application" },
-  version:           { ar: 'الجزائر الحضرية ن١.٢.٠', fr: 'Algérie Urbaine v1.2.0' },
+  version:           { ar: 'بشار ن١.٢.٠', fr: 'Béchar v1.2.0' },
   totalReports:      { ar: 'البلاغات', fr: 'Signalements' },
   resolvedCount:     { ar: 'تم الحل', fr: 'Résolus' },
   pendingCount:      { ar: 'معلق', fr: 'En attente' },
@@ -148,7 +159,7 @@ export const strings: Record<string, Record<Language, string>> = {
   sendingReport:     { ar: 'جاري إرسال البلاغ', fr: "Envoi du signalement" },
   optimizingMedia:   { ar: 'جاري تحسين ورفع الوسائط...', fr: 'Optimisation et envoi des médias...' },
   reportSubmitted:   { ar: 'تم إرسال البلاغ', fr: 'Signalement envoyé' },
-  thankYou:          { ar: 'شكراً لمساهمتك في تحسين مدينتنا.', fr: 'Merci pour votre contribution à l\'amélioration de notre ville.' },
+  thankYou:          { ar: 'شكراً لمساهمتكم في الحفاظ على الموارد المائية.', fr: 'Merci pour votre contribution à la préservation des ressources en eau.' },
   photoRequired:     { ar: 'الصورة مطلوبة', fr: 'Photo requise' },
   pleaseAttachPhoto: { ar: 'يرجى إرفاق صورة للمشكلة.', fr: 'Veuillez joindre une photo du problème.' },
   emergencyPhotoRequired: { ar: 'الصورة مطلوبة للحالات الطارئة', fr: 'Photo requise pour les urgences' },

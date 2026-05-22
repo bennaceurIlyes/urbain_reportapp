@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, spacing, borderRadius, shadows } from '../theme';
+import { colors, spacing, radius, shadows } from '../theme';
 
 /** Shimmer effect skeleton card for loading states */
 export const SkeletonCard: React.FC = () => {
@@ -104,12 +104,12 @@ export const SkeletonCard: React.FC = () => {
   );
 };
 
-const skeletonBg = '#E8E8E8';
+const skeletonBg = '#EAEAEA';
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.cardWhite,
-    borderRadius: borderRadius.card,
+    backgroundColor: colors.white,
+    borderRadius: radius.md, // 8px Modest rounding
     borderWidth: 1,
     borderColor: colors.borderLight,
     marginBottom: spacing.md,
@@ -135,21 +135,21 @@ const styles = StyleSheet.create({
     height: 16,
     width: '55%',
     backgroundColor: skeletonBg,
-    borderRadius: 8,
+    borderRadius: radius.xs,
     overflow: 'hidden',
   },
   badgeSkeleton: {
     height: 22,
     width: 65,
     backgroundColor: skeletonBg,
-    borderRadius: 6,
+    borderRadius: radius.xs,
     overflow: 'hidden',
   },
   line1: {
     height: 12,
     width: '90%',
     backgroundColor: skeletonBg,
-    borderRadius: 6,
+    borderRadius: radius.xs,
     marginBottom: 8,
     overflow: 'hidden',
   },
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     height: 12,
     width: '70%',
     backgroundColor: skeletonBg,
-    borderRadius: 6,
+    borderRadius: radius.xs,
     marginBottom: spacing.sm,
     overflow: 'hidden',
   },
@@ -167,19 +167,19 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.borderLight + '60',
+    borderTopColor: colors.divider, // Clean hairline divider
   },
   metaSkeleton: {
     height: 12,
     width: 80,
     backgroundColor: skeletonBg,
-    borderRadius: 6,
+    borderRadius: radius.xs,
     overflow: 'hidden',
   },
   thumbSkeleton: {
     width: 60,
     height: 60,
-    borderRadius: 8,
+    borderRadius: radius.xs,
     backgroundColor: skeletonBg,
     overflow: 'hidden',
   },

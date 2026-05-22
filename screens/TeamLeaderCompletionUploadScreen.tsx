@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { uploadCompletionImages } from '../services/api';
 import { GovHeader } from '../components/GovHeader';
-import { colors, spacing, borderRadius, shadows } from '../theme';
+import { colors, spacing, radius } from '../theme';
 import { useLanguage } from '../hooks/useLanguage';
 
 export const TeamLeaderCompletionUploadScreen = ({ route, navigation }: any) => {
@@ -89,12 +89,12 @@ export const TeamLeaderCompletionUploadScreen = ({ route, navigation }: any) => 
         onBack={() => navigation.goBack()}
       />
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL]}>{t('proofOfCompletion')}</Text>
-        <Text style={[styles.helperText, isRTL && styles.helperTextRTL]}>{t('proofHelper')}</Text>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('proofOfCompletion')}</Text>
+        <Text style={[styles.helperText, isRTL && styles.helperTextRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>{t('proofHelper')}</Text>
 
         {/* Image grid */}
-        <View style={styles.imageGrid}>
+        <View style={[styles.imageGrid, isRTL && styles.imageGridRTL]}>
           {images.map((uri, index) => (
             <View key={index} style={styles.imageWrapper}>
               <Image source={{ uri }} style={styles.previewImage} accessibilityLabel={`${t('photos')} ${index + 1}`} />
@@ -103,26 +103,26 @@ export const TeamLeaderCompletionUploadScreen = ({ route, navigation }: any) => 
                 onPress={() => removeImage(index)}
                 accessibilityLabel={lang === 'ar' ? 'إزالة' : 'Supprimer'}
               >
-                <MaterialCommunityIcons name="close" size={16} color="#FFF" />
+                <MaterialCommunityIcons name="close" size={14} color="#FFF" />
               </TouchableOpacity>
             </View>
           ))}
           {images.length < 6 && (
             <View style={[styles.actionButtons, isRTL && styles.actionButtonsRTL]}>
-              <TouchableOpacity style={styles.addBtn} onPress={takePhoto} accessibilityLabel={t('camera')} accessibilityRole="button">
-                <MaterialCommunityIcons name="camera-outline" size={28} color={colors.republicGreen} />
-                <Text style={styles.addBtnText}>{t('camera')}</Text>
+              <TouchableOpacity style={styles.addBtn} onPress={takePhoto} accessibilityLabel={t('camera')} accessibilityRole="button" activeOpacity={0.8}>
+                <MaterialCommunityIcons name="camera-outline" size={24} color={colors.primary} />
+                <Text style={[styles.addBtnText, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('camera')}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.addBtn} onPress={pickImage} accessibilityLabel={t('gallery')} accessibilityRole="button">
-                <MaterialCommunityIcons name="image-plus" size={28} color={colors.republicGreen} />
-                <Text style={styles.addBtnText}>{t('gallery')}</Text>
+              <TouchableOpacity style={styles.addBtn} onPress={pickImage} accessibilityLabel={t('gallery')} accessibilityRole="button" activeOpacity={0.8}>
+                <MaterialCommunityIcons name="image-plus" size={24} color={colors.primary} />
+                <Text style={[styles.addBtnText, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('gallery')}</Text>
               </TouchableOpacity>
             </View>
           )}
         </View>
 
         {/* Notes */}
-        <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL]}>{t('completionNotes')}</Text>
+        <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('completionNotes')}</Text>
         <TextInput
           mode="outlined"
           placeholder={t('notesPlaceholder')}
@@ -131,9 +131,10 @@ export const TeamLeaderCompletionUploadScreen = ({ route, navigation }: any) => 
           multiline
           numberOfLines={4}
           outlineColor={colors.borderLight}
-          activeOutlineColor={colors.republicGreen}
-          style={[styles.input, isRTL && styles.inputRTL]}
+          activeOutlineColor={colors.primary}
+          style={[styles.input, isRTL && styles.inputRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}
           accessibilityLabel={t('completionNotes')}
+          theme={{ roundness: radius.sm }} // 6px rounded shapes for form elements
         />
 
         {/* Submit */}
@@ -148,7 +149,7 @@ export const TeamLeaderCompletionUploadScreen = ({ route, navigation }: any) => 
           {uploading ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
-            <Text style={styles.submitBtnText}>{t('confirmCompletion')}</Text>
+            <Text style={[styles.submitBtnText, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('confirmCompletion')}</Text>
           )}
         </TouchableOpacity>
       </ScrollView>
@@ -157,49 +158,51 @@ export const TeamLeaderCompletionUploadScreen = ({ route, navigation }: any) => 
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.offWhite },
-  content: { padding: spacing.lg },
+  container: { flex: 1, backgroundColor: colors.pageBg },
+  content: { padding: spacing.md },
   sectionTitle: {
-    fontWeight: '700', color: colors.textPrimary,
-    marginBottom: spacing.sm, fontSize: 15, textAlign: 'left',
+    color: colors.textPrimary,
+    marginBottom: spacing.xs, fontSize: 14, textAlign: 'left',
   },
   sectionTitleRTL: { textAlign: 'right' },
   helperText: {
-    color: colors.textSecondary, marginBottom: spacing.lg,
-    fontSize: 14, lineHeight: 22, textAlign: 'left',
+    color: colors.textSecondary, marginBottom: spacing.md,
+    fontSize: 13, lineHeight: 20, textAlign: 'left',
   },
   helperTextRTL: { textAlign: 'right' },
-  imageGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: spacing.xl },
+  imageGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: spacing.md },
+  imageGridRTL: { flexDirection: 'row-reverse' },
   imageWrapper: {
-    width: 100, height: 100, borderRadius: borderRadius.badge, overflow: 'hidden',
+    width: 80, height: 80, borderRadius: radius.sm, overflow: 'hidden',
+    borderWidth: 1, borderColor: colors.borderLight,
   },
   previewImage: { width: '100%', height: '100%', resizeMode: 'cover' },
   removeButton: {
     position: 'absolute', top: 4, right: 4,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 12, padding: 4,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 10, padding: 3,
   },
-  actionButtons: { flexDirection: 'row', gap: 12 },
+  actionButtons: { flexDirection: 'row', gap: 10 },
   actionButtonsRTL: { flexDirection: 'row-reverse' },
   addBtn: {
-    width: 100, height: 100,
-    backgroundColor: colors.cardWhite,
-    borderWidth: 1, borderColor: colors.borderLight, borderStyle: 'dashed',
-    borderRadius: borderRadius.badge,
+    width: 80, height: 80,
+    backgroundColor: colors.white,
+    borderWidth: 1.5, borderColor: colors.borderLight, borderStyle: 'dashed',
+    borderRadius: radius.sm, // 6px rounded form shapes
     justifyContent: 'center', alignItems: 'center',
-    ...shadows.card,
   },
-  addBtnText: { marginTop: 8, color: colors.republicGreen, fontSize: 12, fontWeight: '600' },
+  addBtnText: { marginTop: 4, color: colors.primary, fontSize: 11 },
   input: {
-    backgroundColor: colors.cardWhite, marginBottom: spacing.xl,
+    backgroundColor: colors.white, marginBottom: spacing.lg,
+    fontSize: 13,
     textAlign: 'left',
   },
   inputRTL: { textAlign: 'right' },
   submitBtn: {
-    borderRadius: borderRadius.button, backgroundColor: colors.republicGreen,
-    height: 52, justifyContent: 'center', alignItems: 'center',
-    ...shadows.fab,
+    borderRadius: radius.sm, // 6px rounded square button
+    backgroundColor: colors.primary,
+    height: 48, justifyContent: 'center', alignItems: 'center',
   },
   submitBtnDisabled: { opacity: 0.5 },
-  submitBtnText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
+  submitBtnText: { fontSize: 15, color: colors.textOnBlue },
 });

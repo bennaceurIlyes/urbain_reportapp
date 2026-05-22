@@ -18,7 +18,7 @@ import { ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing } from '../theme';
+import { colors } from '../theme';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -38,27 +38,28 @@ const CitizenTabNavigator = () => {
           bottom: 0,
           left: 0,
           right: 0,
-          height: 65 + insets.bottom,
+          height: 60 + insets.bottom,
           backgroundColor: Platform.OS === 'ios' ? 'rgba(255,255,255,0.92)' : '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: colors.borderLight,
           elevation: 0,
-          shadowColor: '#000',
+          shadowColor: '#000000',
           shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
+          shadowOpacity: 0.04,
+          shadowRadius: 6,
           paddingBottom: insets.bottom,
         },
         tabBarBackground: () =>
           Platform.OS === 'ios' ? (
             <BlurView intensity={80} tint="light" style={StyleSheet.absoluteFill} />
           ) : null,
-        tabBarActiveTintColor: colors.republicGreen,
-        tabBarInactiveTintColor: colors.textMuted,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '600',
           marginBottom: 4,
+          fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold',
         },
         tabBarIconStyle: {
           marginTop: 6,
@@ -73,25 +74,9 @@ const CitizenTabNavigator = () => {
           tabBarIcon: ({ color, focused }) => (
             <MaterialCommunityIcons
               name={focused ? 'home' : 'home-outline'}
-              size={24}
+              size={22}
               color={color}
             />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="NewReport"
-        component={ReportScreen}
-        options={{
-          tabBarLabel: t('newReport'),
-          tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeIconBg : undefined}>
-              <MaterialCommunityIcons
-                name="plus-circle"
-                size={focused ? 28 : 24}
-                color={focused ? colors.republicGreen : color}
-              />
-            </View>
           ),
         }}
       />
@@ -103,7 +88,7 @@ const CitizenTabNavigator = () => {
           tabBarIcon: ({ color, focused }) => (
             <MaterialCommunityIcons
               name={focused ? 'account' : 'account-outline'}
-              size={24}
+              size={22}
               color={color}
             />
           ),
@@ -128,27 +113,28 @@ const TeamLeaderTabNavigator = () => {
           bottom: 0,
           left: 0,
           right: 0,
-          height: 65 + insets.bottom,
+          height: 60 + insets.bottom,
           backgroundColor: Platform.OS === 'ios' ? 'rgba(255,255,255,0.92)' : '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: colors.borderLight,
           elevation: 0,
-          shadowColor: '#000',
+          shadowColor: '#000000',
           shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
+          shadowOpacity: 0.04,
+          shadowRadius: 6,
           paddingBottom: insets.bottom,
         },
         tabBarBackground: () =>
           Platform.OS === 'ios' ? (
             <BlurView intensity={80} tint="light" style={StyleSheet.absoluteFill} />
           ) : null,
-        tabBarActiveTintColor: colors.republicGreen,
-        tabBarInactiveTintColor: colors.textMuted,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '600',
           marginBottom: 4,
+          fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold',
         },
         tabBarIconStyle: {
           marginTop: 6,
@@ -163,7 +149,7 @@ const TeamLeaderTabNavigator = () => {
           tabBarIcon: ({ color, focused }) => (
             <MaterialCommunityIcons
               name={focused ? 'clipboard-list' : 'clipboard-list-outline'}
-              size={24}
+              size={22}
               color={color}
             />
           ),
@@ -177,7 +163,7 @@ const TeamLeaderTabNavigator = () => {
           tabBarIcon: ({ color, focused }) => (
             <MaterialCommunityIcons
               name={focused ? 'account' : 'account-outline'}
-              size={24}
+              size={22}
               color={color}
             />
           ),
@@ -196,7 +182,7 @@ export const AppNavigator = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.republicGreen} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -207,7 +193,7 @@ export const AppNavigator = () => {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: colors.offWhite },
+        contentStyle: { backgroundColor: colors.pageBg },
         animation: slideAnimation,
       }}
     >
@@ -259,9 +245,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.offWhite,
-  },
-  activeIconBg: {
-    padding: 2,
+    backgroundColor: colors.pageBg,
   },
 });

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
-import { colors, spacing, borderRadius } from '../theme';
+import { colors } from '../theme';
 import { useLanguage } from '../hooks/useLanguage';
 import { Language } from '../i18n/strings';
 
@@ -39,24 +39,26 @@ export const LanguageToggle: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 6, // Modest radius matching buttons
     padding: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   pill: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 18,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 4,
   },
   pillActive: {
     backgroundColor: '#FFFFFF',
   },
   pillText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.7)',
+    fontSize: 11,
+    fontFamily: 'IBMPlexSans-Bold',
+    color: 'rgba(255,255,255,0.85)',
   },
   pillTextActive: {
-    color: colors.republicGreen,
+    color: colors.primary,
   },
 });

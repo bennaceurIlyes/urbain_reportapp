@@ -9,7 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { submitReport } from '../services/api';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { GovHeader } from '../components/GovHeader';
-import { colors, spacing, borderRadius, shadows } from '../theme';
+import { colors, spacing, radius, shadows } from '../theme';
 import { useLanguage } from '../hooks/useLanguage';
 
 export const ReportScreen = ({ navigation }: any) => {
@@ -71,7 +71,6 @@ export const ReportScreen = ({ navigation }: any) => {
   };
 
   const handleSubmit = async (values: any, { setSubmitting }: any) => {
-    // Image is required for High and Emergency priorities (value >= 3)
     if (selectedPriority >= 3 && !imageUri) {
       return Alert.alert(t('emergencyPhotoRequired'), t('pleaseAttachEmergencyPhoto'));
     }
@@ -97,6 +96,17 @@ export const ReportScreen = ({ navigation }: any) => {
     { value: 4, label: t('priorityEmergency'), color: colors.priority.emergency },
   ];
 
+  const categories = [
+    { id: 'cat_water_leak', icon: 'water' },
+    { id: 'cat_water_cutoff', icon: 'water-off' },
+    { id: 'cat_low_pressure', icon: 'gauge' },
+    { id: 'cat_contamination', icon: 'flask-outline' },
+    { id: 'cat_meter_fault', icon: 'timer-outline' },
+    { id: 'cat_sewage', icon: 'waves' },
+    { id: 'cat_network_damage', icon: 'shield-alert-outline' },
+    { id: 'cat_other', icon: 'help-circle-outline' },
+  ];
+
   return (
     <View style={styles.container}>
       <GovHeader
@@ -111,29 +121,85 @@ export const ReportScreen = ({ navigation }: any) => {
         validationSchema={ReportSchema}
         onSubmit={handleSubmit}
       >
-        {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting }) => (
+        {({ handleChange, handleBlur, handleSubmit, setFieldValue, values, errors, touched, isSubmitting }) => (
           <View style={{ flex: 1 }}>
             <KeyboardAvoidingView
               behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
               style={{ flex: 1 }}
             >
               <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-                {/* ─── Section 1: Report Info ─── */}
+                {/* ─── Section 1: Category Selector (8 specialized water categories) ─── */}
                 <View style={styles.section}>
-                  <Text style={[styles.sectionLabel, isRTL && styles.sectionLabelRTL]}>{t('reportInfo')}</Text>
+                  <Text 
+                    style={[
+                      styles.sectionLabel, 
+                      isRTL && styles.sectionLabelRTL,
+                      { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }
+                    ]}
+                  >
+                    {t('selectCategory')}
+                  </Text>
+                  
+                  <View style={[styles.categoriesGrid, isRTL && styles.categoriesGridRTL]}>
+                    {categories.map((cat) => {
+                      const isSelected = values.title === cat.id;
+                      return (
+                        <TouchableOpacity
+                          key={cat.id}
+                          style={[
+                            styles.categoryTile,
+                            isSelected && styles.categoryTileSelected,
+                          ]}
+                          onPress={() => setFieldValue('title', cat.id)}
+                          accessibilityLabel={t(cat.id)}
+                          accessibilityRole="button"
+                          activeOpacity={0.8}
+                        >
+                          <MaterialCommunityIcons 
+                            name={cat.icon as any} 
+                            size={26} 
+                            color={isSelected ? colors.primary : colors.textSecondary} 
+                          />
+                          <Text
+                            style={[
+                              styles.categoryLabel,
+                              isSelected && styles.categoryLabelSelected,
+                              { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }
+                            ]}
+                            numberOfLines={2}
+                          >
+                            {t(cat.id)}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  {touched.title && errors.title ? (
+                    <Text 
+                      style={[
+                        styles.errorText, 
+                        isRTL && { textAlign: 'right' },
+                        { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
+                      ]}
+                    >
+                      {t('titleRequired')}
+                    </Text>
+                  ) : null}
+                </View>
+
+                {/* ─── Section 2: Detailed Description ─── */}
+                <View style={styles.section}>
+                  <Text 
+                    style={[
+                      styles.sectionLabel, 
+                      isRTL && styles.sectionLabelRTL,
+                      { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }
+                    ]}
+                  >
+                    {t('description')}
+                  </Text>
                   <View style={styles.inputCard}>
-                    <TextInput
-                      mode="flat"
-                      placeholder={t('titlePlaceholder')}
-                      onChangeText={handleChange('title')}
-                      onBlur={handleBlur('title')}
-                      value={values.title}
-                      style={[styles.input, isRTL && styles.inputRTL]}
-                      underlineColor="transparent"
-                      activeUnderlineColor="transparent"
-                      accessibilityLabel={t('title')}
-                    />
-                    <View style={styles.separator} />
                     <TextInput
                       mode="flat"
                       placeholder={t('descPlaceholder')}
@@ -141,41 +207,83 @@ export const ReportScreen = ({ navigation }: any) => {
                       onBlur={handleBlur('description')}
                       value={values.description}
                       multiline
-                      style={[styles.input, styles.textArea, isRTL && styles.inputRTL]}
+                      style={[
+                        styles.input, 
+                        styles.textArea, 
+                        isRTL && styles.inputRTL,
+                        { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
+                      ]}
                       underlineColor="transparent"
                       activeUnderlineColor="transparent"
                       accessibilityLabel={t('description')}
                     />
                   </View>
-                  {(touched.title && errors.title) || (touched.description && errors.description) ? (
-                    <Text style={styles.errorText}>{t('completeFields')}</Text>
+                  {touched.description && errors.description ? (
+                    <Text 
+                      style={[
+                        styles.errorText, 
+                        isRTL && { textAlign: 'right' },
+                        { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
+                      ]}
+                    >
+                      {errors.description}
+                    </Text>
                   ) : null}
+                </View>
 
-                  {/* Priority selector */}
+                {/* ─── Section 3: Priority Selector ─── */}
+                <View style={styles.section}>
+                  <Text 
+                    style={[
+                      styles.sectionLabel, 
+                      isRTL && styles.sectionLabelRTL,
+                      { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }
+                    ]}
+                  >
+                    {lang === 'ar' ? 'درجة الخطورة' : 'Niveau de gravité'}
+                  </Text>
                   <View style={[styles.priorityRow, isRTL && styles.priorityRowRTL]}>
-                    {priorityOptions.map(opt => (
-                      <TouchableOpacity
-                        key={opt.value}
-                        style={[
-                          styles.priorityPill,
-                          selectedPriority === opt.value && { backgroundColor: opt.color + '18', borderColor: opt.color },
-                        ]}
-                        onPress={() => setSelectedPriority(opt.value)}
-                        accessibilityLabel={opt.label}
-                        accessibilityRole="button"
-                      >
-                        <View style={[styles.priorityDot, { backgroundColor: opt.color }]} />
-                        <Text style={[styles.priorityLabel, selectedPriority === opt.value && { color: opt.color, fontWeight: '700' }]}>
-                          {opt.label}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
+                    {priorityOptions.map(opt => {
+                      const isSelected = selectedPriority === opt.value;
+                      return (
+                        <TouchableOpacity
+                          key={opt.value}
+                          style={[
+                            styles.priorityPill,
+                            isSelected && { backgroundColor: opt.color + '12', borderColor: opt.color, borderWidth: 1.5 },
+                          ]}
+                          onPress={() => setSelectedPriority(opt.value)}
+                          accessibilityLabel={opt.label}
+                          accessibilityRole="button"
+                          activeOpacity={0.8}
+                        >
+                          <View style={[styles.priorityDot, { backgroundColor: opt.color }]} />
+                          <Text 
+                            style={[
+                              styles.priorityLabel, 
+                              isSelected && { color: opt.color, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' },
+                              { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
+                            ]}
+                          >
+                            {opt.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
                 </View>
 
-                {/* ─── Section 2: Photos ─── */}
+                {/* ─── Section 4: Evidence Photo ─── */}
                 <View style={styles.section}>
-                  <Text style={[styles.sectionLabel, isRTL && styles.sectionLabelRTL]}>{t('photos')}</Text>
+                  <Text 
+                    style={[
+                      styles.sectionLabel, 
+                      isRTL && styles.sectionLabelRTL,
+                      { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }
+                    ]}
+                  >
+                    {t('photos')}
+                  </Text>
                   {imageUri ? (
                     <View style={styles.imageWrapper}>
                       <Image source={{ uri: imageUri }} style={styles.imagePreview} accessibilityLabel={t('evidencePhoto')} />
@@ -186,45 +294,66 @@ export const ReportScreen = ({ navigation }: any) => {
                   ) : (
                     <View style={[styles.imageSelectorRow, isRTL && styles.imageSelectorRowRTL]}>
                       <TouchableOpacity style={styles.imageBox} onPress={() => pickImage(true)} accessibilityLabel={t('camera')} accessibilityRole="button">
-                        <MaterialCommunityIcons name="camera-outline" size={28} color={colors.republicGreen} />
-                        <Text style={styles.imageBoxLabel}>{t('camera')}</Text>
+                        <MaterialCommunityIcons name="camera-outline" size={28} color={colors.primary} />
+                        <Text style={[styles.imageBoxLabel, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('camera')}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.imageBox} onPress={() => pickImage(false)} accessibilityLabel={t('gallery')} accessibilityRole="button">
-                        <MaterialCommunityIcons name="image-outline" size={28} color={colors.republicGreen} />
-                        <Text style={styles.imageBoxLabel}>{t('gallery')}</Text>
+                        <MaterialCommunityIcons name="image-outline" size={28} color={colors.primary} />
+                        <Text style={[styles.imageBoxLabel, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('gallery')}</Text>
                       </TouchableOpacity>
                     </View>
                   )}
                 </View>
 
-                {/* ─── Section 3: Location ─── */}
+                {/* ─── Section 5: Geographical Location ─── */}
                 <View style={styles.section}>
-                  <Text style={[styles.sectionLabel, isRTL && styles.sectionLabelRTL]}>{t('location')}</Text>
+                  <Text 
+                    style={[
+                      styles.sectionLabel, 
+                      isRTL && styles.sectionLabelRTL,
+                      { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }
+                    ]}
+                  >
+                    {t('location')}
+                  </Text>
                   <TouchableOpacity
                     style={[styles.locationCard, location && styles.locationCardActive]}
                     onPress={getLocation}
                     disabled={locating}
                     accessibilityLabel={t('useMyLocation')}
                     accessibilityRole="button"
+                    activeOpacity={0.8}
                   >
-                    <View style={[styles.locIconBg, { backgroundColor: location ? colors.republicGreen : colors.offWhite }]}>
+                    <View style={[styles.locIconBg, { backgroundColor: location ? colors.primary : '#F0F4F8' }]}>
                       <MaterialCommunityIcons
                         name={location ? 'check' : 'map-marker-outline'}
                         size={20}
-                        color={location ? 'white' : colors.textMuted}
+                        color={location ? '#FFFFFF' : colors.textSecondary}
                       />
                     </View>
                     <View style={[{ flex: 1, marginLeft: 12 }, isRTL && { marginLeft: 0, marginRight: 12 }]}>
-                      <Text style={[styles.locTitle, isRTL && styles.locTitleRTL]}>
+                      <Text 
+                        style={[
+                          styles.locTitle, 
+                          isRTL && styles.locTitleRTL,
+                          { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }
+                        ]}
+                      >
                         {location ? t('locationTagged') : t('tagLocation')}
                       </Text>
-                      <Text style={[styles.locSub, isRTL && styles.locSubRTL]}>
+                      <Text 
+                        style={[
+                          styles.locSub, 
+                          isRTL && styles.locSubRTL,
+                          { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
+                        ]}
+                      >
                         {location
                           ? `${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}`
                           : t('requiredField')}
                       </Text>
                     </View>
-                    {locating && <ActivityIndicator size="small" color={colors.republicGreen} />}
+                    {locating && <ActivityIndicator size="small" color={colors.primary} />}
                   </TouchableOpacity>
                 </View>
               </ScrollView>
@@ -242,18 +371,25 @@ export const ReportScreen = ({ navigation }: any) => {
                   {isSubmitting ? (
                     <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
-                    <Text style={styles.submitBtnText}>{t('submitReport')}</Text>
+                    <Text 
+                      style={[
+                        styles.submitBtnText,
+                        { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }
+                      ]}
+                    >
+                      {t('submitReport')}
+                    </Text>
                   )}
                 </TouchableOpacity>
               </View>
             </KeyboardAvoidingView>
 
-            {/* Submitting modal */}
+            {/* Submitting Modal */}
             <Portal>
               <Modal visible={isSubmitting} dismissable={false} contentContainerStyle={styles.modal}>
-                <ActivityIndicator size="large" color={colors.republicGreen} />
-                <Text style={styles.modalTitle}>{t('sendingReport')}</Text>
-                <Text style={styles.modalSubtext}>{t('optimizingMedia')}</Text>
+                <ActivityIndicator size="large" color={colors.primary} style={{ marginBottom: 20 }} />
+                <Text style={[styles.modalTitle, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('sendingReport')}</Text>
+                <Text style={[styles.modalSubtext, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>{t('optimizingMedia')}</Text>
               </Modal>
             </Portal>
           </View>
@@ -264,86 +400,174 @@ export const ReportScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.offWhite },
-  scroll: { padding: spacing.lg, paddingBottom: 40 },
-  section: { marginBottom: spacing.xl },
+  container: { flex: 1, backgroundColor: colors.pageBg },
+  scroll: { padding: spacing.md, paddingBottom: 40 },
+  section: { marginBottom: spacing.lg },
   sectionLabel: {
-    color: colors.textPrimary, fontWeight: '700', marginBottom: spacing.sm,
-    fontSize: 15, letterSpacing: 0.2, textAlign: 'left',
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+    fontSize: 14,
+    textAlign: 'left',
   },
   sectionLabelRTL: { textAlign: 'right' },
+  
+  // 8 Specialized Categories Grid
+  categoriesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    justifyContent: 'space-between',
+    marginTop: spacing.xs,
+  },
+  categoriesGridRTL: {
+    flexDirection: 'row-reverse',
+  },
+  categoryTile: {
+    width: '48%', // Equal half split
+    backgroundColor: colors.white,
+    borderRadius: radius.md, // 8px modest corner radius
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    padding: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 100,
+  },
+  categoryTileSelected: {
+    backgroundColor: colors.primaryTint,
+    borderColor: colors.primary,
+    borderWidth: 1.5,
+  },
+  categoryLabel: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
+  categoryLabelSelected: {
+    color: colors.primary,
+  },
+
   inputCard: {
-    backgroundColor: colors.cardWhite, borderRadius: borderRadius.card,
-    borderWidth: 1, borderColor: colors.borderLight, overflow: 'hidden',
-    ...shadows.card,
+    backgroundColor: colors.white,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    overflow: 'hidden',
   },
   input: {
-    backgroundColor: 'transparent', height: 52, fontSize: 16,
+    backgroundColor: 'transparent',
+    fontSize: 14,
     textAlign: 'left',
   },
   inputRTL: { textAlign: 'right' },
-  textArea: { height: 120, paddingTop: 12 },
-  separator: { height: 1, backgroundColor: colors.borderLight, marginHorizontal: spacing.md },
-  errorText: { color: colors.error, fontSize: 12, marginTop: spacing.sm, fontWeight: '500' },
+  textArea: { height: 110, paddingTop: 10 },
+  errorText: { color: colors.error, fontSize: 11, marginTop: 4, fontWeight: '500' },
 
-  // Priority
-  priorityRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
+  // Priority Selector
+  priorityRow: { flexDirection: 'row', gap: spacing.xs, marginTop: spacing.xs },
   priorityRowRTL: { flexDirection: 'row-reverse' },
   priorityPill: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 12, borderRadius: borderRadius.button,
-    backgroundColor: colors.cardWhite, borderWidth: 1.5, borderColor: colors.borderLight,
-    gap: 6,
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: radius.sm, // 6px rounded form shapes
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    gap: 4,
   },
-  priorityDot: { width: 8, height: 8, borderRadius: 4 },
-  priorityLabel: { fontSize: 13, fontWeight: '500', color: colors.textSecondary },
+  priorityDot: { width: 6, height: 6, borderRadius: 3 },
+  priorityLabel: { fontSize: 11, color: colors.textSecondary },
 
-  // Image
-  imageWrapper: { borderRadius: borderRadius.card, overflow: 'hidden', height: 200, backgroundColor: colors.offWhite },
+  // Image Selector
+  imageWrapper: {
+    borderRadius: radius.md,
+    overflow: 'hidden',
+    height: 180,
+    backgroundColor: '#F0F4F8',
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
   imagePreview: { width: '100%', height: '100%' },
   removeBtn: {
-    position: 'absolute', top: 12, right: 12,
-    width: 32, height: 32, borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center',
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageSelectorRow: { flexDirection: 'row', gap: spacing.md },
   imageSelectorRowRTL: { flexDirection: 'row-reverse' },
   imageBox: {
-    flex: 1, height: 100, borderRadius: borderRadius.card,
-    backgroundColor: colors.cardWhite, borderWidth: 1, borderColor: colors.borderLight,
-    justifyContent: 'center', alignItems: 'center',
-    ...shadows.card,
+    flex: 1,
+    height: 90,
+    borderRadius: radius.md,
+    backgroundColor: 'transparent', // pure transparent background
+    borderWidth: 1.5,
+    borderColor: colors.borderLight,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  imageBoxLabel: { marginTop: 8, color: colors.republicGreen, fontWeight: '600', fontSize: 13 },
+  imageBoxLabel: { marginTop: 4, color: colors.primary, fontSize: 12 },
 
   // Location
   locationCard: {
-    flexDirection: 'row', alignItems: 'center',
-    padding: spacing.md, borderRadius: borderRadius.card,
-    backgroundColor: colors.cardWhite, borderWidth: 1, borderColor: colors.borderLight,
-    ...shadows.card,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
-  locationCardActive: { borderColor: colors.republicGreen, backgroundColor: colors.surfaceGreen },
-  locIconBg: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  locTitle: { fontWeight: '700', color: colors.textPrimary, fontSize: 14, textAlign: 'left' },
+  locationCardActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryTint,
+  },
+  locIconBg: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  locTitle: { color: colors.textPrimary, fontSize: 13, textAlign: 'left' },
   locTitleRTL: { textAlign: 'right' },
-  locSub: { color: colors.textMuted, marginTop: 2, fontSize: 12, textAlign: 'left' },
+  locSub: { color: colors.textSecondary, marginTop: 2, fontSize: 11, textAlign: 'left' },
   locSubRTL: { textAlign: 'right' },
 
-  // Footer
-  footer: { padding: spacing.lg, paddingBottom: Platform.OS === 'ios' ? spacing.sm : spacing.lg },
-  submitBtn: {
-    borderRadius: borderRadius.button, backgroundColor: colors.republicGreen,
-    height: 52, justifyContent: 'center', alignItems: 'center',
-    ...shadows.fab,
+  // Footer / Submit
+  footer: {
+    padding: spacing.md,
+    backgroundColor: colors.white,
+    borderTopWidth: 1,
+    borderColor: colors.borderLight,
   },
-  submitBtnText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
+  submitBtn: {
+    borderRadius: radius.sm, // 6px rounded square button
+    backgroundColor: colors.primary,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  submitBtnText: { fontSize: 15, color: colors.textOnBlue },
 
   // Modal
   modal: {
-    backgroundColor: 'white', padding: 40, margin: 40,
-    borderRadius: 24, alignItems: 'center',
+    backgroundColor: 'white',
+    padding: 30,
+    margin: 30,
+    borderRadius: radius.md,
+    alignItems: 'center',
   },
-  modalTitle: { marginTop: 20, fontWeight: '700', fontSize: 16, color: colors.textPrimary },
-  modalSubtext: { color: colors.textMuted, marginTop: 4, fontSize: 14 },
+  modalTitle: { fontWeight: '700', fontSize: 15, color: colors.textPrimary },
+  modalSubtext: { color: colors.textSecondary, marginTop: 4, fontSize: 12, textAlign: 'center' },
 });

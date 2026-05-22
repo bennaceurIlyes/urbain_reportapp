@@ -1,6 +1,8 @@
 import React from 'react';
 import { TouchableOpacity, Text, View, StyleSheet, ViewStyle, StyleProp, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { colors, borderRadius, shadows } from '../theme';
+import { useLanguage } from '../hooks/useLanguage';
 
 interface ButtonProps {
   title: string;
@@ -21,6 +23,8 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   icon
 }) => {
+  const { isRTL } = useLanguage();
+
   const getButtonStyle = () => {
     switch(variant) {
       case 'primary': return styles.primary;
@@ -33,10 +37,10 @@ export const Button: React.FC<ButtonProps> = ({
 
   const getTextColor = () => {
     switch(variant) {
-      case 'secondary': return '#1A1A2E';
-      case 'outline': return '#006233';
-      case 'link': return '#006233';
-      default: return '#FFFFFF';
+      case 'secondary': return colors.primary;
+      case 'outline': return colors.primary;
+      case 'link': return colors.primary;
+      default: return colors.textOnBlue;
     }
   };
 
@@ -57,7 +61,7 @@ export const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <ActivityIndicator color={getTextColor()} size="small" />
       ) : (
-        <View style={styles.content}>
+        <View style={[styles.content, isRTL && styles.contentRTL]}>
           {icon && (
             <MaterialCommunityIcons 
               name={icon} 
@@ -66,7 +70,13 @@ export const Button: React.FC<ButtonProps> = ({
               style={styles.icon}
             />
           )}
-          <Text style={[styles.text, { color: getTextColor() }]}>
+          <Text style={[
+            styles.text, 
+            { 
+              color: getTextColor(),
+              fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold'
+            }
+          ]}>
             {title}
           </Text>
         </View>
@@ -77,27 +87,24 @@ export const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   base: {
-    height: 56,
+    height: 52, // Professional e-gov standard height
     paddingHorizontal: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 28,
+    borderRadius: borderRadius.button, // 6px modest radius
+    borderWidth: 0,
   },
   primary: {
-    backgroundColor: '#006233',
-    shadowColor: '#006233',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 6,
+    backgroundColor: colors.primary,
+    ...shadows.elevated,
   },
   secondary: {
-    backgroundColor: '#F2F2F7',
+    backgroundColor: colors.primaryTint,
     borderWidth: 0,
   },
   outline: {
-    borderColor: '#006233',
-    borderWidth: 2,
+    borderColor: colors.primary,
+    borderWidth: 1.5,
     backgroundColor: 'transparent',
   },
   link: {
@@ -107,17 +114,21 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.5,
+    backgroundColor: colors.surfaceGray,
+    borderColor: 'transparent',
   },
   content: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
+  contentRTL: {
+    flexDirection: 'row-reverse',
+  },
   icon: {
     marginRight: 0,
   },
   text: {
-    fontWeight: '700',
-    fontSize: 16,
+    fontSize: 15,
   },
 });

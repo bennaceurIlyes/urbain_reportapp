@@ -12,28 +12,41 @@ interface PriorityBadgeProps {
 export const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority, lang }) => {
   const color = getPriorityColor(priority);
   const label = getPriorityLabel(priority, lang);
+  const isAr = lang === 'ar';
 
   return (
-    <View style={styles.container} accessibilityLabel={label} accessibilityRole="text">
-      <View style={[styles.dot, { backgroundColor: color }]} />
-      <Text style={[styles.label, { color }]}>{label}</Text>
+    <View 
+      style={[
+        styles.container, 
+        { flexDirection: isAr ? 'row-reverse' : 'row' }
+      ]} 
+      accessibilityLabel={label} 
+      accessibilityRole="text"
+    >
+      <View style={[styles.dot, { backgroundColor: color }, isAr ? { marginLeft: 6 } : { marginRight: 6 }]} />
+      <Text 
+        style={[
+          styles.label, 
+          { color, fontFamily: isAr ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }
+        ]}
+      >
+        {label}
+      </Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
     alignItems: 'center',
   },
   dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginRight: 6,
   },
   label: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl, TouchableOpacity, Animated } from 'react-native';
-import { Text, ActivityIndicator } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { useAuth } from '../hooks/useAuth';
 import { getUserReports, ReportWithAttachments } from '../services/api';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -9,7 +9,7 @@ import { ReportCard } from '../components/ReportCard';
 import { EmptyState } from '../components/EmptyState';
 import { SkeletonCard } from '../components/SkeletonCard';
 import { LanguageToggle } from '../components/LanguageToggle';
-import { colors, spacing, shadows, toArabicNumeral } from '../theme';
+import { colors, spacing, radius, shadows, toArabicNumeral } from '../theme';
 import { useLanguage } from '../hooks/useLanguage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRef } from 'react';
@@ -71,17 +71,22 @@ export const HomeScreen = ({ navigation }: any) => {
 
   const renderStatsRow = () => (
     <View style={[styles.statsRow, isRTL && styles.statsRowRTL]}>
-      <View style={styles.statCard}>
-        <Text style={styles.statNumber}>{formatNum(totalReports)}</Text>
-        <Text style={[styles.statLabel, isRTL && styles.statLabelRTL]}>{t('totalReports')}</Text>
+      {/* Total Reports Stat Tile */}
+      <View style={[styles.statCard, { borderTopColor: colors.primary, borderTopWidth: 3, backgroundColor: colors.primaryTint }]}>
+        <Text style={[styles.statNumber, { color: colors.primary, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{formatNum(totalReports)}</Text>
+        <Text style={[styles.statLabel, isRTL && styles.statLabelRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>{t('totalReports')}</Text>
       </View>
-      <View style={[styles.statCard, { borderColor: colors.status.pending + '30' }]}>
-        <Text style={[styles.statNumber, { color: colors.status.pending }]}>{formatNum(pendingReports)}</Text>
-        <Text style={[styles.statLabel, isRTL && styles.statLabelRTL]}>{t('pendingCount')}</Text>
+      
+      {/* Pending Reports Stat Tile */}
+      <View style={[styles.statCard, { borderTopColor: colors.priority.medium, borderTopWidth: 3 }]}>
+        <Text style={[styles.statNumber, { color: colors.priority.medium, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{formatNum(pendingReports)}</Text>
+        <Text style={[styles.statLabel, isRTL && styles.statLabelRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>{t('pendingCount')}</Text>
       </View>
-      <View style={[styles.statCard, { borderColor: colors.status.completed + '30' }]}>
-        <Text style={[styles.statNumber, { color: colors.status.completed }]}>{formatNum(resolvedReports)}</Text>
-        <Text style={[styles.statLabel, isRTL && styles.statLabelRTL]}>{t('resolvedCount')}</Text>
+
+      {/* Resolved Reports Stat Tile */}
+      <View style={[styles.statCard, { borderTopColor: colors.priority.low, borderTopWidth: 3 }]}>
+        <Text style={[styles.statNumber, { color: colors.priority.low, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{formatNum(resolvedReports)}</Text>
+        <Text style={[styles.statLabel, isRTL && styles.statLabelRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>{t('resolvedCount')}</Text>
       </View>
     </View>
   );
@@ -117,19 +122,23 @@ export const HomeScreen = ({ navigation }: any) => {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                tintColor={colors.republicGreen}
-                colors={[colors.republicGreen]}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
               />
             }
             contentContainerStyle={[styles.listContainer, { paddingBottom: 120 + insets.bottom }]}
             showsVerticalScrollIndicator={false}
             ListHeaderComponent={renderStatsRow}
             ListEmptyComponent={<EmptyState type="no-reports" />}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            removeClippedSubviews={true}
           />
         )}
       </View>
 
-      {/* FAB */}
+      {/* FAB (Square-ish, 12px rounding) */}
       <Animated.View style={[styles.fabContainer, isRTL ? styles.fabLeft : styles.fabRight, { transform: [{ scale: fabScale }] }]}>
         <TouchableOpacity
           style={styles.fab}
@@ -148,7 +157,7 @@ export const HomeScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.offWhite },
+  container: { flex: 1, backgroundColor: colors.pageBg },
   content: { flex: 1 },
   skeletonContainer: { paddingHorizontal: spacing.md, paddingTop: spacing.md },
   listContainer: { paddingHorizontal: spacing.md },
@@ -163,24 +172,21 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: colors.cardWhite,
-    borderRadius: 12,
-    padding: spacing.md,
+    backgroundColor: colors.white,
+    borderRadius: radius.md, // 8px Modest rounding
+    padding: spacing.sm,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.borderLight,
     ...shadows.card,
   },
   statNumber: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.republicGreen,
+    fontSize: 22,
     marginBottom: 2,
   },
   statLabel: {
     fontSize: 11,
-    color: colors.textMuted,
-    fontWeight: '600',
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   statLabelRTL: {
@@ -198,12 +204,12 @@ const styles = StyleSheet.create({
     left: spacing.lg,
   },
   fab: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: colors.republicGreen,
+    width: 56,
+    height: 56,
+    borderRadius: radius.lg, // 12px modest rounding (FAB)
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.fab,
+    ...shadows.elevated,
   },
 });
