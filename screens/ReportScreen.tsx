@@ -62,30 +62,58 @@ export const ReportScreen = ({ navigation }: any) => {
   const getLocation = async () => {
     setLocating(true);
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(t('error'), t('locationRequired'));
+      // 1. Check if GPS services are enabled on the phone
+      const servicesEnabled = await Location.hasServicesEnabledAsync();
+      if (!servicesEnabled) {
+        Alert.alert(
+          lang === 'ar' ? 'تفعيل نظام الموقع (GPS)' : 'Activer le GPS',
+          lang === 'ar'
+            ? 'يرجى تفعيل خدمة تحديد الموقع (GPS) من إعدادات الهاتف السريعة لتحديد موقع البلاغ.'
+            : 'Veuillez activer la localisation (GPS) dans les paramètres rapides de votre appareil.'
+        );
         setLocating(false);
         return;
       }
 
-      // Try balanced accuracy first (much faster and more reliable than high accuracy GPS lock)
-      const loc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-      setLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
-    } catch (error) {
-      console.warn('getCurrentPositionAsync failed, trying getLastKnownPositionAsync:', error);
-      try {
-        const lastLoc = await Location.getLastKnownPositionAsync({});
-        if (lastLoc) {
-          setLocation({ latitude: lastLoc.coords.latitude, longitude: lastLoc.coords.longitude });
-        } else {
-          Alert.alert(t('error'), t('locationRequired'));
-        }
-      } catch (innerError) {
-        Alert.alert(t('error'), t('locationRequired'));
+      // 2. Request permission
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          lang === 'ar' ? 'صلاحية الوصول للموقع' : 'Permission requise',
+          lang === 'ar'
+            ? 'يرجى السماح للتطبيق بالوصول إلى الموقع في إعدادات الهاتف لتحديد موقع المشكلة.'
+            : 'Veuillez autoriser l\'application à accéder à votre position dans les paramètres de votre téléphone.'
+        );
+        setLocating(false);
+        return;
       }
+
+      // 3. Try balanced accuracy for instant Wi-Fi/Cell lock (extremely reliable)
+      try {
+        const loc = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        setLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
+        return;
+      } catch (gpsError) {
+        console.warn('getCurrentPositionAsync failed, attempting fallback:', gpsError);
+      }
+
+      // 4. Fallback: try last known position
+      const lastLoc = await Location.getLastKnownPositionAsync({});
+      if (lastLoc) {
+        setLocation({ latitude: lastLoc.coords.latitude, longitude: lastLoc.coords.longitude });
+      } else {
+        // 5. Friendly error tip if no signal is found
+        Alert.alert(
+          t('error'),
+          lang === 'ar'
+            ? 'تعذر تحديد موقعك بدقة. يرجى الوقوف في مكان مفتوح أو تفعيل الواي فاي لتحسين الإشارة.'
+            : 'Impossible d\'obtenir votre position. Veuillez vous placer dans un endroit dégagé ou activer le Wi-Fi.'
+        );
+      }
+    } catch (error: any) {
+      Alert.alert(t('error'), error.message || t('errorSubtext'));
     } finally {
       setLocating(false);
     }
