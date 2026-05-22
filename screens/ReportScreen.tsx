@@ -19,6 +19,7 @@ export const ReportScreen = ({ navigation }: any) => {
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [selectedPriority, setSelectedPriority] = useState(2);
+  const [selectedCatId, setSelectedCatId] = useState<string | null>(null);
 
   const ReportSchema = Yup.object().shape({
     title: Yup.string().required(t('titleRequired')),
@@ -142,7 +143,7 @@ export const ReportScreen = ({ navigation }: any) => {
                   
                   <View style={[styles.categoriesGrid, isRTL && styles.categoriesGridRTL]}>
                     {categories.map((cat) => {
-                      const isSelected = values.title === cat.id;
+                      const isSelected = selectedCatId === cat.id;
                       return (
                         <TouchableOpacity
                           key={cat.id}
@@ -150,7 +151,10 @@ export const ReportScreen = ({ navigation }: any) => {
                             styles.categoryTile,
                             isSelected && styles.categoryTileSelected,
                           ]}
-                          onPress={() => setFieldValue('title', cat.id)}
+                          onPress={() => {
+                            setSelectedCatId(cat.id);
+                            setFieldValue('title', t(cat.id));
+                          }}
                           accessibilityLabel={t(cat.id)}
                           accessibilityRole="button"
                           activeOpacity={0.8}
@@ -174,7 +178,45 @@ export const ReportScreen = ({ navigation }: any) => {
                       );
                     })}
                   </View>
+                </View>
 
+                {/* ─── Section 1.5: Editable Title ─── */}
+                <View style={styles.section}>
+                  <Text 
+                    style={[
+                      styles.sectionLabel, 
+                      isRTL && styles.sectionLabelRTL,
+                      { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }
+                    ]}
+                  >
+                    {t('title')}
+                  </Text>
+                  <View style={styles.inputCard}>
+                    <TextInput
+                      mode="flat"
+                      placeholder={t('titlePlaceholder')}
+                      onChangeText={(txt) => {
+                        setFieldValue('title', txt);
+                        // Highlight matching category if found, else clear selectedCatId
+                        const matchedCat = categories.find(cat => t(cat.id) === txt);
+                        if (matchedCat) {
+                          setSelectedCatId(matchedCat.id);
+                        } else {
+                          setSelectedCatId(null);
+                        }
+                      }}
+                      onBlur={handleBlur('title')}
+                      value={values.title}
+                      style={[
+                        styles.input, 
+                        isRTL && styles.inputRTL,
+                        { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
+                      ]}
+                      underlineColor="transparent"
+                      activeUnderlineColor="transparent"
+                      accessibilityLabel={t('title')}
+                    />
+                  </View>
                   {touched.title && errors.title ? (
                     <Text 
                       style={[
@@ -183,7 +225,7 @@ export const ReportScreen = ({ navigation }: any) => {
                         { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
                       ]}
                     >
-                      {t('titleRequired')}
+                      {errors.title}
                     </Text>
                   ) : null}
                 </View>
