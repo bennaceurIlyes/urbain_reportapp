@@ -136,7 +136,7 @@ export const strings: Record<string, Record<Language, string>> = {
   helpCenter:        { ar: 'مركز المساعدة', fr: "Centre d'aide" },
   termsPrivacy:      { ar: 'الشروط والخصوصية', fr: 'Conditions et confidentialité' },
   appSettings:       { ar: 'إعدادات التطبيق', fr: "Paramètres de l'application" },
-  version:           { ar: 'بشار ن١.٢.٠', fr: 'Béchar v1.2.0' },
+  version:           { ar: 'بشار ن1.2.0', fr: 'Béchar v1.2.0' },
   totalReports:      { ar: 'البلاغات', fr: 'Signalements' },
   resolvedCount:     { ar: 'تم الحل', fr: 'Résolus' },
   pendingCount:      { ar: 'معلق', fr: 'En attente' },
@@ -185,7 +185,7 @@ export const strings: Record<string, Record<Language, string>> = {
   notesPlaceholder:  { ar: 'أضف تفاصيل عن الإصلاح...', fr: 'Ajoutez des détails sur la réparation...' },
   emailPlaceholder:  { ar: 'name@example.com', fr: 'nom@example.com' },
   passwordPlaceholder: { ar: '••••••••', fr: '••••••••' },
-  passwordMin:       { ar: '٦ أحرف على الأقل', fr: 'Au moins 6 caractères' },
+  passwordMin:       { ar: '6 أحرف على الأقل', fr: 'Au moins 6 caractères' },
   passwordMismatch:  { ar: 'كلمتا المرور غير متطابقتين', fr: 'Les mots de passe ne correspondent pas' },
   invalidEmail:      { ar: 'بريد إلكتروني غير صالح', fr: 'E-mail invalide' },
 };

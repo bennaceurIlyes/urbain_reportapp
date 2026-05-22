@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView, Dimensions, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Dimensions, TouchableOpacity, Image } from 'react-native';
 import {
   TextInput,
   Text,
@@ -13,12 +13,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, radius, typography } from '../theme';
 import { useLanguage } from '../hooks/useLanguage';
 import { LanguageToggle } from '../components/LanguageToggle';
+import { useAlert } from '../context/AlertContext';
 
 const { height } = Dimensions.get('window');
 
 export const LoginScreen = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
   const { t, lang, isRTL } = useLanguage();
+  const { showAlert } = useAlert();
 
   const LoginSchema = Yup.object().shape({
     email: Yup.string().email(t('invalidEmail')).required(t('titleRequired')),
@@ -33,7 +35,7 @@ export const LoginScreen = ({ navigation }: any) => {
       });
       if (error) throw error;
     } catch (error: any) {
-      Alert.alert(t('error'), error.message);
+      showAlert({ title: t('error'), message: error.message });
     } finally {
       setSubmitting(false);
     }
@@ -53,7 +55,7 @@ export const LoginScreen = ({ navigation }: any) => {
         >
           {/* ─── Blue Header Area (Top 35%) ─── */}
           <LinearGradient
-            colors={['#073858', '#0A4C78']}
+            colors={[colors.primaryDark, colors.primary]}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
             style={[styles.headerArea, { paddingTop: insets.top + spacing.lg }]}

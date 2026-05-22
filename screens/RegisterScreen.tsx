@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import {
   TextInput,
   Text,
@@ -13,12 +13,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, spacing, radius, typography } from '../theme';
 import { useLanguage } from '../hooks/useLanguage';
+import { useAlert } from '../context/AlertContext';
 
 const { height } = Dimensions.get('window');
 
 export const RegisterScreen = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
   const { t, lang, isRTL } = useLanguage();
+  const { showAlert } = useAlert();
 
   const RegisterSchema = Yup.object().shape({
     email: Yup.string().email(t('invalidEmail')).required(t('titleRequired')),
@@ -35,10 +37,13 @@ export const RegisterScreen = ({ navigation }: any) => {
         password: values.password,
       });
       if (error) throw error;
-      Alert.alert(t('success'), t('accountCreated'));
-      navigation.goBack();
+      showAlert({ 
+        title: t('success'), 
+        message: t('accountCreated'),
+        buttons: [{ text: t('done'), onPress: () => navigation.goBack() }]
+      });
     } catch (error: any) {
-      Alert.alert(t('error'), error.message);
+      showAlert({ title: t('error'), message: error.message });
     } finally {
       setSubmitting(false);
     }
@@ -58,7 +63,7 @@ export const RegisterScreen = ({ navigation }: any) => {
         >
           {/* ─── Blue Header Area (Top 35%) ─── */}
           <LinearGradient
-            colors={['#073858', '#0A4C78']}
+            colors={[colors.primaryDark, colors.primary]}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
             style={[styles.headerArea, { paddingTop: insets.top + spacing.md }]}

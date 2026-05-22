@@ -6,6 +6,7 @@ import { PaperProvider } from 'react-native-paper';
 import { theme } from './theme';
 import { AppNavigator } from './navigation/AppNavigator';
 import { LanguageProvider } from './hooks/useLanguage';
+import { AlertProvider } from './context/AlertContext';
 
 import { LogBox } from 'react-native';
 
@@ -20,9 +21,11 @@ export default function App() {
     <PaperProvider theme={theme}>
       <SafeAreaProvider>
         <LanguageProvider>
-          <NavigationContainer>
-            <AppNavigator />
-          </NavigationContainer>
+          <AlertProvider>
+            <NavigationContainer>
+              <AppNavigator />
+            </NavigationContainer>
+          </AlertProvider>
         </LanguageProvider>
       </SafeAreaProvider>
     </PaperProvider>
