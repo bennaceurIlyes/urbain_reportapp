@@ -14,6 +14,7 @@ import { colors, spacing, radius, typography } from '../theme';
 import { useLanguage } from '../hooks/useLanguage';
 import { LanguageToggle } from '../components/LanguageToggle';
 import { useAlert } from '../context/AlertContext';
+import Svg, { Path, Defs, Pattern, Rect } from 'react-native-svg';
 
 const { height } = Dimensions.get('window');
 
@@ -58,8 +59,18 @@ export const LoginScreen = ({ navigation }: any) => {
             colors={[colors.primaryDark, colors.primary]}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
-            style={[styles.headerArea, { paddingTop: insets.top + spacing.lg }]}
+            style={[styles.headerArea, { paddingTop: insets.top + spacing.lg + 10 }]}
           >
+            {/* Zellij Vector SVG Overlay */}
+            <Svg style={StyleSheet.absoluteFillObject}>
+              <Defs>
+                <Pattern id="zellij" width="30" height="30" patternUnits="userSpaceOnUse">
+                  <Path d="M0 15 L15 0 L30 15 L15 30 Z" stroke="#FFFFFF" strokeWidth="0.5" fill="none" opacity="0.05" />
+                </Pattern>
+              </Defs>
+              <Rect width="100%" height="100%" fill="url(#zellij)" />
+            </Svg>
+
             {/* Thin accent line at the bottom of the header area */}
             <View style={{
               position: 'absolute',
@@ -116,7 +127,7 @@ export const LoginScreen = ({ navigation }: any) => {
                   <View style={styles.inputContainer}>
                     <Text style={[styles.label, isRTL && styles.labelRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('email')}</Text>
                     <TextInput
-                      mode="flat"
+                      mode="outlined"
                       placeholder={t('emailPlaceholder')}
                       onChangeText={handleChange('email')}
                       onBlur={handleBlur('email')}
@@ -124,8 +135,8 @@ export const LoginScreen = ({ navigation }: any) => {
                       keyboardType="email-address"
                       autoCapitalize="none"
                       style={[styles.input, isRTL && styles.inputRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}
-                      activeUnderlineColor={colors.primary}
-                      underlineColor="transparent"
+                      activeOutlineColor={colors.primary}
+                      outlineColor={colors.borderLight}
                       error={!!(touched.email && errors.email)}
                       accessibilityLabel={t('email')}
                     />
@@ -137,15 +148,15 @@ export const LoginScreen = ({ navigation }: any) => {
                   <View style={styles.inputContainer}>
                     <Text style={[styles.label, isRTL && styles.labelRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('password')}</Text>
                     <TextInput
-                      mode="flat"
+                      mode="outlined"
                       placeholder={t('passwordPlaceholder')}
                       onChangeText={handleChange('password')}
                       onBlur={handleBlur('password')}
                       value={values.password}
                       secureTextEntry
                       style={[styles.input, isRTL && styles.inputRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}
-                      activeUnderlineColor={colors.primary}
-                      underlineColor="transparent"
+                      activeOutlineColor={colors.primary}
+                      outlineColor={colors.borderLight}
                       error={!!(touched.password && errors.password)}
                       accessibilityLabel={t('password')}
                     />
@@ -227,10 +238,9 @@ const styles = StyleSheet.create({
   goldDivider: {
     width: 60,
     height: 2,
-    backgroundColor: colors.primaryBorder,
+    backgroundColor: '#D4AF37', // Official administrative Gold pop
     borderRadius: 1,
     marginVertical: 10,
-    opacity: 0.6,
   },
   appName: {
     fontSize: 24,
@@ -277,12 +287,8 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: colors.white,
-    borderRadius: radius.sm, // square form fields (6px)
     height: 50,
-    paddingHorizontal: 4,
     fontSize: 14,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
   },
   inputRTL: {
     textAlign: 'right',

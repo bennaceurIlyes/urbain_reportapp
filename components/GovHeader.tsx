@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing } from '../theme';
 import { useLanguage } from '../hooks/useLanguage';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, Defs, Pattern, Rect } from 'react-native-svg';
 
 interface GovHeaderProps {
   title: string;
@@ -48,13 +48,23 @@ export const GovHeader: React.FC<GovHeaderProps> = ({
 
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor={colors.primaryLight} />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       <LinearGradient
         colors={[colors.primaryLight, colors.primary]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
-        style={[styles.container, { paddingTop: insets.top + spacing.sm }]}
+        style={[styles.container, { paddingTop: insets.top + spacing.sm + 10 }]} // Add small extra padding for status bar translucency
       >
+        {/* Zellij Vector SVG Overlay */}
+        <Svg style={StyleSheet.absoluteFillObject}>
+          <Defs>
+            <Pattern id="zellij" width="30" height="30" patternUnits="userSpaceOnUse">
+              <Path d="M0 15 L15 0 L30 15 L15 30 Z" stroke="#FFFFFF" strokeWidth="0.5" fill="none" opacity="0.06" />
+            </Pattern>
+          </Defs>
+          <Rect width="100%" height="100%" fill="url(#zellij)" />
+        </Svg>
+
         {/* Thin bright blue accent bottom line */}
         <View style={{
           position: 'absolute',

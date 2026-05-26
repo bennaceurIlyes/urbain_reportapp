@@ -47,14 +47,14 @@ export const ProfileScreen = ({ navigation }: any) => {
       >
         {/* Avatar & Info */}
         <View style={styles.profileHeader}>
-          <View style={styles.avatarWrapper}>
+          <View style={styles.avatarOuterRing}>
             <View style={styles.avatarCircle}>
               <Text style={[styles.avatarInitial, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{initial}</Text>
             </View>
-            {/* Role badge */}
-            <View style={styles.roleBadge}>
-              <Text style={[styles.roleBadgeText, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{role}</Text>
-            </View>
+          </View>
+          {/* Role badge */}
+          <View style={styles.roleBadge}>
+            <Text style={[styles.roleBadgeText, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{role}</Text>
           </View>
           <Text style={[styles.userName, isRTL && styles.userNameRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{displayName}</Text>
           <Text style={[styles.userEmail, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>{user?.email}</Text>
@@ -101,22 +101,30 @@ const styles = StyleSheet.create({
 
   // Profile Header
   profileHeader: { alignItems: 'center', padding: spacing.lg },
-  avatarWrapper: { marginBottom: spacing.md, alignItems: 'center' },
+  avatarOuterRing: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    borderWidth: 2.5,
+    borderColor: '#D4AF37', // Gold outer ring
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+    backgroundColor: 'transparent',
+  },
   avatarCircle: {
-    width: 80, height: 80, borderRadius: 40,
+    width: 76, height: 76, borderRadius: 38,
     backgroundColor: colors.primary,
     justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.primaryBorder,
   },
-  avatarInitial: { fontSize: 32, color: '#FFFFFF' },
+  avatarInitial: { fontSize: 30, color: '#FFFFFF' },
   roleBadge: {
-    marginTop: -10,
     backgroundColor: colors.primaryTint,
     borderWidth: 1,
     borderColor: colors.primary,
-    paddingHorizontal: 12, paddingVertical: 2,
-    borderRadius: radius.sm, // 6px modest radius
+    paddingHorizontal: 12, paddingVertical: 2.5,
+    borderRadius: radius.xs, // 4px modest radius
+    marginBottom: spacing.md,
   },
   roleBadgeText: {
     color: colors.primary, fontSize: 10,
@@ -176,13 +184,19 @@ const styles = StyleSheet.create({
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radius.sm, // 6px rounded square button
+    paddingVertical: 14,
+    paddingHorizontal: spacing.xl * 1.5,
+    borderRadius: radius.md, // 8px rounded square button
     backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: '#FEE2E2',
+    borderWidth: 1.5,
+    borderColor: '#FCA5A5',
+    gap: spacing.sm,
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  logoutText: { color: colors.error, marginLeft: 8, fontSize: 14 },
+  logoutText: { color: colors.error, fontSize: 14 },
   versionText: { marginTop: spacing.md, color: colors.textSecondary, fontSize: 11 },
 });

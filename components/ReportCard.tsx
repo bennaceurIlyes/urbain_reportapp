@@ -77,7 +77,9 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report, onPress, showAss
           style={[
             styles.priorityBar,
             { backgroundColor: priorityColor },
-            isRTL ? { right: 0 } : { left: 0 },
+            isRTL 
+              ? { right: 0, borderTopRightRadius: radius.md, borderBottomRightRadius: radius.md } 
+              : { left: 0, borderTopLeftRadius: radius.md, borderBottomLeftRadius: radius.md },
           ]}
         />
 

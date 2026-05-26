@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
 import { colors, radius, typography } from '../theme';
 import { getStatusLabel, Language } from '../i18n/strings';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface StatusBadgeProps {
   status: string | number;
@@ -16,26 +17,31 @@ const STATUS_CONFIG = {
     backgroundColor: colors.statusPendingBg,       // #FEF3E2
     borderColor:     colors.statusPendingBorder,    // #E59C2A
     textColor:       colors.statusPendingText,      // #7D5200
+    icon:            'clock-outline' as const,
   },
   assigned: {
     backgroundColor: colors.statusAssignedBg,       // #E8F4FB
     borderColor:     colors.statusAssignedBorder,   // #2980B9
     textColor:       colors.statusAssignedText,     // #0A4C78
+    icon:            'account-arrow-right' as const,
   },
   in_progress: {
     backgroundColor: colors.statusInProgressBg,     // #F0EAF9
     borderColor:     colors.statusInProgressBorder, // #7B4FBF
     textColor:       colors.statusInProgressText,   // #4A2080
+    icon:            'progress-wrench' as const,
   },
   completed: {
     backgroundColor: colors.statusCompletedBg,      // #E6F6ED
     borderColor:     colors.statusCompletedBorder,  // #28A760
     textColor:       colors.statusCompletedText,    // #145C32
+    icon:            'check-circle-outline' as const,
   },
   approved: {
     backgroundColor: colors.statusApprovedBg,       // #E8F4FB
     borderColor:     colors.statusApprovedBorder,   // #0A4C78
     textColor:       colors.statusApprovedText,     // #073858
+    icon:            'shield-check-outline' as const,
   },
 };
 
@@ -67,6 +73,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, lang, is_resol
     <View
       style={[
         styles.badge,
+        isAr && styles.badgeRTL,
         {
           backgroundColor: config.backgroundColor,
           borderColor: config.borderColor,
@@ -75,6 +82,12 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, lang, is_resol
       accessibilityLabel={label}
       accessibilityRole="text"
     >
+      <MaterialCommunityIcons
+        name={config.icon}
+        size={12}
+        color={config.textColor}
+        style={isAr ? { marginLeft: 4 } : { marginRight: 4 }}
+      />
       <Text 
         style={[
           styles.label, 
@@ -92,11 +105,15 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, lang, is_resol
 
 const styles = StyleSheet.create({
   badge: {
+    flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: radius.xs, // 4px — square-ish, formal
     borderWidth: 1,
+  },
+  badgeRTL: {
+    flexDirection: 'row-reverse',
   },
   label: {
     fontSize: typography.xs, // 11px

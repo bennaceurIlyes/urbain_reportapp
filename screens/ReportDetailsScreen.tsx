@@ -24,17 +24,25 @@ const TimelineStep: React.FC<{
   return (
     <View style={[tlStyles.item, isRTL && tlStyles.itemRTL]}>
       <View style={tlStyles.lineColumn}>
-        <View style={[
-          tlStyles.dot,
-          completed && tlStyles.dotCompleted,
-          current && tlStyles.dotCurrent,
-        ]}>
-          {completed && <MaterialCommunityIcons name="check" size={10} color="#FFFFFF" />}
-        </View>
+        {current ? (
+          <View style={tlStyles.pulseOutline}>
+            <View style={[tlStyles.dot, tlStyles.dotCurrent]}>
+              <View style={tlStyles.pulseInner} />
+            </View>
+          </View>
+        ) : (
+          <View style={[
+            tlStyles.dot,
+            completed && tlStyles.dotCompleted,
+          ]}>
+            {completed && <MaterialCommunityIcons name="check" size={10} color="#FFFFFF" />}
+          </View>
+        )}
         {!isLast && (
           <View style={[
             tlStyles.line,
             completed && tlStyles.lineCompleted,
+            current && tlStyles.lineCompleted,
           ]} />
         )}
       </View>
@@ -399,7 +407,7 @@ const styles = StyleSheet.create({
 const tlStyles = StyleSheet.create({
   item: { flexDirection: 'row', minHeight: 60 },
   itemRTL: { flexDirection: 'row-reverse' },
-  lineColumn: { alignItems: 'center', width: 24 },
+  lineColumn: { alignItems: 'center', width: 24, justifyContent: 'flex-start', paddingTop: 2 },
   dot: {
     width: 18, height: 18, borderRadius: 9,
     backgroundColor: colors.borderLight,
@@ -407,8 +415,29 @@ const tlStyles = StyleSheet.create({
   },
   dotCompleted: { backgroundColor: colors.primary },
   dotCurrent: {
-    backgroundColor: colors.primaryTint,
-    borderWidth: 2, borderColor: colors.primary,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pulseOutline: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(26, 111, 163, 0.15)', // Soft pulsing outer glow
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  pulseInner: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.primary,
   },
   line: {
     width: 2, flex: 1,

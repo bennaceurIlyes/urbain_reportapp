@@ -239,32 +239,30 @@ export const ReportScreen = ({ navigation }: any) => {
                   >
                     {t('title')}
                   </Text>
-                  <View style={styles.inputCard}>
-                    <TextInput
-                      mode="flat"
-                      placeholder={t('titlePlaceholder')}
-                      onChangeText={(txt) => {
-                        setFieldValue('title', txt);
-                        // Highlight matching category if found, else clear selectedCatId
-                        const matchedCat = categories.find(cat => t(cat.id) === txt);
-                        if (matchedCat) {
-                          setSelectedCatId(matchedCat.id);
-                        } else {
-                          setSelectedCatId(null);
-                        }
-                      }}
-                      onBlur={handleBlur('title')}
-                      value={values.title}
-                      style={[
-                        styles.input, 
-                        isRTL && styles.inputRTL,
-                        { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
-                      ]}
-                      underlineColor="transparent"
-                      activeUnderlineColor="transparent"
-                      accessibilityLabel={t('title')}
-                    />
-                  </View>
+                  <TextInput
+                    mode="outlined"
+                    placeholder={t('titlePlaceholder')}
+                    onChangeText={(txt) => {
+                      setFieldValue('title', txt);
+                      // Highlight matching category if found, else clear selectedCatId
+                      const matchedCat = categories.find(cat => t(cat.id) === txt);
+                      if (matchedCat) {
+                        setSelectedCatId(matchedCat.id);
+                      } else {
+                        setSelectedCatId(null);
+                      }
+                    }}
+                    onBlur={handleBlur('title')}
+                    value={values.title}
+                    style={[
+                      styles.input, 
+                      isRTL && styles.inputRTL,
+                      { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
+                    ]}
+                    activeOutlineColor={colors.primary}
+                    outlineColor={colors.borderLight}
+                    accessibilityLabel={t('title')}
+                  />
                   {touched.title && errors.title ? (
                     <Text 
                       style={[
@@ -289,25 +287,24 @@ export const ReportScreen = ({ navigation }: any) => {
                   >
                     {t('description')}
                   </Text>
-                  <View style={styles.inputCard}>
-                    <TextInput
-                      mode="flat"
-                      placeholder={t('descPlaceholder')}
-                      onChangeText={handleChange('description')}
-                      onBlur={handleBlur('description')}
-                      value={values.description}
-                      multiline
-                      style={[
-                        styles.input, 
-                        styles.textArea, 
-                        isRTL && styles.inputRTL,
-                        { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
-                      ]}
-                      underlineColor="transparent"
-                      activeUnderlineColor="transparent"
-                      accessibilityLabel={t('description')}
-                    />
-                  </View>
+                  <TextInput
+                    mode="outlined"
+                    placeholder={t('descPlaceholder')}
+                    onChangeText={handleChange('description')}
+                    onBlur={handleBlur('description')}
+                    value={values.description}
+                    multiline
+                    numberOfLines={4}
+                    style={[
+                      styles.input, 
+                      styles.textArea, 
+                      isRTL && styles.inputRTL,
+                      { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
+                    ]}
+                    activeOutlineColor={colors.primary}
+                    outlineColor={colors.borderLight}
+                    accessibilityLabel={t('description')}
+                  />
                   {touched.description && errors.description ? (
                     <Text 
                       style={[
@@ -527,6 +524,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryTint,
     borderColor: colors.primary,
     borderWidth: 1.5,
+    ...shadows.card,
   },
   categoryLabel: {
     fontSize: 12,
@@ -546,12 +544,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   input: {
-    backgroundColor: 'transparent',
+    backgroundColor: colors.white,
     fontSize: 14,
-    textAlign: 'left',
   },
   inputRTL: { textAlign: 'right' },
-  textArea: { height: 110, paddingTop: 10 },
+  textArea: {
+    minHeight: 110,
+    textAlignVertical: 'top',
+    paddingTop: 10,
+  },
   errorText: { color: colors.error, fontSize: 11, marginTop: 4, fontWeight: '500' },
 
   // Priority Selector

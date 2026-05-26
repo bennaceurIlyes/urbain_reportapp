@@ -73,20 +73,29 @@ export const HomeScreen = ({ navigation }: any) => {
     <View style={[styles.statsRow, isRTL && styles.statsRowRTL]}>
       {/* Total Reports Stat Tile */}
       <View style={[styles.statCard, { borderTopColor: colors.primary, borderTopWidth: 3, backgroundColor: colors.primaryTint }]}>
+        <View style={[styles.statIconBg, { backgroundColor: 'rgba(26, 111, 163, 0.1)' }]}>
+          <MaterialCommunityIcons name="file-document-multiple-outline" size={18} color={colors.primary} />
+        </View>
         <Text style={[styles.statNumber, { color: colors.primary, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{formatNum(totalReports)}</Text>
-        <Text style={[styles.statLabel, isRTL && styles.statLabelRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>{t('totalReports')}</Text>
+        <Text style={[styles.statLabel, isRTL && styles.statLabelRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Medium' : 'IBMPlexSans-Medium' }]}>{t('totalReports')}</Text>
       </View>
       
       {/* Pending Reports Stat Tile */}
-      <View style={[styles.statCard, { borderTopColor: colors.priority.medium, borderTopWidth: 3 }]}>
+      <View style={[styles.statCard, { borderTopColor: colors.priority.medium, borderTopWidth: 3, backgroundColor: '#FEF9F0' }]}>
+        <View style={[styles.statIconBg, { backgroundColor: 'rgba(229, 156, 42, 0.1)' }]}>
+          <MaterialCommunityIcons name="clock-alert-outline" size={18} color={colors.priority.medium} />
+        </View>
         <Text style={[styles.statNumber, { color: colors.priority.medium, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{formatNum(pendingReports)}</Text>
-        <Text style={[styles.statLabel, isRTL && styles.statLabelRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>{t('pendingCount')}</Text>
+        <Text style={[styles.statLabel, isRTL && styles.statLabelRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Medium' : 'IBMPlexSans-Medium' }]}>{t('pendingCount')}</Text>
       </View>
 
       {/* Resolved Reports Stat Tile */}
-      <View style={[styles.statCard, { borderTopColor: colors.priority.low, borderTopWidth: 3 }]}>
+      <View style={[styles.statCard, { borderTopColor: colors.priority.low, borderTopWidth: 3, backgroundColor: '#F0F9F4' }]}>
+        <View style={[styles.statIconBg, { backgroundColor: 'rgba(40, 167, 96, 0.1)' }]}>
+          <MaterialCommunityIcons name="check-circle-outline" size={18} color={colors.priority.low} />
+        </View>
         <Text style={[styles.statNumber, { color: colors.priority.low, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{formatNum(resolvedReports)}</Text>
-        <Text style={[styles.statLabel, isRTL && styles.statLabelRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>{t('resolvedCount')}</Text>
+        <Text style={[styles.statLabel, isRTL && styles.statLabelRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Medium' : 'IBMPlexSans-Medium' }]}>{t('resolvedCount')}</Text>
       </View>
     </View>
   );
@@ -174,18 +183,27 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.white,
     borderRadius: radius.md, // 8px Modest rounding
-    padding: spacing.sm,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xs,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.borderLight,
     ...shadows.card,
+  },
+  statIconBg: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
   },
   statNumber: {
     fontSize: 22,
     marginBottom: 2,
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: 10,
     color: colors.textSecondary,
     textAlign: 'center',
   },
