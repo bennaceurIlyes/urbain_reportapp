@@ -94,7 +94,7 @@ export const TeamLeaderHomeScreen = ({ navigation }: any) => {
           >
             {f.label}
           </Text>
-          {activeFilter === f.key && <View style={styles.filterIndicator} />}
+          {activeFilter === f.key ? <View style={styles.filterIndicator} /> : null}
         </TouchableOpacity>
       ))}
     </View>

@@ -22,7 +22,7 @@ const TimelineStep: React.FC<{
   isRTL: boolean;
 }> = ({ title, subtitle, time, completed, current, isLast, isRTL }) => {
   return (
-    <View style={[tlStyles.item, isRTL && tlStyles.itemRTL]}>
+    <View style={[tlStyles.item, isRTL ? tlStyles.itemRTL : null]}>
       <View style={tlStyles.lineColumn}>
         {current ? (
           <View style={tlStyles.pulseOutline}>
@@ -33,34 +33,34 @@ const TimelineStep: React.FC<{
         ) : (
           <View style={[
             tlStyles.dot,
-            completed && tlStyles.dotCompleted,
+            completed ? tlStyles.dotCompleted : null,
           ]}>
-            {completed && <MaterialCommunityIcons name="check" size={10} color="#FFFFFF" />}
+            {completed ? <MaterialCommunityIcons name="check" size={10} color="#FFFFFF" /> : null}
           </View>
         )}
-        {!isLast && (
+        {!isLast ? (
           <View style={[
             tlStyles.line,
-            completed && tlStyles.lineCompleted,
-            current && tlStyles.lineCompleted,
+            completed ? tlStyles.lineCompleted : null,
+            current ? tlStyles.lineCompleted : null,
           ]} />
-        )}
+        ) : null}
       </View>
-      <View style={[tlStyles.content, isRTL && tlStyles.contentRTL]}>
-        <View style={[tlStyles.header, isRTL && tlStyles.headerRTL]}>
+      <View style={[tlStyles.content, isRTL ? tlStyles.contentRTL : null]}>
+        <View style={[tlStyles.header, isRTL ? tlStyles.headerRTL : null]}>
           <Text style={[
             tlStyles.title,
             { opacity: completed || current ? 1 : 0.4, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' },
-            isRTL && tlStyles.titleRTL,
+            isRTL ? tlStyles.titleRTL : null,
           ]}>
             {title}
           </Text>
-          {time && <Text style={[tlStyles.time, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>{time}</Text>}
+          {time ? <Text style={[tlStyles.time, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>{time}</Text> : null}
         </View>
         <Text style={[
           tlStyles.subtitle,
           { opacity: completed || current ? 0.7 : 0.3, fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' },
-          isRTL && tlStyles.subtitleRTL,
+          isRTL ? tlStyles.subtitleRTL : null,
         ]}>
           {subtitle}
         </Text>
@@ -243,9 +243,9 @@ export const ReportDetailsScreen = ({ route, navigation }: any) => {
           </View>
 
           {/* Additional images (added by team leader) */}
-          {report.attachments?.length > 1 && (
+          {Array.isArray(report.attachments) && report.attachments.length > 1 ? (
             <>
-              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
+              <Text style={[styles.sectionTitle, isRTL ? styles.sectionTitleRTL : null, { marginTop: spacing.md, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
                 {t('additionalPhotos')}
               </Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.completionScroll}>
@@ -259,12 +259,12 @@ export const ReportDetailsScreen = ({ route, navigation }: any) => {
                 ))}
               </ScrollView>
             </>
-          )}
+          ) : null}
 
           {/* Completion images */}
-          {report.completion_images && report.completion_images.length > 0 && (
+          {Array.isArray(report.completion_images) && report.completion_images.length > 0 ? (
             <>
-              <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('completionImages')}</Text>
+              <Text style={[styles.sectionTitle, isRTL ? styles.sectionTitleRTL : null, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('completionImages')}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.completionScroll}>
                 {report.completion_images.map((uri: string, i: number) => (
                   <Image
@@ -276,7 +276,7 @@ export const ReportDetailsScreen = ({ route, navigation }: any) => {
                 ))}
               </ScrollView>
             </>
-          )}
+          ) : null}
 
           <View style={{ height: 100 }} />
         </View>
