@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl, TouchableOpacity, Animated } from 'react-native';
+import { View, StyleSheet, FlatList, RefreshControl, TouchableOpacity, Animated, ScrollView } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useAuth } from '../hooks/useAuth';
 import { getUserReports, ReportWithAttachments } from '../services/api';
