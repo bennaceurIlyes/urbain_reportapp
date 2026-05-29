@@ -167,7 +167,6 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
     : report.location;
 
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
   const [imageModalVisible, setImageModalVisible] = useState(false);
 
   // Active navigation HUD states
@@ -306,9 +305,16 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
     { title: t('resolvedTimeline'), subtitle: t('issueFixed'), time: formatStepTime(report.resolved_at || report.approved_at || (isResolved ? new Date().toISOString() : null)) },
   ];
 
-  const openMaps = () => {
+  const navigateToFullMap = () => {
     if (!location?.latitude || !location?.longitude) return;
-    setModalVisible(true);
+    navigation.navigate('TeamLeaderMap', {
+      report,
+      userLocation,
+      location,
+      navInstruction: navigationInstruction || (lang === 'ar' ? 'اتبع المسار المرسوم' : 'Suivre l\'itinéraire tracé'),
+      distanceKm: routeDistance || '—',
+      durationMin: routeDuration || '—',
+    });
   };
  
   const handleStartWork = async () => {
@@ -436,8 +442,12 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
         </View>
       </View>
 
-      {/* Section 2 — Sticky Interactive Map */}
-      <View style={styles.mapContainer}>
+      {/* Section 2 — Sticky Interactive Map Preview */}
+      <TouchableOpacity 
+        style={styles.mapContainer}
+        onPress={navigateToFullMap}
+        activeOpacity={0.95}
+      >
         {location?.latitude ? (
           <MapRouteView 
             startCoords={userLocation} 
@@ -465,7 +475,7 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
                 {routeDistance} · {routeDuration || '—'}
               </Text>
             </View>
-            <TouchableOpacity onPress={openMaps} activeOpacity={0.8} style={styles.navCompassBtn}>
+            <TouchableOpacity onPress={navigateToFullMap} activeOpacity={0.8} style={styles.navCompassBtn}>
               <MaterialCommunityIcons name="compass-outline" size={16} color="rgba(255,255,255,0.7)" />
             </TouchableOpacity>
           </View>
@@ -489,7 +499,7 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
             </View>
           </TouchableOpacity>
         )}
-      </View>
+      </TouchableOpacity>
 
       {/* Section 3 — Sliding Content Card */}
       <ScrollView 
@@ -668,7 +678,7 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
           {/* Card 2: الموقع */}
           <TouchableOpacity 
             style={styles.gridCard} 
-            onPress={openMaps}
+            onPress={navigateToFullMap}
             activeOpacity={0.8}
           >
             <View style={[styles.gridIconChip, isRTL && styles.gridIconChipRTL]}>
@@ -756,35 +766,7 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
         </TouchableOpacity>
       </Modal>
 
-      {/* Interactive Full-Screen Map Zoom Modal */}
-      <Modal
-        visible={modalVisible}
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={[styles.modalHeader, { paddingTop: insets.top + spacing.sm, flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-            <TouchableOpacity
-              onPress={() => setModalVisible(false)}
-              style={styles.modalCloseButton}
-              accessibilityLabel={t('closeMap')}
-              accessibilityRole="button"
-            >
-              <MaterialCommunityIcons name="close" size={24} color={colors.textPrimary} />
-            </TouchableOpacity>
-            <Text style={[styles.modalHeaderTitle, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
-              {t('viewRoute')}
-            </Text>
-            <View style={{ width: 40 }} />
-          </View>
-          
-          <View style={{ flex: 1 }}>
-            {location?.latitude ? (
-              <MapRouteView startCoords={userLocation} endCoords={location} height={Dimensions.get('window').height - (insets.top + 70)} />
-            ) : null}
-          </View>
-        </View>
-      </Modal>
+      {/* Interactive Full-Screen Map Zoom Modal removed, replaced with dedicated Stack Screen */}
     </View>
   );
 };

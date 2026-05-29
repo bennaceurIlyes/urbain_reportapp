@@ -10,6 +10,7 @@ import { ProfileScreen } from '../screens/ProfileScreen';
 import { TeamLeaderHomeScreen } from '../screens/TeamLeaderHomeScreen';
 import { TeamLeaderReportDetailsScreen } from '../screens/TeamLeaderReportDetailsScreen';
 import { TeamLeaderCompletionUploadScreen } from '../screens/TeamLeaderCompletionUploadScreen';
+import { TeamLeaderMapScreen } from '../screens/TeamLeaderMapScreen';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 import { useReportNotifications } from '../hooks/useReportNotifications';
@@ -210,6 +211,11 @@ export const AppNavigator = () => {
               name="TeamLeaderCompletionUpload"
               component={TeamLeaderCompletionUploadScreen}
               options={{ animation: 'slide_from_bottom' }}
+            />
+            <Stack.Screen
+              name="TeamLeaderMap"
+              component={TeamLeaderMapScreen}
+              options={{ animation: slideAnimation }}
             />
           </>
         ) : (
