@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import { colors, spacing, radius, shadows, toArabicNumeral } from '../theme';
+import { colors, spacing, radius, shadows, toArabicNumeral, borderRadius } from '../theme';
 import { StatusBadge } from '../components/StatusBadge';
 import { PriorityBadge } from '../components/PriorityBadge';
 import { useLanguage } from '../hooks/useLanguage';
@@ -815,16 +815,19 @@ const styles = StyleSheet.create({
   actionButtonGreen: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     backgroundColor: colors.primary,
-    borderRadius: radius.sm, // 6px rounded button
-    paddingVertical: 12, gap: spacing.sm,
+    borderRadius: borderRadius.button, // 16px fully rounded-2xl style
+    height: 52, // Large touch-friendly height
+    gap: spacing.sm,
+    ...shadows.elevated,
   },
   actionButtonOutline: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     backgroundColor: 'transparent',
-    borderRadius: radius.sm, // 6px rounded button
+    borderRadius: borderRadius.button, // 16px fully rounded-2xl style
     borderWidth: 1.5,
     borderColor: colors.primary,
-    paddingVertical: 10, gap: spacing.sm,
+    height: 52, // Large touch-friendly height
+    gap: spacing.sm,
   },
   actionButtonText: {
     color: '#FFFFFF', fontSize: 14,
@@ -877,13 +880,20 @@ const styles = StyleSheet.create({
   infoGrid: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
   infoGridRTL: { flexDirection: 'row-reverse' },
   infoCard: {
-    flex: 1, padding: spacing.sm,
-    borderRadius: radius.md,
-    backgroundColor: colors.pageBg,
-    borderWidth: 1, borderColor: colors.borderLight,
+    flex: 1,
+    padding: spacing.md,
+    borderRadius: radius.md, // 16px fully rounded-2xl style
+    backgroundColor: colors.white, // clean white background
+    borderWidth: 1,
+    borderColor: '#E2E8F0', // clean minimalist border
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 2,
   },
   locationCardActive: {
-    borderColor: colors.primary,
+    borderColor: '#BFDBFE',
     backgroundColor: colors.primaryTint,
   },
   infoLabel: {
@@ -902,13 +912,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   googleMapsButton: {
-    width: 32, height: 32,
-    borderRadius: radius.sm,
+    width: 36, height: 36,
+    borderRadius: 18, // circular background
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1.5,
   },
   viewOnMapRow: {
     flexDirection: 'row', alignItems: 'center',

@@ -240,9 +240,11 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   thumbnail: {
-    width: 60,
-    height: 60,
-    borderRadius: radius.xs,
+    width: 66,
+    height: 66,
+    borderRadius: radius.sm, // Beautiful 12px rounded image
     backgroundColor: colors.pageBg,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
 });

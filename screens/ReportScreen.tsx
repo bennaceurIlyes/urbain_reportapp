@@ -9,7 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { submitReport } from '../services/api';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { GovHeader } from '../components/GovHeader';
-import { colors, spacing, radius, shadows } from '../theme';
+import { colors, spacing, radius, shadows, borderRadius } from '../theme';
 import { useLanguage } from '../hooks/useLanguage';
 
 export const ReportScreen = ({ navigation }: any) => {
@@ -207,11 +207,13 @@ export const ReportScreen = ({ navigation }: any) => {
                           accessibilityRole="button"
                           activeOpacity={0.8}
                         >
-                          <MaterialCommunityIcons 
-                            name={cat.icon as any} 
-                            size={26} 
-                            color={isSelected ? colors.primary : colors.textSecondary} 
-                          />
+                          <View style={[styles.iconBg, isSelected && styles.iconBgSelected]}>
+                            <MaterialCommunityIcons 
+                              name={cat.icon as any} 
+                              size={26} 
+                              color={isSelected ? colors.primary : colors.textSecondary} 
+                            />
+                          </View>
                           <Text
                             style={[
                               styles.categoryLabel,
@@ -512,19 +514,40 @@ const styles = StyleSheet.create({
   categoryTile: {
     width: '48%', // Equal half split
     backgroundColor: colors.white,
-    borderRadius: radius.md, // 8px modest corner radius
+    borderRadius: radius.md, // 16px corner radius (rounded-2xl)
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: '#E2E8F0', // clean minimalist border
     padding: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 100,
+    minHeight: 112,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 2,
   },
   categoryTileSelected: {
-    backgroundColor: colors.primaryTint,
+    backgroundColor: colors.white,
     borderColor: colors.primary,
-    borderWidth: 1.5,
-    ...shadows.card,
+    borderWidth: 2,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  iconBg: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F8FAFC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
+  iconBgSelected: {
+    backgroundColor: colors.primaryTint,
   },
   categoryLabel: {
     fontSize: 12,
@@ -643,11 +666,12 @@ const styles = StyleSheet.create({
     borderColor: colors.borderLight,
   },
   submitBtn: {
-    borderRadius: radius.sm, // 6px rounded square button
+    borderRadius: borderRadius.button, // Fully rounded-2xl style buttons (16px)
     backgroundColor: colors.primary,
-    height: 48,
+    height: 52, // Large touch-friendly height
     justifyContent: 'center',
     alignItems: 'center',
+    ...shadows.elevated,
   },
   submitBtnText: { fontSize: 15, color: colors.textOnBlue },
 

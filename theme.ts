@@ -8,12 +8,12 @@ import { MD3LightTheme as DefaultTheme } from 'react-native-paper';
 export const colors = {
 
   // ── BRAND BLUES (the only colors used boldly) ────────────────────
-  primary:          '#1A6FA3',   // ADE Official Light Blue — headers, primary buttons, nav bars
-  primaryDark:      '#0E4B72',   // Pressed state, active selected items
-  primaryLight:     '#3498DB',   // Secondary buttons, icons, links
-  primaryBorder:    '#5DADE2',   // Input focus borders, tab indicators
-  primaryTint:      '#EBF5FB',   // Blue-tinted white — stat card backgrounds, row highlights
-  primaryUltraLight:'#F4F9FC',   // Near-white with a cold blue hint — page backgrounds
+  primary:          '#2563EB',   // Vibrant Municipal Blue — headers, primary buttons, nav bars
+  primaryDark:      '#1D4ED8',   // Pressed state, active selected items
+  primaryLight:     '#3B82F6',   // Secondary buttons, icons, links
+  primaryBorder:    '#93C5FD',   // Input focus borders, tab indicators
+  primaryTint:      '#EFF6FF',   // Clean light blue tint — cards, row highlights
+  primaryUltraLight:'#F8FAFC',   // Near-white with subtle slate-blue hint — page backgrounds
 
   // ── WHITES & GRAYS (the dominant surfaces) ────────────────────────
   white:            '#FFFFFF',   // Pure white — cards, modals, form backgrounds
@@ -104,20 +104,20 @@ export const colors = {
 };
 
 // ── SHADOWS ────────────────────────────────────────────────────────
-// Use ONLY for cards and elevated components — no glow effects
+// Use ONLY for cards and elevated components — soft, realistic feel
 export const shadow = {
   card: {
-    shadowColor: '#0A4C78',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
     elevation: 2,
   },
   button: {
-    shadowColor: '#0A4C78',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
     elevation: 3,
   },
 };
@@ -129,20 +129,20 @@ export const shadows = {
 };
 
 // ── BORDER RADIUS ───────────────────────────────────────────────────
-// Government apps use modest rounding — not pill shapes
+// Premium municipal style uses modern rounded-2xl aesthetics
 export const radius = {
-  xs:  4,   // Badges, chips, small tags
-  sm:  6,   // Inputs, small buttons
-  md:  8,   // Cards, modals, standard buttons
-  lg:  12,  // Large cards, bottom sheets
-  xl:  16,  // Splash, hero elements only
+  xs:  6,   // Badges, chips, small tags
+  sm:  12,  // Inputs
+  md:  16,  // Cards, modals, standard buttons (rounded-2xl)
+  lg:  20,  // Large cards, bottom sheets
+  xl:  24,  // Splash, hero elements only
 };
 
 export const borderRadius = {
-  card: 8,       // radius.md
-  button: 6,     // radius.sm
-  badge: 4,      // radius.xs
-  input: 6,      // radius.sm
+  card: 16,       // rounded-2xl style cards
+  button: 16,     // rounded-2xl style buttons
+  badge: 6,       // rounded-md style badges
+  input: 12,      // rounded-xl style inputs
 };
 
 // ── SPACING ─────────────────────────────────────────────────────────

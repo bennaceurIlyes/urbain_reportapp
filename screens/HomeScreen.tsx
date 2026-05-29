@@ -72,8 +72,8 @@ export const HomeScreen = ({ navigation }: any) => {
   const renderStatsRow = () => (
     <View style={[styles.statsRow, isRTL && styles.statsRowRTL]}>
       {/* Total Reports Stat Tile */}
-      <View style={[styles.statCard, { borderTopColor: colors.primary, borderTopWidth: 3, backgroundColor: colors.primaryTint }]}>
-        <View style={[styles.statIconBg, { backgroundColor: 'rgba(26, 111, 163, 0.1)' }]}>
+      <View style={[styles.statCard, { borderColor: '#BFDBFE', backgroundColor: colors.primaryTint }]}>
+        <View style={[styles.statIconBg, { backgroundColor: 'rgba(37, 99, 235, 0.08)' }]}>
           <MaterialCommunityIcons name="file-document-multiple-outline" size={18} color={colors.primary} />
         </View>
         <Text style={[styles.statNumber, { color: colors.primary, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{formatNum(totalReports)}</Text>
@@ -81,8 +81,8 @@ export const HomeScreen = ({ navigation }: any) => {
       </View>
       
       {/* Pending Reports Stat Tile */}
-      <View style={[styles.statCard, { borderTopColor: colors.priority.medium, borderTopWidth: 3, backgroundColor: '#FEF9F0' }]}>
-        <View style={[styles.statIconBg, { backgroundColor: 'rgba(229, 156, 42, 0.1)' }]}>
+      <View style={[styles.statCard, { borderColor: '#FDE68A', backgroundColor: '#FFFDF5' }]}>
+        <View style={[styles.statIconBg, { backgroundColor: 'rgba(229, 156, 42, 0.08)' }]}>
           <MaterialCommunityIcons name="clock-alert-outline" size={18} color={colors.priority.medium} />
         </View>
         <Text style={[styles.statNumber, { color: colors.priority.medium, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{formatNum(pendingReports)}</Text>
@@ -90,8 +90,8 @@ export const HomeScreen = ({ navigation }: any) => {
       </View>
 
       {/* Resolved Reports Stat Tile */}
-      <View style={[styles.statCard, { borderTopColor: colors.priority.low, borderTopWidth: 3, backgroundColor: '#F0F9F4' }]}>
-        <View style={[styles.statIconBg, { backgroundColor: 'rgba(40, 167, 96, 0.1)' }]}>
+      <View style={[styles.statCard, { borderColor: '#A7F3D0', backgroundColor: '#F6FDF9' }]}>
+        <View style={[styles.statIconBg, { backgroundColor: 'rgba(40, 167, 96, 0.08)' }]}>
           <MaterialCommunityIcons name="check-circle-outline" size={18} color={colors.priority.low} />
         </View>
         <Text style={[styles.statNumber, { color: colors.priority.low, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{formatNum(resolvedReports)}</Text>
@@ -147,7 +147,7 @@ export const HomeScreen = ({ navigation }: any) => {
         )}
       </View>
 
-      {/* FAB (Circular, Light Color) */}
+      {/* FAB (Circular, Primary Color) */}
       <Animated.View style={[styles.fabContainer, isRTL ? styles.fabLeft : styles.fabRight, { transform: [{ scale: fabScale }] }]}>
         <TouchableOpacity
           style={styles.fab}
@@ -158,7 +158,7 @@ export const HomeScreen = ({ navigation }: any) => {
           accessibilityLabel={t('newReport')}
           accessibilityRole="button"
         >
-          <MaterialCommunityIcons name="plus" size={28} color={colors.primary} />
+          <MaterialCommunityIcons name="plus" size={28} color="#FFFFFF" />
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     backgroundColor: colors.white,
-    borderRadius: radius.md, // 8px Modest rounding
+    borderRadius: radius.md, // 16px modern rounding
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.xs,
     alignItems: 'center',
@@ -225,11 +225,9 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28, // Perfect circle border radius
-    backgroundColor: colors.primaryTint, // Premium light blue tone
+    backgroundColor: colors.primary, // Vibrant accent blue
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderMedium, // High-contrast border outline
     ...shadows.elevated,
   },
 });

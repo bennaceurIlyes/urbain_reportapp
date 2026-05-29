@@ -10,7 +10,7 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, radius, typography } from '../theme';
+import { colors, spacing, radius, typography, borderRadius, shadows } from '../theme';
 import { useLanguage } from '../hooks/useLanguage';
 import { LanguageToggle } from '../components/LanguageToggle';
 import { useAlert } from '../context/AlertContext';
@@ -296,11 +296,12 @@ const styles = StyleSheet.create({
   errorText: { paddingLeft: 0, marginTop: 2, fontSize: 11 },
   loginButton: {
     marginTop: spacing.md,
-    borderRadius: radius.sm, // square-ish buttons (6px)
+    borderRadius: borderRadius.button, // Fully rounded-2xl style buttons (16px)
     backgroundColor: colors.primary,
-    height: 50,
+    height: 52, // Touch-friendly height
     justifyContent: 'center',
     alignItems: 'center',
+    ...shadows.elevated,
   },
   loginButtonText: {
     color: colors.textOnBlue,
@@ -308,10 +309,10 @@ const styles = StyleSheet.create({
   },
   registerButton: {
     marginTop: spacing.md,
-    borderRadius: radius.sm, // square-ish buttons (6px)
+    borderRadius: borderRadius.button, // Fully rounded-2xl style buttons (16px)
     borderWidth: 1.5,
     borderColor: colors.primary,
-    height: 50,
+    height: 52, // Touch-friendly height
     justifyContent: 'center',
     alignItems: 'center',
   },

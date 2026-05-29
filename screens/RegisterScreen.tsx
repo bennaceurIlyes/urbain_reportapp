@@ -11,7 +11,7 @@ import * as Yup from 'yup';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { colors, spacing, radius, typography } from '../theme';
+import { colors, spacing, radius, typography, borderRadius, shadows } from '../theme';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAlert } from '../context/AlertContext';
 import Svg, { Path, Defs, Pattern, Rect } from 'react-native-svg';
@@ -280,11 +280,12 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     marginTop: spacing.md,
-    borderRadius: radius.sm, // square buttons (6px)
+    borderRadius: borderRadius.button, // Fully rounded-2xl style buttons (16px)
     backgroundColor: colors.primary,
-    height: 50,
+    height: 52, // Touch-friendly height
     justifyContent: 'center',
     alignItems: 'center',
+    ...shadows.elevated,
   },
   submitButtonText: {
     color: colors.textOnBlue,

@@ -350,10 +350,17 @@ const styles = StyleSheet.create({
   infoGrid: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
   infoGridRTL: { flexDirection: 'row-reverse' },
   infoCard: {
-    flex: 1, padding: spacing.sm,
-    borderRadius: radius.md,
-    backgroundColor: colors.pageBg,
-    borderWidth: 1, borderColor: colors.borderLight,
+    flex: 1,
+    padding: spacing.md,
+    borderRadius: radius.md, // 16px fully rounded-2xl style
+    backgroundColor: colors.white, // clean white background
+    borderWidth: 1,
+    borderColor: '#E2E8F0', // clean minimalist border
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 2,
   },
   infoLabel: {
     color: colors.textSecondary,
@@ -372,17 +379,20 @@ const styles = StyleSheet.create({
   },
   locationCardInnerRTL: { flexDirection: 'row-reverse' },
   locationCardActive: {
-    borderColor: colors.primary,
+    borderColor: '#BFDBFE',
     backgroundColor: colors.primaryTint,
   },
   googleMapsButton: {
-    width: 32, height: 32,
-    borderRadius: radius.sm,
+    width: 36, height: 36,
+    borderRadius: 18, // circular background
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1.5,
   },
   viewOnMapRow: {
     flexDirection: 'row', alignItems: 'center',

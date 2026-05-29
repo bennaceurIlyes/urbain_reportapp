@@ -1,5 +1,5 @@
-import React from 'react';
-import { TouchableOpacity, Text, View, StyleSheet, ViewStyle, StyleProp, ActivityIndicator } from 'react-native';
+import React, { useRef } from 'react';
+import { TouchableOpacity, Text, View, StyleSheet, ViewStyle, StyleProp, ActivityIndicator, Animated } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, borderRadius, shadows } from '../theme';
 import { useLanguage } from '../hooks/useLanguage';
@@ -24,6 +24,7 @@ export const Button: React.FC<ButtonProps> = ({
   icon
 }) => {
   const { isRTL } = useLanguage();
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const getButtonStyle = () => {
     switch(variant) {
@@ -44,54 +45,79 @@ export const Button: React.FC<ButtonProps> = ({
     }
   };
 
+  const onPressIn = () => {
+    if (disabled || loading) return;
+    Animated.spring(scaleAnim, {
+      toValue: 0.97,
+      useNativeDriver: true,
+      speed: 40,
+      bounciness: 3,
+    }).start();
+  };
+
+  const onPressOut = () => {
+    if (disabled || loading) return;
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 40,
+      bounciness: 3,
+    }).start();
+  };
+
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      disabled={disabled || loading}
-      activeOpacity={0.85}
-      style={[
-        styles.base,
-        getButtonStyle(),
-        (disabled || loading) && styles.disabled,
-        style
-      ]}
-      accessibilityRole="button"
-      accessibilityLabel={title}
-    >
-      {loading ? (
-        <ActivityIndicator color={getTextColor()} size="small" />
-      ) : (
-        <View style={[styles.content, isRTL && styles.contentRTL]}>
-          {icon && (
-            <MaterialCommunityIcons 
-              name={icon} 
-              size={20} 
-              color={getTextColor()} 
-              style={styles.icon}
-            />
-          )}
-          <Text style={[
-            styles.text, 
-            { 
-              color: getTextColor(),
-              fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold'
-            }
-          ]}>
-            {title}
-          </Text>
-        </View>
-      )}
-    </TouchableOpacity>
+    <Animated.View style={{ transform: [{ scale: scaleAnim }], width: variant === 'link' ? 'auto' : '100%' }}>
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        disabled={disabled || loading}
+        activeOpacity={1}
+        style={[
+          styles.base,
+          getButtonStyle(),
+          (disabled || loading) && styles.disabled,
+          style
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={title}
+      >
+        {loading ? (
+          <ActivityIndicator color={getTextColor()} size="small" />
+        ) : (
+          <View style={[styles.content, isRTL && styles.contentRTL]}>
+            {icon && (
+              <MaterialCommunityIcons 
+                name={icon} 
+                size={20} 
+                color={getTextColor()} 
+                style={styles.icon}
+              />
+            )}
+            <Text style={[
+              styles.text, 
+              { 
+                color: getTextColor(),
+                fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold'
+              }
+            ]}>
+              {title}
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   base: {
-    height: 52, // Professional e-gov standard height
+    height: 52, // Large, premium touch-friendly button
+    width: '100%',
     paddingHorizontal: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: borderRadius.button, // 6px modest radius
+    borderRadius: borderRadius.button, // Fully rounded-2xl (16px) style
     borderWidth: 0,
   },
   primary: {
@@ -111,6 +137,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     height: 'auto' as any,
     paddingHorizontal: 0,
+    width: 'auto',
   },
   disabled: {
     opacity: 0.5,

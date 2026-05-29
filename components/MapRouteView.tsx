@@ -51,13 +51,17 @@ export const MapRouteView: React.FC<MapRouteViewProps> = ({ startCoords, endCoor
         /* Custom UI aesthetics matching shadcn/mapcn */
         .leaflet-bar {
           border: none !important;
-          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+          box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06) !important;
         }
         .leaflet-bar a {
           background-color: #ffffff !important;
-          color: #1e293b !important;
+          color: #0f172a !important;
           border: 1px solid #e2e8f0 !important;
           border-bottom: none !important;
+          width: 34px !important;
+          height: 34px !important;
+          line-height: 34px !important;
+          font-size: 15px !important;
         }
         .leaflet-bar a:first-child {
           border-top-left-radius: 8px !important;
@@ -68,6 +72,28 @@ export const MapRouteView: React.FC<MapRouteViewProps> = ({ startCoords, endCoor
           border-bottom-right-radius: 8px !important;
           border-bottom: 1px solid #e2e8f0 !important;
         }
+        /* Popup custom styling */
+        .leaflet-popup-content-wrapper {
+          background: #ffffff !important;
+          color: #0f172a !important;
+          border-radius: 12px !important;
+          border: 1px solid #e2e8f0 !important;
+          box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08) !important;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+          font-weight: 500 !important;
+          padding: 2px !important;
+        }
+        .leaflet-popup-tip {
+          background: #ffffff !important;
+          border: 1px solid #e2e8f0 !important;
+          box-shadow: none !important;
+        }
+        .leaflet-popup-content {
+          margin: 8px 12px !important;
+          font-size: 12px !important;
+          line-height: 1.4 !important;
+        }
+        
         /* Pulsing user current location marker styling */
         .user-pulse-marker {
           position: relative;
@@ -93,7 +119,7 @@ export const MapRouteView: React.FC<MapRouteViewProps> = ({ startCoords, endCoor
           width: 32px;
           height: 32px;
           border-radius: 50%;
-          background: rgba(37, 99, 235, 0.45);
+          background: rgba(37, 99, 235, 0.35);
           top: -6px;
           left: -6px;
           animation: radar 2s infinite ease-out;
@@ -164,8 +190,8 @@ export const MapRouteView: React.FC<MapRouteViewProps> = ({ startCoords, endCoor
             attributionControl: false
           }).setView([end.latitude, end.longitude], 14);
 
-          // Render clean CARTO Voyager tiles (premium minimalist Mapcn look)
-          L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+          // Render clean CARTO Positron tiles (premium minimalist Mapcn look)
+          L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             maxZoom: 19
           }).addTo(map);
 
