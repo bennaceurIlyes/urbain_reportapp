@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { View, TouchableOpacity, Image, StyleSheet, Animated } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { colors, spacing, radius, shadows, getPriorityColor, toArabicNumeral } from '../theme';
+import { colors, spacing, radius, shadows, toArabicNumeral } from '../theme';
 import { StatusBadge } from './StatusBadge';
 import { useLanguage } from '../hooks/useLanguage';
 import { ReportWithAttachments } from '../services/api';
@@ -11,14 +11,31 @@ interface ReportCardProps {
   report: ReportWithAttachments;
   onPress: () => void;
   showAssignedTime?: boolean;
+  isTeamLeader?: boolean;
 }
 
-export const ReportCard: React.FC<ReportCardProps> = ({ report, onPress, showAssignedTime = false }) => {
+export const ReportCard: React.FC<ReportCardProps> = ({ 
+  report, 
+  onPress, 
+  showAssignedTime = false,
+  isTeamLeader = false 
+}) => {
   const { t, lang, isRTL } = useLanguage();
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const imageUrl = report.attachments?.length > 0 ? report.attachments[0].file_url : null;
-  const priorityColor = getPriorityColor(report.priority);
+
+  // Urgency Color Logic:
+  // - Red (#DC2626) = Assigned/Active Work (Status 0, 1, 2)
+  // - Amber (#D97706) = Awaiting Admin Approval (Status 3)
+  // - Green (#16A34A) = Approved & Completed (Status 4)
+  const getUrgencyColor = (status: number | string) => {
+    if (status === 4 || status === 'approved') return '#16A34A'; // Green
+    if (status === 3 || status === 'completed') return '#D97706'; // Amber
+    return '#DC2626'; // Red
+  };
+
+  const urgencyColor = getUrgencyColor(report.status);
 
   const formatTimeAgo = (dateStr: string) => {
     const now = new Date();
@@ -61,6 +78,10 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report, onPress, showAss
     }).start();
   };
 
+  // Safe priority width (1-4 -> 25%-100%)
+  const priorityNum = typeof report.priority === 'number' ? report.priority : 1;
+  const progressWidth = Math.max(1, Math.min(4, priorityNum)) * 15; // 15px per level up to 60px
+
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
       <TouchableOpacity
@@ -72,81 +93,111 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report, onPress, showAss
         accessibilityLabel={report.title}
         accessibilityRole="button"
       >
-        {/* Priority indicator bar */}
-        <View
-          style={[
-            styles.priorityBar,
-            { backgroundColor: priorityColor },
-            isRTL 
-              ? { right: 0, borderTopRightRadius: radius.md, borderBottomRightRadius: radius.md } 
-              : { left: 0, borderTopLeftRadius: radius.md, borderBottomLeftRadius: radius.md },
-          ]}
-        />
+        {/* Urgency accent strip on the left-hand side */}
+        <View style={[styles.urgencyStrip, { backgroundColor: urgencyColor }]} />
 
-        <View style={[styles.cardContent, isRTL ? { paddingRight: spacing.md + 4 } : { paddingLeft: spacing.md + 4 }]}>
-          {/* Top row: Title + Status */}
-          <View style={[styles.topRow, isRTL && styles.topRowRTL]}>
-            <Text
-              style={[
-                styles.title, 
-                isRTL && styles.titleRTL,
-                { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }
-              ]}
-              numberOfLines={1}
-            >
-              {report.title && report.title.startsWith('cat_') ? t(report.title) : report.title}
-            </Text>
-            <StatusBadge status={report.status} lang={lang} is_resolved={report.is_resolved} work_in_progress_at={report.work_in_progress_at} />
-          </View>
-
-          {/* Description */}
-          <Text
-            style={[
-              styles.description, 
-              isRTL && styles.descriptionRTL,
-              { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
-            ]}
-            numberOfLines={2}
-          >
-            {report.description}
-          </Text>
-
-          {/* Bottom row: Location + Time + Thumbnail */}
-          <View style={[styles.bottomRow, isRTL && styles.bottomRowRTL]}>
-            <View style={[styles.metaSection, isRTL && styles.metaSectionRTL]}>
-              <View style={[styles.locationRow, isRTL && styles.locationRowRTL]}>
-                <MaterialCommunityIcons
-                  name="map-marker-outline"
-                  size={14}
-                  color={colors.textSecondary}
-                />
-                <Text 
+        <View style={styles.cardBody}>
+          <View style={[styles.mainRow, isRTL && styles.mainRowRTL]}>
+            {/* Left/Right Text Column depending on RTL */}
+            <View style={styles.textColumn}>
+              {/* Title & Status Badge */}
+              <View style={[styles.titleRow, isRTL && styles.titleRowRTL]}>
+                <Text
                   style={[
-                    styles.metaText,
+                    styles.title,
+                    isRTL && styles.titleRTL,
+                    { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }
+                  ]}
+                  numberOfLines={1}
+                >
+                  {report.title && report.title.startsWith('cat_') ? t(report.title) : report.title}
+                </Text>
+                <StatusBadge 
+                  status={report.status} 
+                  lang={lang} 
+                  is_resolved={report.is_resolved} 
+                  work_in_progress_at={report.work_in_progress_at} 
+                />
+              </View>
+
+              {/* Description */}
+              <Text
+                style={[
+                  styles.description,
+                  isRTL && styles.descriptionRTL,
+                  { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
+                ]}
+                numberOfLines={2}
+              >
+                {report.description}
+              </Text>
+
+              {/* Meta information row (Location + Time) */}
+              <View style={[styles.metaRow, isRTL && styles.metaRowRTL]}>
+                <View style={[styles.locationBadge, isRTL && styles.locationBadgeRTL]}>
+                  <MaterialCommunityIcons
+                    name="map-marker-outline"
+                    size={14}
+                    color={colors.textSecondary}
+                  />
+                  <Text
+                    style={[
+                      styles.metaText,
+                      { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
+                    ]}
+                  >
+                    {lang === 'ar' ? 'الموقع محدد' : 'Localisé'}
+                  </Text>
+                </View>
+                <Text
+                  style={[
+                    styles.timeText,
                     { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
                   ]}
                 >
-                  {lang === 'ar' ? 'الموقع محدد' : 'Localisé'}
+                  {timeStr}
                 </Text>
               </View>
-              <Text 
-                style={[
-                  styles.timeText,
-                  { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }
-                ]}
-              >
-                {timeStr}
-              </Text>
             </View>
 
+            {/* Thumbnail opposite the text block */}
             {imageUrl && (
               <Image
                 source={{ uri: imageUrl }}
-                style={[styles.thumbnail, isRTL ? { marginRight: spacing.sm } : { marginLeft: spacing.sm }]}
+                style={[
+                  styles.thumbnail,
+                  isRTL ? { marginRight: spacing.md } : { marginLeft: spacing.md }
+                ]}
                 accessibilityLabel={lang === 'ar' ? 'صورة البلاغ' : 'Photo du signalement'}
               />
             )}
           </View>
+
+          {/* Custom Team Leader Footer */}
+          {isTeamLeader && (
+            <View style={[styles.footer, isRTL && styles.footerRTL]}>
+              <View style={[styles.prioritySection, isRTL && styles.prioritySectionRTL]}>
+                <Text style={[
+                  styles.priorityLabel,
+                  { fontFamily: isRTL ? 'IBMPlexArabic-Medium' : 'IBMPlexSans-Medium' }
+                ]}>
+                  {lang === 'ar' ? 'الأولوية' : 'Priorité'}
+                </Text>
+                <View style={styles.progressBarBg}>
+                  <View style={[styles.progressBarFill, { width: progressWidth, backgroundColor: urgencyColor }]} />
+                </View>
+              </View>
+
+              <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={styles.detailsButton}>
+                <Text style={[
+                  styles.detailsText,
+                  { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }
+                ]}>
+                  {lang === 'ar' ? 'عرض التفاصيل ←' : 'Détails →'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -156,31 +207,41 @@ export const ReportCard: React.FC<ReportCardProps> = ({ report, onPress, showAss
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.white,
-    borderRadius: radius.md, // 8px Modest rounding
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.borderLight, // thin 1px border
+    borderColor: colors.borderLight, // thin 1px `#C0EAF5` border
     marginBottom: spacing.md,
     overflow: 'hidden',
     flexDirection: 'row',
-    ...shadows.card,
+    elevation: 0,
+    shadowOpacity: 0,
   },
-  priorityBar: {
+  urgencyStrip: {
     width: 4,
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
+    height: '100%',
   },
-  cardContent: {
+  cardBody: {
     flex: 1,
     padding: spacing.md,
   },
-  topRow: {
+  mainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  mainRowRTL: {
+    flexDirection: 'row-reverse',
+  },
+  textColumn: {
+    flex: 1,
+  },
+  titleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs + 2,
   },
-  topRowRTL: {
+  titleRowRTL: {
     flexDirection: 'row-reverse',
   },
   title: {
@@ -196,42 +257,32 @@ const styles = StyleSheet.create({
     marginLeft: spacing.sm,
   },
   description: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: 18,
     marginBottom: spacing.sm,
     textAlign: 'left',
   },
   descriptionRTL: {
     textAlign: 'right',
   },
-  bottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.divider, // crisp hairline divider
-  },
-  bottomRowRTL: {
-    flexDirection: 'row-reverse',
-  },
-  metaSection: {
-    flex: 1,
-  },
-  metaSectionRTL: {
-    alignItems: 'flex-end',
-  },
-  locationRow: {
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 2,
+    justifyContent: 'space-between',
   },
-  locationRowRTL: {
+  metaRowRTL: {
+    flexDirection: 'row-reverse',
+  },
+  locationBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  locationBadgeRTL: {
     flexDirection: 'row-reverse',
   },
   metaText: {
-    fontSize: 12,
+    fontSize: 11,
     color: colors.textSecondary,
     marginLeft: 4,
   },
@@ -240,11 +291,53 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   thumbnail: {
-    width: 66,
-    height: 66,
-    borderRadius: radius.sm, // Beautiful 12px rounded image
+    width: 64,
+    height: 54,
+    borderRadius: radius.sm,
     backgroundColor: colors.pageBg,
     borderWidth: 1,
     borderColor: colors.borderLight,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight, // thin `#C0EAF5` border
+    paddingTop: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  footerRTL: {
+    flexDirection: 'row-reverse',
+  },
+  prioritySection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  prioritySectionRTL: {
+    flexDirection: 'row-reverse',
+  },
+  priorityLabel: {
+    fontSize: 11,
+    color: colors.textSecondary,
+  },
+  progressBarBg: {
+    width: 60,
+    height: 4,
+    backgroundColor: colors.surfaceGray,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: 4,
+    borderRadius: 2,
+  },
+  detailsButton: {
+    paddingVertical: 2,
+  },
+  detailsText: {
+    fontSize: 12,
+    color: colors.textLink, // `#18A6C8` cyan
   },
 });

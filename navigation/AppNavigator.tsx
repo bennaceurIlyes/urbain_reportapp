@@ -38,16 +38,12 @@ const CitizenTabNavigator = () => {
           bottom: 0,
           left: 0,
           right: 0,
-          height: 60 + insets.bottom,
+          height: 66 + insets.bottom,
           backgroundColor: Platform.OS === 'ios' ? 'rgba(255,255,255,0.92)' : '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: colors.borderLight,
           elevation: 0,
-          shadowColor: '#000000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.04,
-          shadowRadius: 6,
-          paddingBottom: insets.bottom,
+          paddingBottom: insets.bottom + 6,
         },
         tabBarBackground: () =>
           Platform.OS === 'ios' ? (
@@ -57,12 +53,12 @@ const CitizenTabNavigator = () => {
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarLabelStyle: {
           fontSize: 10,
-          fontWeight: '600',
-          marginBottom: 4,
+          fontWeight: '700',
+          marginTop: 2,
           fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold',
         },
         tabBarIconStyle: {
-          marginTop: 6,
+          marginTop: 4,
         },
       }}
     >
@@ -71,12 +67,14 @@ const CitizenTabNavigator = () => {
         component={HomeScreen}
         options={{
           tabBarLabel: t('myReports'),
-          tabBarIcon: ({ color, focused }) => (
-            <MaterialCommunityIcons
-              name={focused ? 'home' : 'home-outline'}
-              size={22}
-              color={color}
-            />
+          tabBarIcon: ({ focused }) => (
+            <View style={[tabStyles.iconWrapper, focused && tabStyles.iconWrapperActive]}>
+              <MaterialCommunityIcons
+                name={focused ? 'home' : 'home-outline'}
+                size={focused ? 20 : 22}
+                color={focused ? '#FFFFFF' : '#7BA8BF'}
+              />
+            </View>
           ),
         }}
       />
@@ -85,12 +83,14 @@ const CitizenTabNavigator = () => {
         component={ProfileScreen}
         options={{
           tabBarLabel: t('profile'),
-          tabBarIcon: ({ color, focused }) => (
-            <MaterialCommunityIcons
-              name={focused ? 'account' : 'account-outline'}
-              size={22}
-              color={color}
-            />
+          tabBarIcon: ({ focused }) => (
+            <View style={[tabStyles.iconWrapper, focused && tabStyles.iconWrapperActive]}>
+              <MaterialCommunityIcons
+                name={focused ? 'account' : 'account-outline'}
+                size={focused ? 20 : 22}
+                color={focused ? '#FFFFFF' : '#7BA8BF'}
+              />
+            </View>
           ),
         }}
       />
@@ -113,16 +113,12 @@ const TeamLeaderTabNavigator = () => {
           bottom: 0,
           left: 0,
           right: 0,
-          height: 60 + insets.bottom,
+          height: 66 + insets.bottom,
           backgroundColor: Platform.OS === 'ios' ? 'rgba(255,255,255,0.92)' : '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: colors.borderLight,
           elevation: 0,
-          shadowColor: '#000000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.04,
-          shadowRadius: 6,
-          paddingBottom: insets.bottom,
+          paddingBottom: insets.bottom + 6,
         },
         tabBarBackground: () =>
           Platform.OS === 'ios' ? (
@@ -132,12 +128,12 @@ const TeamLeaderTabNavigator = () => {
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarLabelStyle: {
           fontSize: 10,
-          fontWeight: '600',
-          marginBottom: 4,
+          fontWeight: '700',
+          marginTop: 2,
           fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold',
         },
         tabBarIconStyle: {
-          marginTop: 6,
+          marginTop: 4,
         },
       }}
     >
@@ -146,12 +142,14 @@ const TeamLeaderTabNavigator = () => {
         component={TeamLeaderHomeScreen}
         options={{
           tabBarLabel: t('myTasks'),
-          tabBarIcon: ({ color, focused }) => (
-            <MaterialCommunityIcons
-              name={focused ? 'clipboard-list' : 'clipboard-list-outline'}
-              size={22}
-              color={color}
-            />
+          tabBarIcon: ({ focused }) => (
+            <View style={[tabStyles.iconWrapper, focused && tabStyles.iconWrapperActive]}>
+              <MaterialCommunityIcons
+                name={focused ? 'clipboard-list' : 'clipboard-list-outline'}
+                size={focused ? 20 : 22}
+                color={focused ? '#FFFFFF' : '#7BA8BF'}
+              />
+            </View>
           ),
         }}
       />
@@ -160,12 +158,14 @@ const TeamLeaderTabNavigator = () => {
         component={ProfileScreen}
         options={{
           tabBarLabel: t('profile'),
-          tabBarIcon: ({ color, focused }) => (
-            <MaterialCommunityIcons
-              name={focused ? 'account' : 'account-outline'}
-              size={22}
-              color={color}
-            />
+          tabBarIcon: ({ focused }) => (
+            <View style={[tabStyles.iconWrapper, focused && tabStyles.iconWrapperActive]}>
+              <MaterialCommunityIcons
+                name={focused ? 'account' : 'account-outline'}
+                size={focused ? 20 : 22}
+                color={focused ? '#FFFFFF' : '#7BA8BF'}
+              />
+            </View>
           ),
         }}
       />
@@ -246,5 +246,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.pageBg,
+  },
+});
+
+const tabStyles = StyleSheet.create({
+  iconWrapper: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  iconWrapperActive: {
+    backgroundColor: '#0A2E4A', // Deep water navy active square chip
   },
 });

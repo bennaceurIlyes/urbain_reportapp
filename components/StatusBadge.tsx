@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: radius.xs, // 4px — square-ish, formal
+    borderRadius: 12, // Premium modern pill shape
     borderWidth: 1,
   },
   badgeRTL: {

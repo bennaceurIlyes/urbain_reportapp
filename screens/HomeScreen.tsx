@@ -94,7 +94,11 @@ export const HomeScreen = ({ navigation }: any) => {
   ];
 
   const renderFilterTabs = () => (
-    <View style={[styles.filterRow, isRTL && styles.filterRowRTL]}>
+    <ScrollView 
+      horizontal 
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={[styles.filterRow, isRTL && styles.filterRowRTL]}
+    >
       {filters.map(f => {
         const isActive = activeFilter === f.key;
         return (
@@ -118,14 +122,14 @@ export const HomeScreen = ({ navigation }: any) => {
           </TouchableOpacity>
         );
       })}
-    </View>
+    </ScrollView>
   );
 
   const renderStatsRow = () => (
     <View style={[styles.statsRow, isRTL && styles.statsRowRTL]}>
       {/* Total Reports Stat Tile */}
-      <View style={[styles.statCard, { borderColor: '#BFDBFE', backgroundColor: colors.primaryTint }]}>
-        <View style={[styles.statIconBg, { backgroundColor: 'rgba(37, 99, 235, 0.08)' }]}>
+      <View style={[styles.statCard, { borderColor: '#C0EAF5', backgroundColor: colors.primaryTint }]}>
+        <View style={[styles.statIconBg, { backgroundColor: 'rgba(13, 107, 154, 0.08)' }]}>
           <MaterialCommunityIcons name="file-document-multiple-outline" size={18} color={colors.primary} />
         </View>
         <Text style={[styles.statNumber, { color: colors.primary, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{formatNum(totalReports)}</Text>
@@ -133,7 +137,7 @@ export const HomeScreen = ({ navigation }: any) => {
       </View>
       
       {/* Pending Reports Stat Tile */}
-      <View style={[styles.statCard, { borderColor: '#FDE68A', backgroundColor: '#FFFDF5' }]}>
+      <View style={[styles.statCard, { borderColor: '#C0EAF5', backgroundColor: '#FFFDF5' }]}>
         <View style={[styles.statIconBg, { backgroundColor: 'rgba(229, 156, 42, 0.08)' }]}>
           <MaterialCommunityIcons name="clock-alert-outline" size={18} color={colors.priority.medium} />
         </View>
@@ -142,7 +146,7 @@ export const HomeScreen = ({ navigation }: any) => {
       </View>
 
       {/* Resolved Reports Stat Tile */}
-      <View style={[styles.statCard, { borderColor: '#A7F3D0', backgroundColor: '#F6FDF9' }]}>
+      <View style={[styles.statCard, { borderColor: '#C0EAF5', backgroundColor: '#F6FDF9' }]}>
         <View style={[styles.statIconBg, { backgroundColor: 'rgba(40, 167, 96, 0.08)' }]}>
           <MaterialCommunityIcons name="check-circle-outline" size={18} color={colors.priority.low} />
         </View>
@@ -269,9 +273,9 @@ const styles = StyleSheet.create({
   // Custom Filter Pills/Chips
   filterRow: {
     flexDirection: 'row',
-    gap: spacing.xs,
-    marginVertical: spacing.sm,
+    gap: spacing.sm,
     paddingHorizontal: 2,
+    marginVertical: spacing.xs,
   },
   filterRowRTL: {
     flexDirection: 'row-reverse',
@@ -279,26 +283,21 @@ const styles = StyleSheet.create({
   filterTab: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 20, // Modern floating circular pills
+    borderRadius: 999, // fully rounded pill
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E2E8F0', // clean minimalist outline
+    borderColor: '#C0EAF5', // soft cyan border
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.02,
-    shadowRadius: 3,
-    elevation: 1,
   },
   filterTabActive: {
-    backgroundColor: colors.primary, // Vibrant accent blue
+    backgroundColor: colors.primary, // Navy active fill
     borderColor: colors.primary,
   },
   filterText: {
-    fontSize: 11,
-    color: colors.textSecondary,
-    fontWeight: '500',
+    fontSize: 12,
+    color: colors.primary,
+    fontWeight: '600',
   },
   filterTextActive: {
     color: '#FFFFFF',
@@ -322,7 +321,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.borderLight,
-    ...shadows.card,
+    elevation: 0,
+    shadowOpacity: 0,
   },
   statIconBg: {
     width: 32,
@@ -362,6 +362,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary, // Vibrant accent blue
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.elevated,
+    elevation: 0,
+    shadowOpacity: 0,
   },
 });

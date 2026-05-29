@@ -2,83 +2,82 @@ import { MD3LightTheme as DefaultTheme } from 'react-native-paper';
 
 // ─────────────────────────────────────────────────────────
 // theme.ts — ADE BÉCHAR OFFICIAL COLOR SYSTEM
-// Direction: Pure White + Strong ADE Blue — Government Grade
+// Direction: Deep Water — Industrial Clarity
 // ─────────────────────────────────────────────────────────
 
 export const colors = {
 
-  // ── BRAND BLUES (the only colors used boldly) ────────────────────
-  primary:          '#2563EB',   // Vibrant Municipal Blue — headers, primary buttons, nav bars
-  primaryDark:      '#1D4ED8',   // Pressed state, active selected items
-  primaryLight:     '#3B82F6',   // Secondary buttons, icons, links
-  primaryBorder:    '#93C5FD',   // Input focus borders, tab indicators
-  primaryTint:      '#EFF6FF',   // Clean light blue tint — cards, row highlights
-  primaryUltraLight:'#F8FAFC',   // Near-white with subtle slate-blue hint — page backgrounds
+  // ── BRAND BLUES (Deep Water - Industrial Clarity) ────────────────────
+  primary:          '#0A2E4A',   // Deep Water Navy — Top bar, headings, nav active
+  primaryDark:      '#051B2C',   // Deeper Navy pressed states
+  primaryLight:     '#0D6B9A',   // Electric Cyan gradient partner
+  primaryBorder:    '#C0EAF5',   // Soft cyan outline borders
+  primaryTint:      '#F0F9FF',   // Surface light tint
+  primaryUltraLight:'#F8FAFD',   // Subtle slate page backgrounds
 
   // ── WHITES & GRAYS (the dominant surfaces) ────────────────────────
   white:            '#FFFFFF',   // Pure white — cards, modals, form backgrounds
-  pageBg:           '#F7FAFD',   // Slightly cold off-white — screen backgrounds
-  surfaceGray:      '#F0F4F8',   // Sections, divider areas, inactive tab backgrounds
-  borderLight:      '#DDE8F0',   // Default card and input borders
-  borderMedium:     '#B8CFDF',   // Emphasized dividers, section separators
-  divider:          '#E4ECF3',   // Hairline dividers between list items
+  pageBg:           '#F0F9FF',   // Surface light page background
+  surfaceGray:      '#E2F4F8',   // Divider sections, inactive tab backgrounds
+  borderLight:      '#C0EAF5',   // Default card and input borders
+  borderMedium:     '#9BCFE0',   // Emphasized dividers
+  divider:          '#D4F0F6',   // Hairline dividers
 
   // ── TEXT HIERARCHY ────────────────────────────────────────────────
-  textPrimary:      '#0D1F2D',   // Near-black with a blue undertone — main headings, body
-  textSecondary:    '#4A6070',   // Muted — labels, metadata, timestamps
-  textDisabled:     '#8FA3B1',   // Placeholder text, disabled states
-  textOnBlue:       '#FFFFFF',   // Any text on primary blue backgrounds
-  textLink:         '#1A6FA3',   // Hyperlinks, tappable metadata
+  textPrimary:      '#0A2E4A',   // Deep navy headings
+  textSecondary:    '#3A6B85',   // Medium blue secondary text
+  textDisabled:     '#7BA8BF',   // Muted gray-blue placeholders
+  textOnBlue:       '#FFFFFF',   // Standard text on navy backgrounds
+  textLink:         '#18A6C8',   // Highlight cyan links/icons
 
-  // ── STATUS COLORS (opaque filled badges — no translucency) ────────
-  // Each status has: background (light fill) + border + text
+  // ── STATUS COLORS (Industrial urgencies - high contrast) ────────
   statusPendingBg:       '#FEF3E2',
-  statusPendingBorder:   '#E59C2A',
-  statusPendingText:     '#7D5200',
+  statusPendingBorder:   '#D97706',   // Warning Orange
+  statusPendingText:     '#D97706',
 
-  statusAssignedBg:      '#E8F4FB',
-  statusAssignedBorder:  '#2980B9',
-  statusAssignedText:    '#0A4C78',
+  statusAssignedBg:      '#FDF2F2',
+  statusAssignedBorder:  '#DC2626',   // Urgent Red
+  statusAssignedText:    '#DC2626',
 
-  statusInProgressBg:    '#F0EAF9',
-  statusInProgressBorder:'#7B4FBF',
-  statusInProgressText:  '#4A2080',
+  statusInProgressBg:    '#EFF6FF',
+  statusInProgressBorder:'#0D6B9A',   // Electric Cyan
+  statusInProgressText:  '#0D6B9A',
 
-  statusCompletedBg:     '#E6F6ED',
-  statusCompletedBorder: '#28A760',
-  statusCompletedText:   '#145C32',
+  statusCompletedBg:     '#ECFDF5',
+  statusCompletedBorder: '#16A34A',   // Success Green
+  statusCompletedText:   '#16A34A',
 
-  statusApprovedBg:      '#E8F4FB',
-  statusApprovedBorder:  '#0A4C78',
-  statusApprovedText:    '#073858',
+  statusApprovedBg:      '#ECFDF5',
+  statusApprovedBorder:  '#16A34A',
+  statusApprovedText:    '#16A34A',
 
   // ── PRIORITY COLORS ───────────────────────────────────────────────
-  priorityLow:      '#28A760',   // Green
-  priorityMedium:   '#E59C2A',   // Amber
-  priorityHigh:     '#D63C3C',   // Red
-  priorityCritical: '#7B4FBF',   // Purple
+  priorityLow:      '#16A34A',   // Green
+  priorityMedium:   '#D97706',   // Amber
+  priorityHigh:     '#DC2626',   // Red
+  priorityCritical: '#DC2626',   // Urgent Red
 
-  // ── ALGERIAN FLAG (logo accents only — do not use elsewhere) ──────
+  // ── ALGERIAN FLAG (logo accents) ──────────────────────────────────
   flagGreen:        '#006233',
   flagRed:          '#D21034',
 
   // ── LEGACY ALIASES — safe backward compatibility ──────────────────
-  republicGreen:    '#1A6FA3',   // → primary
-  activeGreen:      '#3498DB',   // → primaryLight
-  pendingYellow:    '#E59C2A',   // → statusPendingBorder
-  resolvedGreen:    '#28A760',   // → priorityLow
-  adeDeepBlue:      '#1A6FA3',
-  adeMediumBlue:    '#3498DB',
-  adeSkyBlue:       '#5DADE2',
-  adePaleBlue:      '#EBF5FB',
-  adeIceBlue:       '#F4F9FC',
-  screenBackground: '#F7FAFD',   // → pageBg
-  dividerColor:      '#DDE8F0',   // → borderLight
-  offWhite:          '#F7FAFD',   // → pageBg
-  lightGray:         '#F0F4F8',   // → surfaceGray
-  midGray:           '#4A6070',   // → textSecondary
-  darkGray:          '#0D1F2D',   // → textPrimary
-  charcoal:          '#0D1F2D',   // → textPrimary
+  republicGreen:    '#0A2E4A',
+  activeGreen:      '#0D6B9A',
+  pendingYellow:    '#D97706',
+  resolvedGreen:    '#16A34A',
+  adeDeepBlue:      '#0A2E4A',
+  adeMediumBlue:    '#0D6B9A',
+  adeSkyBlue:       '#18A6C8',
+  adePaleBlue:      '#F0F9FF',
+  adeIceBlue:       '#F8FAFD',
+  screenBackground: '#F0F9FF',
+  dividerColor:      '#C0EAF5',
+  offWhite:          '#F0F9FF',
+  lightGray:         '#E2F4F8',
+  midGray:           '#3A6B85',
+  darkGray:          '#0A2E4A',
+  charcoal:          '#0A2E4A',
   cardBackground:    '#FFFFFF',
   inputBackground:   '#FFFFFF',
 
@@ -104,21 +103,21 @@ export const colors = {
 };
 
 // ── SHADOWS ────────────────────────────────────────────────────────
-// Use ONLY for cards and elevated components — soft, realistic feel
+// No shadows — rely on borders and background fills for depth (Industrial Clarity)
 export const shadow = {
   card: {
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   button: {
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
 };
 
