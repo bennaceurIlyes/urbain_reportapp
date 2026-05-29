@@ -17,10 +17,10 @@ export interface ReportMapProps {
   mapHeight: number;
 }
 
-const OSM_TILE_SERVERS = [
-  'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
-  'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
-  'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
+const CARTO_TILE_SERVERS = [
+  'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+  'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+  'https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
 ];
 
 const getInitialRegion = (origin: Coords, destination: Coords) => {
@@ -50,7 +50,7 @@ export const ReportMap: React.FC<ReportMapProps> = ({
   durationMin,
   mapHeight,
 }) => {
-  const tileUrlRef = useRef(OSM_TILE_SERVERS[Math.floor(Math.random() * 3)]);
+  const tileUrlRef = useRef(CARTO_TILE_SERVERS[Math.floor(Math.random() * 3)]);
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -129,6 +129,7 @@ export const ReportMap: React.FC<ReportMapProps> = ({
           tileSize={256}
           shouldReplaceMapContent={true}
           flipY={false}
+          {...({ userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1 MahammiApp/1.0" } as any)}
         />
 
         {/* Route shadow line — drawn FIRST so it appears below */}

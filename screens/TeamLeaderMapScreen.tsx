@@ -7,14 +7,6 @@ import { useLanguage } from '../hooks/useLanguage';
 
 const { height } = Dimensions.get('window');
 
-const getLShapedRoute = (origin: { latitude: number; longitude: number }, dest: { latitude: number; longitude: number }) => {
-  return [
-    origin,
-    { latitude: dest.latitude, longitude: origin.longitude },
-    dest,
-  ];
-};
-
 export const TeamLeaderMapScreen = ({ route, navigation }: any) => {
   const { 
     report, 
@@ -31,8 +23,49 @@ export const TeamLeaderMapScreen = ({ route, navigation }: any) => {
   const origin = userLocation || location || { latitude: 31.62, longitude: -2.23 };
   const dest = location || { latitude: 31.621, longitude: -2.231 };
   
-  // Calculate L-shaped route coordinates dynamically
-  const routeCoordinates = getLShapedRoute(origin, dest);
+  const [routeCoordinates, setRouteCoordinates] = React.useState<{ latitude: number; longitude: number }[]>([]);
+
+  React.useEffect(() => {
+    const fetchRoute = async () => {
+      try {
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origin.longitude},${origin.latitude};${dest.longitude},${dest.latitude}?overview=full&geometries=geojson&steps=true`;
+
+        const res = await fetch(osrmUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1 MahammiApp/1.0'
+          }
+        });
+        
+        if (res.status === 200) {
+          const data = await res.json();
+          if (data.routes && data.routes.length > 0) {
+            const coords = data.routes[0].geometry.coordinates.map((c: number[]) => ({
+              latitude: c[1],
+              longitude: c[0]
+            }));
+            setRouteCoordinates(coords);
+            return;
+          }
+        }
+        
+        // Fallback L-shaped route
+        setRouteCoordinates([
+          origin,
+          { latitude: dest.latitude, longitude: origin.longitude },
+          dest,
+        ]);
+      } catch (error) {
+        console.error("Failed to fetch road-following route from OSRM:", error);
+        setRouteCoordinates([
+          origin,
+          { latitude: dest.latitude, longitude: origin.longitude },
+          dest,
+        ]);
+      }
+    };
+
+    fetchRoute();
+  }, [origin.latitude, origin.longitude, dest.latitude, dest.longitude]);
 
   return (
     <View style={styles.container}>
