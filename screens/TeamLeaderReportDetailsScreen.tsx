@@ -1,13 +1,11 @@
 import React, { useState, useRef } from 'react';
-import { View, StyleSheet, ScrollView, Image, Dimensions, TouchableOpacity, StatusBar, Alert, Linking, Animated, Modal } from 'react-native';
-import { Text, Divider, ActivityIndicator } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, Image, Dimensions, TouchableOpacity, StatusBar, Alert, Animated, Modal } from 'react-native';
+import { Text, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import { colors, spacing, radius, shadows, toArabicNumeral, borderRadius } from '../theme';
+import { colors, spacing, radius, toArabicNumeral } from '../theme';
 import { StatusBadge } from '../components/StatusBadge';
-import { PriorityBadge } from '../components/PriorityBadge';
 import { useLanguage } from '../hooks/useLanguage';
 import { updateReportStatus, addImageToReport } from '../services/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,46 +18,71 @@ const TimelineStep: React.FC<{
   title: string;
   subtitle: string;
   time?: string;
-  completed: boolean;
-  current: boolean;
+  status: 'done' | 'active' | 'pending';
   isLast: boolean;
   isRTL: boolean;
-}> = ({ title, subtitle, time, completed, current, isLast, isRTL }) => {
+}> = ({ title, subtitle, time, status, isLast, isRTL }) => {
+  // Dot styling based on status:
+  // - done: circle, #DCFCE7 bg, #16A34A checkmark
+  // - active: circle, #E8F7FC bg, #0D6B9A icon, 2px cyan border #18A6C8
+  // - pending: circle, #F1F5F9 bg, #7BA8BF border, 1.5px dashed border #C0EAF5
+  const getDotStyle = () => {
+    switch (status) {
+      case 'done':
+        return { backgroundColor: '#DCFCE7', borderColor: '#16A34A', borderWidth: 0 };
+      case 'active':
+        return { backgroundColor: '#E8F7FC', borderColor: '#18A6C8', borderWidth: 2 };
+      case 'pending':
+      default:
+        return { backgroundColor: '#F1F5F9', borderColor: '#C0EAF5', borderWidth: 1.5, borderStyle: 'dashed' as const };
+    }
+  };
+
+  const getLineStyle = () => {
+    if (status === 'done') {
+      return { backgroundColor: '#16A34A', opacity: 0.35 };
+    }
+    return { backgroundColor: '#C0EAF5', borderStyle: 'dashed' as const }; // pending or active line below is pending
+  };
+
   return (
     <View style={[tlStyles.item, isRTL ? tlStyles.itemRTL : null]}>
       <View style={tlStyles.lineColumn}>
-        <View style={[
-          tlStyles.dot,
-          completed ? tlStyles.dotCompleted : null,
-          current ? tlStyles.dotCurrent : null,
-        ]}>
-          {completed ? <MaterialCommunityIcons name="check" size={10} color="#FFFFFF" /> : null}
+        <View style={[tlStyles.dot, getDotStyle()]}>
+          {status === 'done' ? (
+            <MaterialCommunityIcons name="check" size={12} color="#16A34A" />
+          ) : status === 'active' ? (
+            <MaterialCommunityIcons name={isRTL ? 'arrow-left' : 'arrow-right'} size={12} color="#0D6B9A" />
+          ) : null}
         </View>
-        {!isLast ? (
-          <View style={[
-            tlStyles.line,
-            completed ? tlStyles.lineCompleted : null,
-          ]} />
-        ) : null}
+        {!isLast && (
+          <View style={[tlStyles.line, getLineStyle()]} />
+        )}
       </View>
       <View style={[tlStyles.content, isRTL ? tlStyles.contentRTL : null]}>
         <View style={[tlStyles.header, isRTL ? tlStyles.headerRTL : null]}>
           <Text style={[
             tlStyles.title,
-            { opacity: completed || current ? 1 : 0.4, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' },
+            { 
+              fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold',
+              color: status === 'pending' ? colors.textDisabled : colors.textPrimary 
+            },
             isRTL ? tlStyles.titleRTL : null,
           ]}>
             {title}
           </Text>
-          {time ? (
+          {time && (
             <Text style={[tlStyles.time, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>
               {time}
             </Text>
-          ) : null}
+          )}
         </View>
         <Text style={[
           tlStyles.subtitle,
-          { opacity: completed || current ? 0.7 : 0.3, fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' },
+          { 
+            fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular',
+            color: status === 'pending' ? colors.textDisabled : colors.textSecondary 
+          },
           isRTL ? tlStyles.subtitleRTL : null,
         ]}>
           {subtitle}
@@ -67,6 +90,50 @@ const TimelineStep: React.FC<{
       </View>
     </View>
   );
+};
+
+// Priority helper functions for the top nav badge
+const getPriorityBgColor = (priority: number) => {
+  if (priority >= 3) return '#FEE2E2'; // High/Emergency (Red bg)
+  if (priority === 2) return '#FEF3C7'; // Medium (Amber bg)
+  return '#DCFCE7'; // Low (Green bg)
+};
+
+const getPriorityTextColor = (priority: number) => {
+  if (priority >= 3) return '#DC2626'; // High/Emergency
+  if (priority === 2) return '#D97706'; // Medium
+  return '#16A34A'; // Low
+};
+
+const getPriorityText = (priority: number, lang: string) => {
+  if (lang === 'ar') {
+    if (priority >= 4) return 'عاجل جداً';
+    if (priority === 3) return 'عالي';
+    if (priority === 2) return 'متوسط';
+    return 'منخفض';
+  } else {
+    if (priority >= 4) return 'Très Urgent';
+    if (priority === 3) return 'Urgent';
+    if (priority === 2) return 'Moyen';
+    return 'Faible';
+  }
+};
+
+const getElapsedTime = (createdStr: string, lang: string) => {
+  const diff = new Date().getTime() - new Date(createdStr).getTime();
+  const days = Math.floor(diff / 86400000);
+  
+  if (lang === 'ar') {
+    if (days <= 0) return 'اليوم';
+    if (days === 1) return 'يوم واحد';
+    if (days === 2) return 'يومين';
+    if (days <= 10) return `${toArabicNumeral(days, 'ar')} أيام`;
+    return `${toArabicNumeral(days, 'ar')} يوم`;
+  } else {
+    if (days <= 0) return "Aujourd'hui";
+    if (days === 1) return '1 jour';
+    return `${days} jours`;
+  }
 };
 
 export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
@@ -100,9 +167,7 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
     : report.location;
 
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [locatingUser, setLocatingUser] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [sheetExpanded, setSheetExpanded] = useState(true);
   const [imageModalVisible, setImageModalVisible] = useState(false);
 
   // Active navigation HUD states
@@ -194,7 +259,6 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
 
   React.useEffect(() => {
     (async () => {
-      setLocatingUser(true);
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status === 'granted') {
@@ -205,8 +269,6 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
         }
       } catch (error) {
         console.warn("Could not get location on load:", error);
-      } finally {
-        setLocatingUser(false);
       }
     })();
   }, []);
@@ -273,34 +335,7 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
     });
   };
  
-  // ─── Direct mark as complete (without upload screen) ───
-  const handleDirectComplete = async () => {
-    Alert.alert(
-      t('completeReport'),
-      t('markAsComplete') + '?',
-      [
-        { text: t('cancel'), style: 'cancel' },
-        {
-          text: t('done'),
-          style: 'default',
-          onPress: async () => {
-            setLoading(true);
-            try {
-              await updateReportStatus(report.id, 3);
-              setCurrentStatus(3);
-              setIsResolved(true);
-            } catch (error: any) {
-              Alert.alert(t('error'), error.message);
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  // ─── Add Image (from gallery or camera) ───
+  // Add Supplementary Photo proof
   const handleAddImage = () => {
     Alert.alert(
       t('addImage'),
@@ -367,7 +402,7 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
   };
 
   const onBtnPressIn = () => {
-    Animated.spring(btnScale, { toValue: 0.97, useNativeDriver: true, speed: 50 }).start();
+    Animated.spring(btnScale, { toValue: 0.96, useNativeDriver: true, speed: 50 }).start();
   };
   const onBtnPressOut = () => {
     Animated.spring(btnScale, { toValue: 1, useNativeDriver: true, speed: 50 }).start();
@@ -377,335 +412,323 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" backgroundColor="#0A2E4A" />
 
-      {/* Full-Screen Interactive Background Map */}
-      <View style={StyleSheet.absoluteFillObject}>
+      {/* Section 1 — Sticky Navigation Bar */}
+      <View style={[styles.navBar, isRTL && styles.navBarRTL, { paddingTop: insets.top + 6 }]}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backBtn}
+          accessibilityLabel={t('back')}
+          accessibilityRole="button"
+        >
+          <MaterialCommunityIcons name={isRTL ? 'arrow-right' : 'arrow-left'} size={20} color="#FFFFFF" />
+        </TouchableOpacity>
+
+        <Text style={[styles.navTitle, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
+          {lang === 'ar' ? 'تفاصيل البلاغ' : 'Détails du signalement'}
+        </Text>
+
+        <View style={[styles.urgencyBadge, { backgroundColor: getPriorityBgColor(report.priority) }]}>
+          <Text style={[styles.urgencyBadgeText, { color: getPriorityTextColor(report.priority), fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
+            {getPriorityText(report.priority, lang)}
+          </Text>
+        </View>
+      </View>
+
+      {/* Section 2 — Sticky Interactive Map */}
+      <View style={styles.mapContainer}>
         {location?.latitude ? (
           <MapRouteView 
             startCoords={userLocation} 
             endCoords={location} 
-            height={Dimensions.get('window').height} 
+            height={180} 
             onRouteUpdate={handleRouteUpdate}
           />
-        ) : null}
-      </View>
+        ) : (
+          <View style={styles.mapPlaceholder}>
+            <ActivityIndicator size="small" color={colors.primary} />
+          </View>
+        )}
 
-      {/* Floating Glassmorphic Header Controls */}
-      <View style={[styles.floatingHeader, { paddingTop: insets.top + spacing.xs, paddingHorizontal: spacing.md }]}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.floatingBackButton}
-          accessibilityLabel={t('back')}
-          accessibilityRole="button"
-        >
-          <MaterialCommunityIcons name={isRTL ? 'chevron-right' : 'chevron-left'} size={26} color={colors.textPrimary} />
-        </TouchableOpacity>
+        {/* Navigation instruction pill (floating, top-center of map) */}
+        {!!routeDistance && !!navigationInstruction && (
+          <View style={[styles.navPill, isRTL && styles.navPillRTL]}>
+            <View style={styles.navDirectionIconBg}>
+              <MaterialCommunityIcons name="navigation" size={16} color="#FFFFFF" style={{ transform: [{ rotate: '45deg' }] }} />
+            </View>
+            <View style={styles.navTextContainer}>
+              <Text style={[styles.navInstructionText, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]} numberOfLines={1}>
+                {navigationInstruction}
+              </Text>
+              <Text style={[styles.navStatsText, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>
+                {routeDistance} · {routeDuration || '—'}
+              </Text>
+            </View>
+            <TouchableOpacity onPress={openMaps} activeOpacity={0.8} style={styles.navCompassBtn}>
+              <MaterialCommunityIcons name="compass-outline" size={16} color="rgba(255,255,255,0.7)" />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Scale label in bottom-right corner */}
+        <View style={styles.scaleLabel}>
+          <Text style={styles.scaleLabelText}>Béchar · OSM</Text>
+        </View>
 
         {/* Floating Pulse Evidence Image Bubble */}
-        {imageUrl ? (
+        {imageUrl && (
           <TouchableOpacity
             onPress={() => setImageModalVisible(true)}
-            style={styles.floatingImageBubble}
+            style={[styles.floatingImageBubble, isRTL ? { left: spacing.md } : { right: spacing.md }]}
             activeOpacity={0.85}
           >
             <Image source={{ uri: imageUrl }} style={styles.floatingImageThumb} />
             <View style={styles.floatingImageBadge}>
-              <MaterialCommunityIcons name="image" size={10} color="#FFFFFF" />
+              <MaterialCommunityIcons name="image" size={9} color="#FFFFFF" />
             </View>
           </TouchableOpacity>
-        ) : null}
+        )}
       </View>
 
-      {/* Floating Active Navigation HUD */}
-      {!!routeDistance && !!navigationInstruction ? (
-        <View style={[styles.navHudContainer, { top: insets.top + spacing.xl + 12, flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-          <View style={styles.navHudIconBg}>
-            <MaterialCommunityIcons name="navigation" size={20} color="#FFFFFF" />
-          </View>
-          <View style={[{ flex: 1, marginHorizontal: spacing.sm }, isRTL ? { alignItems: 'flex-end' } : null]}>
-            <Text style={[styles.navHudInstruction, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]} numberOfLines={2}>
-              {navigationInstruction}
-            </Text>
-            <Text style={[styles.navHudStats, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>
-              {routeDistance} • {routeDuration || '—'}
-            </Text>
-          </View>
-          <View style={styles.navHudRadarBg}>
-            <View style={styles.navHudRadarPulse} />
-            <MaterialCommunityIcons name="compass-outline" size={16} color="rgba(255,255,255,0.7)" />
-          </View>
-        </View>
-      ) : null}
-
-      {/* Sliding Glassmorphic Details Sheet */}
-      <View 
-        style={[
-          styles.sheetContainer, 
-          { height: sheetExpanded ? height * 0.58 : height * 0.18 }
-        ]}
+      {/* Section 3 — Sliding Content Card */}
+      <ScrollView 
+        style={styles.detailsCard}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.detailsCardContent, { paddingBottom: 60 + insets.bottom }]}
       >
-        {/* Toggle / Drag Handle */}
-        <TouchableOpacity
-          style={styles.sheetHandleContainer}
-          onPress={() => setSheetExpanded(!sheetExpanded)}
-          activeOpacity={0.8}
-        >
-          <View style={styles.sheetHandle} />
-        </TouchableOpacity>
-
-        {/* Status + Title Header Bar (Always visible) */}
-        <View style={{ marginBottom: spacing.xs }}>
-          <View style={[styles.badgeRow, isRTL && styles.badgeRowRTL, { marginBottom: spacing.xs }]}>
-            <StatusBadge status={currentStatus} lang={lang} is_resolved={isResolved} work_in_progress_at={workInProgressAt} />
-            <PriorityBadge priority={report.priority} lang={lang} />
-          </View>
-          
-          <TouchableOpacity 
-            onPress={() => setSheetExpanded(!sheetExpanded)}
-            activeOpacity={0.9}
-          >
-            <Text 
-              style={[
-                styles.title, 
-                isRTL && styles.titleRTL, 
-                { fontSize: 18, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold', marginBottom: 2 }
-              ]} 
-              numberOfLines={1}
-            >
+        {/* 3a. Report Header */}
+        <View style={[styles.reportHeader, isRTL && styles.reportHeaderRTL]}>
+          <View style={styles.titleAndPills}>
+            <Text style={[styles.reportTitle, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
               {displayTitle}
             </Text>
-          </TouchableOpacity>
+            {/* Horizontal chip row below title */}
+            <View style={[styles.badgeRow, isRTL && styles.badgeRowRTL]}>
+              <StatusBadge status={currentStatus} lang={lang} is_resolved={isResolved} work_in_progress_at={workInProgressAt} />
+            </View>
+          </View>
+          
+          <View style={styles.referenceContainer}>
+            <Text style={[styles.refIdText, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
+              #{report.id.substring(0, 8).toUpperCase()}
+            </Text>
+          </View>
         </View>
 
-        {/* Expanded Content ScrollView */}
-        {sheetExpanded ? (
-          <ScrollView 
-            style={styles.sheetScroll} 
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 40 }}
-          >
-            {isResolved ? (
-              <>
-                <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold', marginTop: spacing.xs }]}>{t('description')}</Text>
-                <Text style={[styles.description, isRTL && styles.descriptionRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>{report.description}</Text>
+        {/* 3b. Action Card (CTA) */}
+        <View style={styles.actionCard}>
+          <Text style={[styles.actionCardLabel, { fontFamily: isRTL ? 'IBMPlexArabic-Medium' : 'IBMPlexSans-Medium' }]}>
+            {lang === 'ar' ? 'إجراءات العمل' : 'PROCÉDURES DE TRAVAIL'}
+          </Text>
 
-                {/* Timeline Section */}
-                <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.xs, marginBottom: spacing.xs, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
-                  {lang === 'ar' ? 'الجدول الزمني للمتابعة' : 'Timeline de suivi'}
-                </Text>
-                <View style={tlStyles.timeline}>
-                  {timelineSteps.map((step, index) => {
-                    const isStepCompleted = index < statusIndex;
-                    const isStepCurrent = index === statusIndex;
-                    return (
-                      <TimelineStep
-                        key={index}
-                        title={step.title}
-                        subtitle={step.subtitle}
-                        time={step.time}
-                        completed={isStepCompleted}
-                        current={isStepCurrent}
-                        isLast={index === timelineSteps.length - 1}
-                        isRTL={isRTL}
-                      />
-                    );
-                  })}
-                </View>
-
-                {/* Location Card Info (Route is already in background) */}
-                <View style={[styles.infoCard, { width: '100%', marginHorizontal: 0, marginTop: spacing.xs, backgroundColor: colors.pageBg }]}>
-                  <View style={[styles.locationHeader, isRTL && { flexDirection: 'row-reverse' }]}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.infoLabel, isRTL && { textAlign: 'right' }, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('locationLabel')}</Text>
-                      <Text style={[styles.infoValue, { color: colors.primary }, isRTL && { textAlign: 'right' }, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
-                        {location?.latitude ? `${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}` : 'N/A'}
+          {loading ? (
+            <ActivityIndicator size="small" color="#FFFFFF" style={{ marginVertical: 12 }} />
+          ) : (
+            <View style={styles.actionButtonsContainer}>
+              {!workInProgressAt ? (
+                <Animated.View style={{ transform: [{ scale: btnScale }] }}>
+                  <TouchableOpacity
+                    style={styles.ctaButton}
+                    onPress={handleStartWork}
+                    onPressIn={onBtnPressIn}
+                    onPressOut={onBtnPressOut}
+                    activeOpacity={1}
+                    accessibilityLabel={t('startWork')}
+                    accessibilityRole="button"
+                  >
+                    <Text style={[styles.ctaButtonText, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
+                      {lang === 'ar' ? 'بدء العمل الميداني ▶' : 'Débuter le travail terrain ▶'}
+                    </Text>
+                  </TouchableOpacity>
+                </Animated.View>
+              ) : (
+                <View style={{ gap: spacing.sm }}>
+                  <Animated.View style={{ transform: [{ scale: btnScale }] }}>
+                    <TouchableOpacity
+                      style={styles.ctaButton}
+                      onPress={handleMarkCompleted}
+                      onPressIn={onBtnPressIn}
+                      onPressOut={onBtnPressOut}
+                      activeOpacity={1}
+                      accessibilityLabel={t('completeReport')}
+                      accessibilityRole="button"
+                    >
+                      <Text style={[styles.ctaButtonText, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
+                        {lang === 'ar' ? 'إتمـام العمل الميداني ✓' : 'Terminer le travail terrain ✓'}
                       </Text>
-                    </View>
-                    <View style={styles.googleMapsButton}>
-                      <MaterialCommunityIcons name="map-marker-distance" size={20} color={colors.primary} />
-                    </View>
-                  </View>
-                </View>
+                    </TouchableOpacity>
+                  </Animated.View>
 
-                {/* Completion images */}
-                {Array.isArray(report.completion_images) && report.completion_images.length > 0 ? (
-                  <>
-                    <Text style={[styles.sectionTitle, isRTL ? styles.sectionTitleRTL : null, { marginTop: spacing.md, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('completionImages')}</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: spacing.xs }}>
-                      {report.completion_images.map((uri: string, i: number) => (
-                        <Image key={i} source={{ uri }} style={styles.completionImage} accessibilityLabel={`${t('completionImages')} ${i + 1}`} />
-                      ))}
-                    </ScrollView>
-                  </>
-                ) : null}
-              </>
-            ) : (
-              <>
-                {/* ─── Work Actions (Prominent, at top) ─── */}
-                <View style={styles.actionsCard}>
-                  <Text style={[styles.actionsTitle, isRTL && styles.actionsTitleRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('workActions')}</Text>
-
-                  {loading ? (
-                    <ActivityIndicator size="large" color={colors.primary} style={{ padding: spacing.md }} />
-                  ) : (
-                    <View style={styles.actionsContainer}>
-                      {!workInProgressAt ? (
-                        <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-                          <TouchableOpacity
-                            style={styles.actionButtonGreen}
-                            onPress={handleStartWork}
-                            onPressIn={onBtnPressIn}
-                            onPressOut={onBtnPressOut}
-                            activeOpacity={1}
-                            accessibilityLabel={t('startWork')}
-                            accessibilityRole="button"
-                          >
-                            <MaterialCommunityIcons name="play-circle-outline" size={20} color="#FFFFFF" />
-                            <Text style={[styles.actionButtonText, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('startWork')}</Text>
-                          </TouchableOpacity>
-                        </Animated.View>
+                  {/* Upload supplementary proof button inside the CTA area */}
+                  <Animated.View style={{ transform: [{ scale: btnScale }] }}>
+                    <TouchableOpacity
+                      style={styles.ctaUploadButton}
+                      onPress={handleAddImage}
+                      onPressIn={onBtnPressIn}
+                      onPressOut={onBtnPressOut}
+                      activeOpacity={1}
+                      disabled={imageLoading}
+                      accessibilityLabel={t('addImage')}
+                      accessibilityRole="button"
+                    >
+                      {imageLoading ? (
+                        <ActivityIndicator size="small" color="#18A6C8" />
                       ) : (
                         <>
-                          {/* Under implementation flow: complete report (requires completion photo upload) */}
-                          <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-                            <TouchableOpacity
-                              style={styles.actionButtonGreen}
-                              onPress={handleMarkCompleted}
-                              onPressIn={onBtnPressIn}
-                              onPressOut={onBtnPressOut}
-                              activeOpacity={1}
-                              accessibilityLabel={t('markAsComplete')}
-                              accessibilityRole="button"
-                            >
-                              <MaterialCommunityIcons name="check-decagram" size={20} color="#FFFFFF" />
-                              <Text style={[styles.actionButtonText, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('completeReport')}</Text>
-                            </TouchableOpacity>
-                          </Animated.View>
-
-                          {/* Upload supplementary work proof images */}
-                          <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-                            <TouchableOpacity
-                              style={styles.actionButtonOutline}
-                              onPress={handleAddImage}
-                              onPressIn={onBtnPressIn}
-                              onPressOut={onBtnPressOut}
-                              activeOpacity={1}
-                              disabled={imageLoading}
-                              accessibilityLabel={t('addImage')}
-                              accessibilityRole="button"
-                            >
-                              {imageLoading ? (
-                                <ActivityIndicator size="small" color={colors.primary} />
-                              ) : (
-                                <>
-                                  <MaterialCommunityIcons name="camera-plus-outline" size={20} color={colors.primary} />
-                                  <Text style={[styles.actionButtonTextGreen, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('uploadProof')}</Text>
-                                </>
-                              )}
-                            </TouchableOpacity>
-                          </Animated.View>
+                          <MaterialCommunityIcons name="camera-plus-outline" size={16} color="#18A6C8" />
+                          <Text style={[styles.ctaUploadButtonText, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
+                            {lang === 'ar' ? 'تحميل إثبات إضافي' : 'Téléverser une preuve'}
+                          </Text>
                         </>
                       )}
-                    </View>
-                  )}
+                    </TouchableOpacity>
+                  </Animated.View>
                 </View>
+              )}
+            </View>
+          )}
+        </View>
 
-                {/* Added Images Preview */}
-                {addedImages.length > 0 ? (
-                  <>
-                    <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.md, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
-                      {t('additionalPhotos')}
-                    </Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.md }}>
-                      {addedImages.map((uri, i) => (
-                        <Image key={i} source={{ uri }} style={styles.addedImage} accessibilityLabel={`${t('addImage')} ${i + 1}`} />
-                      ))}
-                    </ScrollView>
-                  </>
-                ) : null}
+        {/* Added supplementary proof photos row if any exist */}
+        {addedImages.length > 0 && (
+          <View style={styles.addedPhotosSection}>
+            <Text style={[styles.addedPhotosLabel, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
+              {lang === 'ar' ? 'الصور الإضافية المرفقة' : 'Photos de preuve additionnelles'}
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: spacing.xs }}>
+              {addedImages.map((uri, i) => (
+                <Image key={i} source={{ uri }} style={styles.proofThumb} />
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
-                {/* Details */}
-                <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold', marginTop: spacing.sm }]}>{t('description')}</Text>
-                <Text style={[styles.description, isRTL && styles.descriptionRTL, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>{report.description}</Text>
+        {/* 3c. Description Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={[styles.sectionHeading, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
+            {lang === 'ar' ? 'الوصف' : 'DESCRIPTION'}
+          </Text>
+          <View style={styles.descriptionBox}>
+            <Text style={[styles.descriptionText, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>
+              {report.description || (lang === 'ar' ? 'لا يوجد وصف متوفر.' : 'Aucune description fournie.')}
+            </Text>
+          </View>
+        </View>
 
-                {/* Timeline Section */}
-                <Text style={[styles.sectionTitle, isRTL && styles.sectionTitleRTL, { marginTop: spacing.xs, marginBottom: spacing.xs, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
-                  {lang === 'ar' ? 'الجدول الزمني للمتابعة' : 'Timeline de suivi'}
-                </Text>
-                <View style={tlStyles.timeline}>
-                  {timelineSteps.map((step, index) => {
-                    const isStepCompleted = index < statusIndex;
-                    const isStepCurrent = index === statusIndex;
-                    return (
-                      <TimelineStep
-                        key={index}
-                        title={step.title}
-                        subtitle={step.subtitle}
-                        time={step.time}
-                        completed={isStepCompleted}
-                        current={isStepCurrent}
-                        isLast={index === timelineSteps.length - 1}
-                        isRTL={isRTL}
-                      />
-                    );
-                  })}
-                </View>
+        {/* 3d. Follow-up Timeline */}
+        <View style={styles.sectionContainer}>
+          <Text style={[styles.sectionHeading, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
+            {lang === 'ar' ? 'الجدول الزمني للمتابعة' : 'TIMELINE DE SUIVI'}
+          </Text>
+          
+          <View style={tlStyles.timelineContainer}>
+            {timelineSteps.map((step, index) => {
+              let stepStatus: 'done' | 'active' | 'pending' = 'pending';
+              if (index < statusIndex) {
+                stepStatus = 'done';
+              } else if (index === statusIndex) {
+                stepStatus = 'active';
+              }
 
-                {/* Meta */}
-                <View style={[styles.metaRow, isRTL && styles.metaRowRTL, { marginBottom: spacing.sm }]}>
-                  <View style={[styles.metaItem, isRTL && styles.metaItemRTL]}>
-                    <MaterialCommunityIcons name="calendar-outline" size={15} color={colors.textSecondary} />
-                    <Text style={[styles.metaText, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>
-                      {t('assigned')}: {new Date(report.assigned_to_at || report.created_at).toLocaleDateString(
-                        lang === 'ar' ? 'ar-DZ' : 'fr-DZ'
-                      )}
-                    </Text>
-                  </View>
-                </View>
+              return (
+                <TimelineStep
+                  key={index}
+                  title={step.title}
+                  subtitle={step.subtitle}
+                  time={step.time}
+                  status={stepStatus}
+                  isLast={index === timelineSteps.length - 1}
+                  isRTL={isRTL}
+                />
+              );
+            })}
+          </View>
+        </View>
 
-                <Divider style={styles.divider} />
+        {/* 3e. Report Info Grid */}
+        <View style={styles.gridDivider} />
+        
+        <View style={[styles.infoGrid, isRTL && styles.infoGridRTL]}>
+          {/* Card 1: رقم البلاغ */}
+          <View style={styles.gridCard}>
+            <View style={[styles.gridIconChip, isRTL && styles.gridIconChipRTL]}>
+              <View style={styles.iconChipInner}>
+                <MaterialCommunityIcons name="identifier" size={12} color="#0D6B9A" />
+              </View>
+              <Text style={[styles.gridLabel, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>
+                {lang === 'ar' ? 'رقم البلاغ' : 'ID SIGNALEMENT'}
+              </Text>
+            </View>
+            <Text style={[styles.gridValue, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]} numberOfLines={1}>
+              #{report.id.substring(0, 8).toUpperCase()}
+            </Text>
+          </View>
 
-                {/* Info Card Grid */}
-                <View style={[styles.infoGrid, isRTL && styles.infoGridRTL, { marginBottom: spacing.sm }]}>
-                  <View style={styles.infoCard}>
-                    <Text style={[styles.infoLabel, isRTL && { textAlign: 'right' }, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('reportId')}</Text>
-                    <Text style={[styles.infoValue, isRTL && { textAlign: 'right' }, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>#{report.id.substring(0, 8).toUpperCase()}</Text>
-                  </View>
+          {/* Card 2: الموقع */}
+          <TouchableOpacity 
+            style={styles.gridCard} 
+            onPress={openMaps}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.gridIconChip, isRTL && styles.gridIconChipRTL]}>
+              <View style={styles.iconChipInner}>
+                <MaterialCommunityIcons name="map-marker-outline" size={12} color="#0D6B9A" />
+              </View>
+              <Text style={[styles.gridLabel, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>
+                {lang === 'ar' ? 'الموقع' : 'COORDONNÉES'}
+              </Text>
+            </View>
+            <Text style={[styles.gridValue, { color: '#0D6B9A', fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]} numberOfLines={1}>
+              {location?.latitude ? `${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}` : 'N/A'}
+            </Text>
+          </TouchableOpacity>
 
-                  <View style={[styles.infoCard, { backgroundColor: colors.pageBg }]}>
-                    <View style={[styles.locationHeader, isRTL && { flexDirection: 'row-reverse' }]}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.infoLabel, isRTL && { textAlign: 'right' }, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>{t('locationLabel')}</Text>
-                        <Text style={[styles.infoValue, { color: colors.primary }, isRTL && { textAlign: 'right' }, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
-                          {location?.latitude ? `${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}` : 'N/A'}
-                        </Text>
-                      </View>
-                      <View style={styles.googleMapsButton}>
-                        <MaterialCommunityIcons name="map-marker-distance" size={20} color={colors.primary} />
-                      </View>
-                    </View>
-                  </View>
-                </View>
+          {/* Card 3: تاريخ الإسناد */}
+          <View style={styles.gridCard}>
+            <View style={[styles.gridIconChip, isRTL && styles.gridIconChipRTL]}>
+              <View style={styles.iconChipInner}>
+                <MaterialCommunityIcons name="calendar-range" size={12} color="#0D6B9A" />
+              </View>
+              <Text style={[styles.gridLabel, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>
+                {lang === 'ar' ? 'تاريخ الإسناد' : 'DATE ASSIGNÉE'}
+              </Text>
+            </View>
+            <Text style={[styles.gridValue, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]} numberOfLines={1}>
+              {report.assigned_to_at ? new Date(report.assigned_to_at).toLocaleDateString(lang === 'ar' ? 'ar-DZ' : 'fr-DZ') : '—'}
+            </Text>
+          </View>
 
-                {/* Completion images */}
-                {Array.isArray(report.completion_images) && report.completion_images.length > 0 ? (
-                  <>
-                    <Text style={[styles.sectionTitle, isRTL ? styles.sectionTitleRTL : null, { marginTop: spacing.md, fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
-                      {t('completionImages')}
-                    </Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                      {report.completion_images.map((uri: string, i: number) => (
-                        <Image key={i} source={{ uri }} style={styles.completionImage} accessibilityLabel={`${t('completionImages')} ${i + 1}`} />
-                      ))}
-                    </ScrollView>
-                  </>
-                ) : null}
-              </>
-            )}
-          </ScrollView>
-        ) : null}
-      </View>
+          {/* Card 4: المدة المنقضية */}
+          <View style={styles.gridCard}>
+            <View style={[styles.gridIconChip, isRTL && styles.gridIconChipRTL]}>
+              <View style={styles.iconChipInner}>
+                <MaterialCommunityIcons name="clock-outline" size={12} color="#0D6B9A" />
+              </View>
+              <Text style={[styles.gridLabel, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>
+                {lang === 'ar' ? 'المدة المنقضية' : 'DURÉE ÉCOULÉE'}
+              </Text>
+            </View>
+            <Text style={[styles.gridValue, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]} numberOfLines={1}>
+              {getElapsedTime(report.created_at, lang)}
+            </Text>
+          </View>
+        </View>
+
+        {/* Completion photos if resolved */}
+        {isResolved && Array.isArray(report.completion_images) && report.completion_images.length > 0 && (
+          <View style={styles.sectionContainer}>
+            <Text style={[styles.sectionHeading, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
+              {lang === 'ar' ? 'صور إتمام العمل' : 'PHOTOS DE RÉSOLUTION'}
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: spacing.xs }}>
+              {report.completion_images.map((uri: string, i: number) => (
+                <Image key={i} source={{ uri }} style={styles.completionImageThumb} />
+              ))}
+            </ScrollView>
+          </View>
+        )}
+      </ScrollView>
 
       {/* High-res Evidence Image Modal */}
       <Modal
@@ -767,177 +790,386 @@ export const TeamLeaderReportDetailsScreen = ({ route, navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.pageBg },
-  heroContainer: { height: height * 0.35, width: '100%' },
-  heroImage: { width: '100%', height: '100%', resizeMode: 'cover' },
-  placeholderImage: {
-    width: '100%', height: '100%',
-    justifyContent: 'center', alignItems: 'center',
-    backgroundColor: '#F0F4F8',
+  container: { 
+    flex: 1, 
+    backgroundColor: '#0A2E4A' 
   },
-  headerOverlay: {
-    position: 'absolute', top: 0, left: 0, right: 0,
-    paddingHorizontal: spacing.md,
-  },
-  backButton: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  backButtonRTL: { alignSelf: 'flex-end' },
-  contentCard: {
-    flex: 1, marginTop: -24,
-    borderTopLeftRadius: radius.md, borderTopRightRadius: radius.md,
-    borderWidth: 1, borderColor: colors.borderLight,
-    backgroundColor: colors.white,
-    padding: spacing.md,
-    minHeight: height * 0.65,
-  },
-
-  // Work actions card
-  actionsCard: {
-    backgroundColor: colors.primaryTint,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.primaryBorder,
-  },
-  actionsTitle: {
-    fontSize: 13,
-    color: colors.primary, marginBottom: spacing.xs,
-    textAlign: 'left',
-  },
-  actionsTitleRTL: { textAlign: 'right' },
-  actionsContainer: { gap: spacing.sm },
-  actionButtonGreen: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.button, // 16px fully rounded-2xl style
-    height: 52, // Large touch-friendly height
-    gap: spacing.sm,
-    ...shadows.elevated,
-  },
-  actionButtonOutline: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'transparent',
-    borderRadius: borderRadius.button, // 16px fully rounded-2xl style
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    height: 52, // Large touch-friendly height
-    gap: spacing.sm,
-  },
-  actionButtonText: {
-    color: '#FFFFFF', fontSize: 14,
-  },
-  actionButtonTextGreen: {
-    color: colors.primary, fontSize: 14,
-  },
-
-  // Added images preview
-  addedImage: {
-    width: 70, height: 70,
-    borderRadius: radius.sm,
-    marginRight: spacing.sm,
-    backgroundColor: '#F0F4F8',
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-
-  badgeRow: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', marginBottom: spacing.md,
-  },
-  badgeRowRTL: { flexDirection: 'row-reverse' },
-  title: {
-    fontSize: 20,
-    color: colors.textPrimary, marginBottom: spacing.sm,
-    textAlign: 'left',
-  },
-  titleRTL: { textAlign: 'right' },
-  metaRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.md },
-  metaRowRTL: { flexDirection: 'row-reverse' },
-  metaItem: { flexDirection: 'row', alignItems: 'center' },
-  metaItemRTL: { flexDirection: 'row-reverse' },
-  metaText: {
-    color: colors.textSecondary, marginLeft: 4,
-    fontSize: 12,
-  },
-  divider: { backgroundColor: colors.borderLight, marginBottom: spacing.md },
-  sectionTitle: {
-    fontSize: 14,
-    color: colors.textPrimary, marginBottom: spacing.xs,
-    textAlign: 'left',
-  },
-  sectionTitleRTL: { textAlign: 'right' },
-  description: {
-    color: colors.textSecondary, lineHeight: 22,
-    marginBottom: spacing.lg, fontSize: 13, textAlign: 'left',
-  },
-  descriptionRTL: { textAlign: 'right' },
-  infoGrid: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
-  infoGridRTL: { flexDirection: 'row-reverse' },
-  infoCard: {
-    flex: 1,
-    padding: spacing.md,
-    borderRadius: radius.md, // 16px fully rounded-2xl style
-    backgroundColor: colors.white, // clean white background
-    borderWidth: 1,
-    borderColor: '#E2E8F0', // clean minimalist border
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  locationCardActive: {
-    borderColor: '#BFDBFE',
-    backgroundColor: colors.primaryTint,
-  },
-  infoLabel: {
-    color: colors.textSecondary,
-    marginBottom: 2, fontSize: 10, letterSpacing: 0.3,
-    textTransform: 'uppercase', textAlign: 'left',
-  },
-  infoValue: {
-    color: colors.textPrimary, fontSize: 12,
-    textAlign: 'left',
-  },
-
-  // Google Maps location card
-  locationHeader: {
-    flexDirection: 'row', justifyContent: 'space-between',
+  
+  // Section 1 — Sticky Navigation Bar
+  navBar: {
+    height: 60,
+    backgroundColor: '#0A2E4A',
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
-  googleMapsButton: {
-    width: 36, height: 36,
-    borderRadius: 18, // circular background
-    backgroundColor: '#FFFFFF',
+  navBarRTL: {
+    flexDirection: 'row-reverse',
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1.5,
   },
-  viewOnMapRow: {
-    flexDirection: 'row', alignItems: 'center',
-    marginTop: 6, gap: 2,
+  navTitle: {
+    fontSize: 15,
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
-  viewOnMapText: {
-    fontSize: 10, color: colors.primary,
+  urgencyBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  urgencyBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
 
-  completionImage: {
-    width: 100, height: 100,
+  // Section 2 — Interactive Map Container
+  mapContainer: {
+    height: 180,
+    width: '100%',
+    position: 'relative',
+    backgroundColor: '#F0F9FF',
+  },
+  mapPlaceholder: {
+    height: 180,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  
+  // Navigation Pill Floating HUD
+  navPill: {
+    position: 'absolute',
+    top: spacing.sm,
+    left: spacing.md,
+    right: spacing.md,
+    height: 48,
+    backgroundColor: 'rgba(10, 46, 74, 0.92)',
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    zIndex: 99,
+  },
+  navPillRTL: {
+    flexDirection: 'row-reverse',
+  },
+  navDirectionIconBg: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    backgroundColor: '#18A6C8', // Electric Cyan
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navTextContainer: {
+    flex: 1,
+    marginHorizontal: spacing.sm,
+    alignItems: 'flex-start',
+  },
+  navInstructionText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  navStatsText: {
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontSize: 10,
+    marginTop: 1,
+  },
+  navCompassBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scaleLabel: {
+    position: 'absolute',
+    bottom: 6,
+    right: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.65)',
+    borderRadius: 10,
+  },
+  scaleLabelText: {
+    fontSize: 9,
+    fontWeight: '600',
+    color: '#0A2E4A',
+  },
+  floatingImageBubble: {
+    position: 'absolute',
+    bottom: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    backgroundColor: '#F0F9FF',
+    zIndex: 99,
+  },
+  floatingImageThumb: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
+  },
+  floatingImageBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#0D6B9A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+  },
+
+  // Section 3 — Sliding Card scrollable details
+  detailsCard: {
+    flex: 1,
+    marginTop: -14,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+  },
+  detailsCardContent: {
+    paddingTop: 20,
+    paddingHorizontal: 16,
+  },
+  
+  // 3a. Report Header
+  reportHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: spacing.md,
+  },
+  reportHeaderRTL: {
+    flexDirection: 'row-reverse',
+  },
+  titleAndPills: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  reportTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0A2E4A',
+    marginBottom: 6,
+    textAlign: 'left',
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  badgeRowRTL: {
+    flexDirection: 'row-reverse',
+  },
+  referenceContainer: {
+    paddingLeft: spacing.sm,
+    alignItems: 'flex-end',
+  },
+  refIdText: {
+    fontSize: 11,
+    color: '#7BA8BF',
+    letterSpacing: 0.5,
+  },
+
+  // 3b. Action Card CTA
+  actionCard: {
+    backgroundColor: '#0A2E4A',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: spacing.md,
+  },
+  actionCardLabel: {
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.55)',
+    letterSpacing: 0.8,
+    marginBottom: 10,
+    textAlign: 'left',
+  },
+  actionButtonsContainer: {
+    width: '100%',
+  },
+  ctaButton: {
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: '#18A6C8', // Electric Cyan bg
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  ctaButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  ctaUploadButton: {
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#18A6C8',
+    backgroundColor: 'transparent',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    gap: 8,
+  },
+  ctaUploadButtonText: {
+    color: '#18A6C8',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  
+  // Supplementary photo grid
+  addedPhotosSection: {
+    marginBottom: spacing.md,
+  },
+  addedPhotosLabel: {
+    fontSize: 11,
+    color: '#3A6B85',
+    fontWeight: '700',
+    textAlign: 'left',
+  },
+  proofThumb: {
+    width: 66,
+    height: 66,
     borderRadius: radius.sm,
     marginRight: spacing.sm,
-    backgroundColor: '#F0F4F8',
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: '#C0EAF5',
+    backgroundColor: '#F0F9FF',
+  },
+
+  // 3c. Description Box
+  sectionContainer: {
+    marginBottom: spacing.md,
+  },
+  sectionHeading: {
+    fontSize: 11,
+    color: '#7BA8BF',
+    fontWeight: '700',
+    letterSpacing: 1,
+    marginBottom: spacing.xs,
+    textAlign: 'left',
+  },
+  descriptionBox: {
+    backgroundColor: '#F0F9FF',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#C0EAF5',
+  },
+  descriptionText: {
+    fontSize: 13,
+    color: '#3A6B85',
+    lineHeight: 20,
+    textAlign: 'left',
+  },
+  
+  // 3e. Meta Grid
+  gridDivider: {
+    height: 1,
+    backgroundColor: '#C0EAF5',
+    marginVertical: spacing.md,
+  },
+  infoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  infoGridRTL: {
+    flexDirection: 'row-reverse',
+  },
+  gridCard: {
+    width: '48%',
+    backgroundColor: '#F0F9FF',
+    borderWidth: 1,
+    borderColor: '#C0EAF5',
+    borderRadius: 12,
+    padding: 12,
+    gap: 4,
+  },
+  gridIconChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  gridIconChipRTL: {
+    flexDirection: 'row-reverse',
+  },
+  iconChipInner: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    backgroundColor: '#E8F7FC',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gridLabel: {
+    fontSize: 10,
+    color: '#7BA8BF',
+    fontWeight: '600',
+  },
+  gridValue: {
+    fontSize: 12,
+    color: '#0A2E4A',
+    fontWeight: '700',
+    textAlign: 'left',
+  },
+  completionImageThumb: {
+    width: 90,
+    height: 90,
+    borderRadius: radius.sm,
+    marginRight: spacing.sm,
+    backgroundColor: '#F0F9FF',
+    borderWidth: 1,
+    borderColor: '#C0EAF5',
+  },
+
+  // Modals
+  imageModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageModalClose: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  highResImage: {
+    width: '100%',
+    height: '80%',
+    resizeMode: 'contain',
   },
   modalContainer: {
     flex: 1,
@@ -950,7 +1182,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    borderBottomColor: '#C0EAF5',
     backgroundColor: '#FFFFFF',
   },
   modalCloseButton: {
@@ -959,194 +1191,26 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.pageBg,
+    backgroundColor: '#F0F9FF',
   },
   modalHeaderTitle: {
-    fontSize: 16,
-    color: colors.textPrimary,
+    fontSize: 15,
+    color: '#0A2E4A',
     fontWeight: '700',
-  },
-  floatingHeader: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 100,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  floatingBackButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  floatingImageBubble: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    backgroundColor: '#F0F4F8',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 5,
-  },
-  floatingImageThumb: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 21,
-  },
-  floatingImageBadge: {
-    position: 'absolute',
-    bottom: -2,
-    right: -2,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#FFFFFF',
-  },
-  sheetContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.96)',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    borderWidth: 1,
-    borderColor: 'rgba(226, 232, 240, 0.8)',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: -6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 24,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
-  },
-  sheetHandleContainer: {
-    width: '100%',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-  },
-  sheetHandle: {
-    width: 40,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: '#cbd5e1',
-  },
-  sheetScroll: {
-    flex: 1,
-  },
-  imageModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  imageModalClose: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  highResImage: {
-    width: '100%',
-    height: '80%',
-    resizeMode: 'contain',
-  },
-  navHudContainer: {
-    position: 'absolute',
-    left: spacing.md,
-    right: spacing.md,
-    zIndex: 90,
-    backgroundColor: 'rgba(15, 23, 42, 0.94)',
-    borderRadius: radius.md,
-    padding: spacing.md,
-    alignItems: 'center',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
-  },
-  navHudIconBg: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  navHudInstruction: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
-    textAlign: 'left',
-  },
-  navHudStats: {
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontSize: 11,
-    marginTop: 2,
-    textAlign: 'left',
-  },
-  navHudRadarBg: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    position: 'relative',
-  },
-  navHudRadarPulse: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: 'rgba(59, 130, 246, 0.5)',
-    transform: [{ scale: 1.2 }],
   },
 });
 
 const tlStyles = StyleSheet.create({
-  timeline: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.sm,
-    backgroundColor: colors.pageBg,
-    borderRadius: radius.md,
+  timelineContainer: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    backgroundColor: '#F0F9FF',
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.borderLight,
-    marginBottom: spacing.md,
+    borderColor: '#C0EAF5',
   },
   item: {
     flexDirection: 'row',
-    marginBottom: 0,
   },
   itemRTL: {
     flexDirection: 'row-reverse',
@@ -1156,37 +1220,24 @@ const tlStyles = StyleSheet.create({
     width: 24,
   },
   dot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: colors.borderLight,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 2,
   },
-  dotCompleted: {
-    backgroundColor: colors.primary,
-  },
-  dotCurrent: {
-    backgroundColor: colors.primaryTint,
-    borderColor: colors.primary,
-    borderWidth: 2,
-  },
   line: {
     width: 2,
     flex: 1,
-    backgroundColor: colors.borderLight,
     marginVertical: -2,
     zIndex: 1,
-    minHeight: 36,
-  },
-  lineCompleted: {
-    backgroundColor: colors.primary,
+    minHeight: 40,
   },
   content: {
     flex: 1,
     paddingLeft: spacing.sm,
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.md,
   },
   contentRTL: {
     paddingLeft: 0,
@@ -1203,7 +1254,6 @@ const tlStyles = StyleSheet.create({
   },
   title: {
     fontSize: 13,
-    color: colors.textPrimary,
     textAlign: 'left',
   },
   titleRTL: {
@@ -1211,12 +1261,11 @@ const tlStyles = StyleSheet.create({
   },
   time: {
     fontSize: 10,
-    color: colors.textSecondary,
+    color: '#7BA8BF',
   },
   subtitle: {
     fontSize: 11,
-    color: colors.textSecondary,
-    lineHeight: 14,
+    lineHeight: 15,
     textAlign: 'left',
   },
   subtitleRTL: {
