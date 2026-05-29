@@ -14,7 +14,35 @@ import { LogBox } from 'react-native';
 LogBox.ignoreLogs([
   'SafeAreaView has been deprecated',
   'The native view manager for module',
+  'expo-notifications: Android Push notifications',
+  '`expo-notifications` functionality is not fully supported',
 ]);
+
+// Silence specific noisy library logs from printing in the developer console/terminal
+const originalWarn = console.warn;
+console.warn = (...args: any[]) => {
+  const message = args.join(' ');
+  if (
+    message.includes('expo-notifications') ||
+    message.includes('Expo Go') ||
+    message.includes('supported in Expo Go')
+  ) {
+    return;
+  }
+  originalWarn(...args);
+};
+
+const originalError = console.error;
+console.error = (...args: any[]) => {
+  const message = args.join(' ');
+  if (
+    message.includes('expo-notifications') ||
+    message.includes('remote notifications')
+  ) {
+    return;
+  }
+  originalError(...args);
+};
 
 export default function App() {
   return (
