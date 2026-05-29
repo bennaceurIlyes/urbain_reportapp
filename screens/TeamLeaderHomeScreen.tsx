@@ -67,6 +67,7 @@ export const TeamLeaderHomeScreen = ({ navigation }: any) => {
   }).length;
 
   const formatNum = (n: number) => toArabicNumeral(n, lang);
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || t('teamLeader');
 
   const filters: { key: FilterTab; label: string }[] = [
     { key: 'all', label: t('all') },
@@ -77,26 +78,45 @@ export const TeamLeaderHomeScreen = ({ navigation }: any) => {
 
   const renderFilterTabs = () => (
     <View style={[styles.filterRow, isRTL && styles.filterRowRTL]}>
-      {filters.map(f => (
-        <TouchableOpacity
-          key={f.key}
-          style={[styles.filterTab, activeFilter === f.key && styles.filterTabActive]}
-          onPress={() => setActiveFilter(f.key)}
-          accessibilityLabel={f.label}
-          accessibilityRole="button"
-        >
-          <Text 
-            style={[
-              styles.filterText, 
-              activeFilter === f.key && styles.filterTextActive,
-              { fontFamily: isRTL ? (activeFilter === f.key ? 'IBMPlexArabic-Bold' : 'IBMPlexArabic-Regular') : (activeFilter === f.key ? 'IBMPlexSans-Bold' : 'IBMPlexSans-Regular') }
-            ]}
+      {filters.map(f => {
+        const isActive = activeFilter === f.key;
+        return (
+          <TouchableOpacity
+            key={f.key}
+            style={[styles.filterTab, isActive && styles.filterTabActive]}
+            onPress={() => setActiveFilter(f.key)}
+            accessibilityLabel={f.label}
+            accessibilityRole="button"
+            activeOpacity={0.8}
           >
-            {f.label}
+            <Text 
+              style={[
+                styles.filterText, 
+                isActive && styles.filterTextActive,
+                { fontFamily: isRTL ? (isActive ? 'IBMPlexArabic-Bold' : 'IBMPlexArabic-Regular') : (isActive ? 'IBMPlexSans-Bold' : 'IBMPlexSans-Regular') }
+              ]}
+            >
+              {f.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+
+  const renderHeader = () => (
+    <View style={styles.headerSection}>
+      <View style={[styles.greetingRow, isRTL && styles.greetingRowRTL]}>
+        <View>
+          <Text style={[styles.greetingText, { fontFamily: isRTL ? 'IBMPlexArabic-Bold' : 'IBMPlexSans-Bold' }]}>
+            {lang === 'ar' ? `مرحباً، رئيس الفرقة ${displayName} 🛠️` : `Bonjour, Chef ${displayName} 🛠️`}
           </Text>
-          {activeFilter === f.key ? <View style={styles.filterIndicator} /> : null}
-        </TouchableOpacity>
-      ))}
+          <Text style={[styles.greetingSubtitle, { fontFamily: isRTL ? 'IBMPlexArabic-Regular' : 'IBMPlexSans-Regular' }]}>
+            {lang === 'ar' ? 'مركز عمليات الصيانة لولاية بشار' : 'Centre d\'opérations de maintenance de Béchar'}
+          </Text>
+        </View>
+      </View>
+      {renderFilterTabs()}
     </View>
   );
 
@@ -109,11 +129,10 @@ export const TeamLeaderHomeScreen = ({ navigation }: any) => {
         rightElement={<LanguageToggle />}
       />
 
-      {renderFilterTabs()}
-
       <View style={styles.content}>
         {loading ? (
           <View style={styles.skeletonContainer}>
+            {renderHeader()}
             <SkeletonCard />
             <SkeletonCard />
             <SkeletonCard />
@@ -139,6 +158,7 @@ export const TeamLeaderHomeScreen = ({ navigation }: any) => {
             }
             contentContainerStyle={[styles.listContainer, { paddingBottom: 100 + insets.bottom }]}
             showsVerticalScrollIndicator={false}
+            ListHeaderComponent={renderHeader}
             ListEmptyComponent={<EmptyState type="no-tasks" />}
             initialNumToRender={10}
             maxToRenderPerBatch={10}
@@ -155,39 +175,70 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.pageBg },
   content: { flex: 1 },
   skeletonContainer: { paddingHorizontal: spacing.md, paddingTop: spacing.md },
-  listContainer: { paddingHorizontal: spacing.md, paddingTop: spacing.md },
+  listContainer: { paddingHorizontal: spacing.md },
+  
+  headerSection: {
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xs,
+  },
+  greetingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+    paddingHorizontal: 2,
+  },
+  greetingRowRTL: {
+    flexDirection: 'row-reverse',
+  },
+  greetingText: {
+    fontSize: 20,
+    color: colors.textPrimary,
+    fontWeight: '700',
+    textAlign: 'left',
+  },
+  greetingSubtitle: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 2,
+    textAlign: 'left',
+  },
+  
+  // Custom Filter Pills/Chips
   filterRow: {
     flexDirection: 'row',
-    backgroundColor: colors.white,
-    paddingHorizontal: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    gap: spacing.xs,
+    marginVertical: spacing.sm,
+    paddingHorizontal: 2,
   },
   filterRowRTL: {
     flexDirection: 'row-reverse',
   },
   filterTab: {
-    paddingVertical: spacing.sm + 4,
-    paddingHorizontal: spacing.md,
-    position: 'relative',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20, // Modern floating circular pills
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0', // clean minimalist outline
     alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.02,
+    shadowRadius: 3,
+    elevation: 1,
   },
-  filterTabActive: {},
+  filterTabActive: {
+    backgroundColor: colors.primary, // Vibrant accent blue
+    borderColor: colors.primary,
+  },
   filterText: {
-    fontSize: 12,
+    fontSize: 11,
     color: colors.textSecondary,
+    fontWeight: '500',
   },
   filterTextActive: {
-    color: colors.primary,
-  },
-  filterIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    left: spacing.md,
-    right: spacing.md,
-    height: 3,
-    backgroundColor: colors.primary,
-    borderTopLeftRadius: 3,
-    borderTopRightRadius: 3,
+    color: '#FFFFFF',
   },
 });
